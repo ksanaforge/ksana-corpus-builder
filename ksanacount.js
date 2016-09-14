@@ -32,7 +32,7 @@ var cjk=function(t){
 			i++;
 		} else if (code>=0x2ff0&&code<=0x2fff) {
 			throw "ids not supported yet"
-		} else {
+		} else if (code>32 && code!==0x3000 && code>=0x2e80) {
 			r++;
 		}
 		i++;

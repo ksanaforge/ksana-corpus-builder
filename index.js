@@ -3,7 +3,7 @@ const ksanacount=require("./ksanacount");
 const ksanapos=require("./ksanapos");
 const createCorpus=function(name,opts){
 	opts=opts||{};
-	var kPos=0, LineKCount=0, tPos=0, text="";
+	var kPos=0, LineKCount=0, tPos=0, started=false;
 	var filecount=0;
 	var textstack=[""];
 	var vars={};
@@ -20,8 +20,13 @@ const createCorpus=function(name,opts){
 
 	}
 	const addXMLTextNode=function(t){
+		if (!started)return;
 		if (textstack.length==1) {
 			LineKCount+=this.kcount(t);
+			if (LineKCount>addressPattern.maxchar) {
+				debugger;
+				throw "line longer than "+addressPattern.maxchar+","+LineKCount;
+			}
 		}
 		textstack[textstack.length-1]+=t;
 	}
@@ -35,10 +40,14 @@ const createCorpus=function(name,opts){
 	}
 
 	const putLine=function(kpos,text){
-
+		console.log(kpos.toString(16),text)
+		LineKCount=0;
+	}
+	var start=function(){
+		started=true;
 	}
 
-	const instance={addFile, onToken, vars, makeKPos};
+	const instance={addFile, onToken, vars, makeKPos, start};
 	instance.kPos=()=>kPos;
 	instance.fileCount=()=>filecount;
 
@@ -56,6 +65,9 @@ const createCorpus=function(name,opts){
 		instance.kcount=ksanacount.cjk_nopunc;
 	}
 
+	if(opts.autostart){
+		started=true;
+	}
 	
 	return instance;
 
