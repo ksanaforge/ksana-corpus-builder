@@ -1,9 +1,9 @@
+var Ksanapos=require("./ksanapos");
 const Romable=function(){
 	var fields={},texts=[];
 
 	var rom={texts,fields};
 	const putField=function(name,value,kpos){
-		kpos=kpos||this.kPos(); //default to current kpos
 		if (!fields[name]) fields[name]=[];
 		fields[name].push([kpos,value]);
 	}
@@ -20,6 +20,33 @@ const Romable=function(){
 	const getRawFields=function(name){
 		return fields[name];
 	}
-	return {putField,getField,getRawFields};
+
+	const putLine=function(line,kpos){
+		var parts=Ksanapos.unpack(kpos,this.addressPattern);
+		var levels=[],i;
+		for (i=0;i<parts.length-1;i++){//drop ch
+			if (i && !this.addressPattern.bits[i]) continue;
+
+			levels.push(parts[i]);
+		}
+		storepoint=texts;
+		for (i=0;i<levels.length-1;i++){
+			if (!storepoint[ levels[i] ]) {
+				storepoint[ levels[i] ]=[];
+			}
+			storepoint=storepoint[ levels[i] ];
+		}
+		storepoint[levels[levels.length-1]]=line;
+	}
+	const getTexts=function(){
+		return texts;
+	}
+//optimize for jsonrom
+//convert to column base single item array
+//kpos use vint and make use of stringarray
+	const optimize=function(){
+
+	}
+	return {putLine,putField,getField,getRawFields,getTexts};
 }
 module.exports=Romable;
