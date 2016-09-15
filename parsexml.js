@@ -1,9 +1,9 @@
 var sax="sax";
 var fs=require("fs");
 var setHandlers=function(openhandlers,closehandlers,otherhandlers){
-	this.openhandlers=openhandlers;	
-	this.closehandlers=closehandlers;
-	this.otherhandlers=otherhandlers;
+	this.openhandlers=openhandlers||{};	
+	this.closehandlers=closehandlers||{};
+	this.otherhandlers=otherhandlers||{};
 }
 var addContent=function(content,name){
 	const Sax=require("sax");
@@ -30,7 +30,9 @@ var addContent=function(content,name){
 		corpus.position=this.position;
 		handler&&handler.call(corpus,tag,true);
 	}	
+	this.otherhandlers.fileStart&&this.otherhandlers.fileStart.call(corpus);
 	parser.write(content);
+	this.otherhandlers.fileEnd&&this.otherhandlers.fileEnd.call(corpus);
 }
 var addFile=function(fn){
 	var content=fs.readFileSync(fn,"utf8").replace(/\r?\n/);

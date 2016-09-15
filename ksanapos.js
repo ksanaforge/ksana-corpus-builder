@@ -12,8 +12,11 @@ const parseAddress=function(bits){
 	const maxcolumn=1<<(columnbits);
 	const maxpage=1<<(pagebits);
 	const maxbook=1<<(bookbits);
-	return {maxbook,maxpage,maxcolumn,maxline,maxchar,
-					bookbits,pagebits,columnbits,linebits,charbits};
+	var rangebits=charbits+linebits+columnbits+pagebits;
+	const maxrange=1<<(rangebits);
+
+	return {maxbook,maxpage,maxcolumn,maxline,maxchar,maxrange,
+					bookbits,pagebits,columnbits,linebits,charbits,rangebits};
 }
 var checknums=function(nums,pat){
 	if (nums[4]>pat.maxchar) {
