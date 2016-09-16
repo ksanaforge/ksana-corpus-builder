@@ -7,18 +7,22 @@ const createCorpus=function(name,opts){
 	opts=opts||{};
 	var LineKStart=0, LineKCount=0, tPos=0, started=false;
 	var prevlinekpos=-1;
-	var filecount=0;
+	var filecount=0, bookcount=0;
 	var textstack=[""];
 	var vars={};
 	var romable=Romable();
 	const addressPattern=Ksanapos.parseAddress(opts.addrbits);
+	var onBookStart,onBookEnd;
 
 	const addFile=function(fn){
 		Parsexml.addFile.call(this,fn);
 		filecount++;
 	}
 	const setHandlers=function(openhandlers,closehandlers,otherhandlers){
+		otherhandlers=otherhandlers||{};
 		Parsexml.setHandlers.call(this,openhandlers,closehandlers,otherhandlers);
+		onBookStart=otherhandlers.bookStart;
+		onBookEnd=otherhandlers.bookEnd;
 	}
 	const onToken=function(){
 
@@ -46,6 +50,11 @@ const createCorpus=function(name,opts){
 		if (textstack.length==0) textstack.push("");//make sure text stack has at least one entry
 		return s;
 	}
+	const addBook=function(){
+		bookcount&&onBookEnd&&onBookEnd.call(this);
+		bookcount++;
+		onBookStart&&onBookStart.call(this);
+	}
 	const makeKPos=function(book,page,column,line,character,pat){
 		pat=pat||addressPattern;
 		return Ksanapos.makeKPos([book,page,column,line,character],addressPattern);
@@ -64,24 +73,29 @@ const createCorpus=function(name,opts){
 	}
 
 	const putLine=function(text,kpos){
+		if (isNaN(kpos)||kpos<0) return;
 		if (prevlinekpos>=kpos) {
-			console.error("line kpos must be larger",kpos,prevlinekpos);
-			return;
+			throw "line kpos must be larger "+kpos+" prev"+prevlinekpos;
 		}
 		LineKStart=kpos;
 		LineKCount=0;
 		prevlinepos=kpos;
-		romable.putLine.call(this,text,kpos);
+		romable.putLine.call(this,text,kpos);	
 	}
 	var start=function(){
 		started=true;
 	}
 
-	const instance={addFile, putField, putEmptyField,onToken, vars, 
-									makeKPos, makeKRange,	start, romable};
+	var stop=function(){
+		bookcount&&onBookEnd&&onBookEnd.call(this);
+	}
+
+	const instance={addFile, addBook, putField, putEmptyField,onToken, vars, 
+									makeKPos, makeKRange,	start, romable, stop };
 
 	Object.defineProperty(instance,"kPos",{ get:()=>LineKStart+LineKCount});
 	Object.defineProperty(instance,"fileCount",{ get:()=>filecount});
+	Object.defineProperty(instance,"bookCount",{ get:()=>bookcount});
 	Object.defineProperty(instance,"addressPattern",{ get:()=>addressPattern});
 
 	if (opts.inputformat==="xml") {
