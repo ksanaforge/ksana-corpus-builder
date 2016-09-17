@@ -5,11 +5,14 @@ const Romable=require("./romable");
 
 const createCorpus=function(name,opts){
 	opts=opts||{};
-	var LineKStart=0, LineKCount=0, tPos=0, started=false;
+	var LineKStart=-1, //current line starting kpos
+	LineKCount=0, //character count of line line 
+	LineTPos=0, //tPos of begining of current line
+	tPos=0,     //current tPos
+	started=false;
 	var prevlinekpos=-1;
 	var filecount=0, bookcount=0;
 	var textstack=[""];
-	var vars={};
 	var romable=Romable();
 	const addressPattern=Ksanapos.parseAddress(opts.addrbits);
 	var onBookStart,onBookEnd;
@@ -75,18 +78,24 @@ const createCorpus=function(name,opts){
 		}
 		return startkpos*Math.pow(2,addressPattern.rangebits)+r;
 	}
-	const resetLine=function(kpos){ //reset Line to a new kpos
-		LineKStart=kpos;
-		LineKCount=0;
-		prevlinepos=kpos;
-	}
-	const putLine=function(text,kpos){
+
+	//call newLine on begining of <lb>
+	const newLine=function(kpos,tpos){ //reset Line to a new kpos
 		if (isNaN(kpos)||kpos<0) return;
 		if (prevlinekpos>=kpos) {
 			throw "line kpos must be larger "+kpos+" prev"+prevlinekpos;
 		}
-		resetLine.call(this,kpos);
-		romable.putLine.call(this,text,kpos);	
+
+		LineKStart=kpos;
+		LineTPos=tpos;
+		LineKCount=0;
+		prevlinkpos=kpos;
+	}
+	//call putLine on end of </lb>
+	const putLine=function(text){
+		if (LineKStart<0) return;//first call to putLine has no effect
+		romable.putLine.call(this,text,LineKStart);	
+		romable.putLineTPos.call(this,LineKStart,LineTPos);
 	}
 	var prevtoken=null;
 	const putToken=function(token,tpos){
@@ -110,7 +119,7 @@ const createCorpus=function(name,opts){
 	}
 
 	const instance={addFile, addBook, putField, putEmptyField,putToken, putEmptyToken,
-									vars, makeKPos, makeKRange,	start, romable, stop , getRawToken:Ksanacount.getRawToken};
+									 makeKPos, makeKRange,	start, romable, stop , getRawToken:Ksanacount.getRawToken};
 
 	Object.defineProperty(instance,"tPos",{ get:()=>tPos});
 	Object.defineProperty(instance,"kPos",{ get:()=>LineKStart+LineKCount});
@@ -124,7 +133,7 @@ const createCorpus=function(name,opts){
 		instance.popText=popText;
 		instance.popBaseText=popBaseText;
 		instance.addText=addXMLTextNode;
-		instance.resetLine=resetLine;
+		instance.newLine=newLine;
 		instance.putLine=putLine;
 	}
 

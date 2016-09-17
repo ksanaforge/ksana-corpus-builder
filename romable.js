@@ -38,6 +38,9 @@ const Romable=function(){
 		}
 		storepoint[levels[levels.length-1]]=line;
 	}
+	const putLineTPos=function(kpos,tpos){
+
+	}
 	const getTexts=function(){
 		return texts;
 	}
@@ -47,6 +50,6 @@ const Romable=function(){
 	const optimize=function(){
 
 	}
-	return {putLine,putField,getField,getRawFields,getTexts};
+	return {putLine,putLineTPos,putField,getField,getRawFields,getTexts};
 }
 module.exports=Romable;
