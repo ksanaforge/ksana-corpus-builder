@@ -36,6 +36,7 @@ var addContent=function(content,name){
 }
 var addFile=function(fn){
 	var content=fs.readFileSync(fn,"utf8").replace(/\r?\n/);
+	this.filename=fn;
 	addContent.call(this,content,fn);
 }
 

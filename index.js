@@ -40,10 +40,15 @@ const createCorpus=function(name,opts){
 		if (textstack.length==1) {
 			LineKCount+=this.kcount(t);
 			if (LineKCount>addressPattern.maxchar) {
-				console.error("line too long",t);
+				throw "line too long "+LineKCount+" "+t;
 			}
 		}
 		textstack[textstack.length-1]+=t;
+	}
+	const popBaseText=function(){
+		const s=textstack.shift();
+		textstack.unshift("");
+		return s;
 	}
 	const popText=function(){
 		const s=textstack.pop();
@@ -61,38 +66,53 @@ const createCorpus=function(name,opts){
 	}
 	const makeKRange=function(startkpos,endkpos){
 		if (isNaN(startkpos)||isNaN(endkpos)) {
-			console.error("invalie kpos");
 			return 0;
 		}
 		var r=endkpos-startkpos;
 		if (r>addressPattern.maxrange) {
-			console.log("range too far",r);
-			r=addressPattern.maxrange;
+			//throw "range too far "+ r;
+			r=addressPattern.maxrange-1;
 		}
 		return startkpos*Math.pow(2,addressPattern.rangebits)+r;
 	}
-
+	const resetLine=function(kpos){ //reset Line to a new kpos
+		LineKStart=kpos;
+		LineKCount=0;
+		prevlinepos=kpos;
+	}
 	const putLine=function(text,kpos){
 		if (isNaN(kpos)||kpos<0) return;
 		if (prevlinekpos>=kpos) {
 			throw "line kpos must be larger "+kpos+" prev"+prevlinekpos;
 		}
-		LineKStart=kpos;
-		LineKCount=0;
-		prevlinepos=kpos;
+		resetLine.call(this,kpos);
 		romable.putLine.call(this,text,kpos);	
 	}
-	var start=function(){
+	var prevtoken=null;
+	const putToken=function(token,tpos){
+		tpos=tpos||tPos;
+		if (token) {
+			Inverted.putToken(token,tpos);
+		}
+		prevtoken=token;
+		tPos++;
+	}
+	const putEmptyToken=function(tpos){
+		putToken.call(this,null,tpos);
+	}
+	const start=function(){
 		started=true;
 	}
 
-	var stop=function(){
+	const stop=function(){
+		started=false;
 		bookcount&&onBookEnd&&onBookEnd.call(this);
 	}
 
-	const instance={addFile, addBook, putField, putEmptyField,onToken, vars, 
-									makeKPos, makeKRange,	start, romable, stop };
+	const instance={addFile, addBook, putField, putEmptyField,putToken, putEmptyToken,
+									vars, makeKPos, makeKRange,	start, romable, stop , getRawToken:Ksanacount.getRawToken};
 
+	Object.defineProperty(instance,"tPos",{ get:()=>tPos});
 	Object.defineProperty(instance,"kPos",{ get:()=>LineKStart+LineKCount});
 	Object.defineProperty(instance,"fileCount",{ get:()=>filecount});
 	Object.defineProperty(instance,"bookCount",{ get:()=>bookcount});
@@ -102,7 +122,9 @@ const createCorpus=function(name,opts){
 		instance.setHandlers=setHandlers;
 		instance.textstack=textstack;
 		instance.popText=popText;
+		instance.popBaseText=popBaseText;
 		instance.addText=addXMLTextNode;
+		instance.resetLine=resetLine;
 		instance.putLine=putLine;
 	}
 
