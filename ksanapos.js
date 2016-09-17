@@ -1,15 +1,12 @@
-const parseAddress=function(packedbits){
-	const charbits=packedbits & 0xF;
-	const linebits=(packedbits >> 4) &0xF;
-	const columnbits=(packedbits >> 8) &0xF;
-	const pagebits=(packedbits >> 12) &0xF;
-	const bookbits=(packedbits >> 16) &0xF;
+const parseAddress=function(b){
+	const bookbits=b[0],pagebits=b[1],
+	columnbits=b[2],linebits=b[3], charbits=b[4];
 	if (charbits*2+linebits*2+columnbits*2+pagebits*2+bookbits>53) {
 		throw "address has more than 53 bits";
 	}
 	const maxchar=1<<(charbits);
 	const maxline=1<<(linebits);
-	const maxcolumn=1<<(columnbits);
+	const maxcolumn=(columnbits==0)?0:(1<<columnbits);
 	const maxpage=1<<(pagebits);
 	const maxbook=1<<(bookbits);
 	var rangebits=charbits+linebits+columnbits+pagebits;
@@ -67,4 +64,17 @@ var unpack=function(kpos,pat){
 	var r=[vol,page,col,line,ch];
 	return r;
 }
-module.exports={parseAddress,makeKPos,unpack};
+const stringify=function(kpos,pat){
+	const parts=unpack(kpos,pat);
+	var s= (parts[0]+1)+'p'+(1+parts[1]);
+	if (pat.maxcolumn){
+		console.log(pat.maxcolumn)
+		s+=String.fromCharCode(parts[2]+0x61);
+	} else {
+		s+='.';
+	}
+	s+=(parts[3]+1);
+	if (parts[4]) s='#'+(parts[4]+1);
+	return s;
+}
+module.exports={parseAddress,makeKPos,unpack,stringify};

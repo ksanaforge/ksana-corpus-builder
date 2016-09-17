@@ -1,6 +1,6 @@
 var Ksanapos=require("./ksanapos");
 const Romable=function(){
-	var fields={},texts=[];
+	var fields={},texts=[],linetpos=[];
 
 	var rom={texts,fields};
 	const putField=function(name,value,kpos){
@@ -39,8 +39,18 @@ const Romable=function(){
 		storepoint[levels[levels.length-1]]=line;
 	}
 	const putLineTPos=function(kpos,tpos){
-
+		var parts=Ksanapos.unpack(kpos,this.addressPattern);
+		var book=parts[0];
+		parts[0]=0;
+		var idx=Ksanapos.makeKPos(parts,this.addressPattern);
+		idx=idx/Math.pow(2,this.addressPattern.charbits);
+		if (!linetpos[book]) linetpos[book]=[];
+		linetpos[book][idx]=tpos;
 	}
+	const getLineTPos=function(){
+		return linetpos;
+	}
+
 	const getTexts=function(){
 		return texts;
 	}
@@ -50,6 +60,7 @@ const Romable=function(){
 	const optimize=function(){
 
 	}
-	return {putLine,putLineTPos,putField,getField,getRawFields,getTexts};
+
+	return {putLine,putLineTPos,putField,getField,getRawFields,getTexts,getLineTPos};
 }
 module.exports=Romable;
