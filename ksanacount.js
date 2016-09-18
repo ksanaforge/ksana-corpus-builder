@@ -1,6 +1,7 @@
 /*
 	given a string , return count
 */
+var {parseIDS}=require("./tokenizer");
 const classical_chinese=function(t){
 	var i=0,r=0;
 	while (i<t.length) {
@@ -43,18 +44,6 @@ var cjk=function(t){
 	return r;
 }
 
-var parseIDS=function(str){ //return number of char used by one IDS
-	var count=0,i=0;
-	while (count!==1&&i<str.length) {
-		var code=str.charCodeAt(i);
-		if (code>=0x2ff0 && code<=0x2ffb) {
-			count--;//two operands
-			if (code===0x2ff2 || code===0x2ff3) count--; //three operands
-		} else count++;
-		i++;
-	}
-	return i;
-}
 const getRawToken=function(obj){
 	var i=0,r=0;
 	var t=obj.str;
@@ -85,4 +74,4 @@ const getRawToken=function(obj){
 	obj.str=t.substr(i);
 	return t.substr(0,i);
 }
-module.exports={cjk,classical_chinese,getRawToken};
+module.exports={cjk,classical_chinese,getRawToken,parseIDS};
