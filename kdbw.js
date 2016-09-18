@@ -12,15 +12,15 @@ var DT={
 	blob:'&',
 	utf8arr:'*', //shift of 8
 	ucs2arr:'@', //shift of 2
-	uint8arr:'!', //shift of 1
-	int32arr:'$', //shift of 4
+	//uint8arr:'!', //shift of 1
+	//int32arr:'$', //shift of 4
 	vint:'`',
 	pint:'~',	
 
 	array:'\u001b',
 	object:'\u001a' 
-	//ydb start with object signature,
-	//type a ydb in command prompt shows nothing
+	//kdb start with an object signature,
+	//type a kdb in command prompt shows nothing, avoiding annoying peep
 }
 var key_writing="";//for debugging
 var pack_int = function (ar, savedelta) { // pack ar into
@@ -178,13 +178,13 @@ var Create=function(path,opts) {
 	var writeVInt1=function(value) {
 		writeVInt([value]);
 	}
-	//for postings
+	//for postings,sorted array
 	var writePInt =function(arr) {
 		var o=pack_int(arr,true);
 		kfs.writeFixedArray(o,cur,1);
 		cur+=o.length;
 	}
-	
+	//variable size int, not sorted , good for small ints
 	var saveVInt = function(arr,key) {
 		var start=cur;
 		key_writing=key;
@@ -305,22 +305,21 @@ var Create=function(path,opts) {
 		return written;
 	}
 	
-	
 	var stringencoding='ucs2';
 	var stringEncoding=function(newencoding) {
 		if (newencoding) stringencoding=newencoding;
 		else return stringencoding;
 	}
 	
-	var allnumber_fast=function(arr) {
-		if (arr.length<5) return allnumber(arr);
+	var isIntArray_fast=function(arr) {
+		if (arr.length<5) return isIntArray(arr);
 		if (typeof arr[0]=='number'
 		    && Math.round(arr[0])==arr[0] && arr[0]>=0)
 			return true;
 		return false;
 	}
 
-	// sample testing with Fibonacci
+	// quick test if an array is sorted with Fibonacci
 	var isSorted=function(arr) {
 		var a=0,b=1,f=1;
 		while (f<arr.length ) {
@@ -332,19 +331,19 @@ var Create=function(path,opts) {
 		return true;
 	}
 
-	var allstring_fast=function(arr) {
+	var isStringArray_fast=function(arr) {
 		if (arr.normalArray) return false;
-		if (arr.length<5) return allstring(arr);
+		if (arr.length<5) return isStringArray(arr);
 		if (typeof arr[0]=='string') return true;
 		return false;
 	}	
-	var allnumber=function(arr) {
+	var isIntArray=function(arr) {
 		for (var i=0;i<arr.length;i++) {
-			if (typeof arr[i]!=='number') return false;
+			if (typeof arr[i]!=='number' && Math.round(arr[i])!==arr[i]) return false;
 		}
 		return true;
 	}
-	var allstring=function(arr) {
+	var isStringArray=function(arr) {
 		for (var i=0;i<arr.length;i++) {
 			if (typeof arr[i]!=='string') return false;
 		}
@@ -376,13 +375,13 @@ var Create=function(path,opts) {
 			}
 			close();
 		} else if (type==='Array') {
-			if (allnumber_fast(J)) {
+			if (isIntArray_fast(J)) {
 				if (J.sorted || isSorted(J)) { //number array is sorted
 					saveInts(J,key,savePInt);	//posting delta format
 				} else {
 					saveInts(J,key,saveVInt);	
 				}
-			} else if (allstring_fast(J)) {
+			} else if (isStringArray_fast(J)) {
 				saveStringArray(J,key,J.enc);
 			} else {
 				openArray(key);
