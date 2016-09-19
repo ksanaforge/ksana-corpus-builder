@@ -1,4 +1,4 @@
-var Ksanapos=require("./ksanapos");
+var Ksanapos=require("ksana-corpus/ksanapos");
 
 const Romable=function(opts){
 	opts=opts||{};

@@ -1,9 +1,9 @@
 const Parsexml=require("./parsexml");
-const Ksanacount=require("./ksanacount");
-const Ksanapos=require("./ksanapos");
+const Ksanacount=require("ksana-corpus/ksanacount");
+const Ksanapos=require("ksana-corpus/ksanapos");
 const Romable=require("./romable");
 
-const {tokenize,TokenTypes,tokenizerVersion}=require("./tokenizer");
+const {tokenize,TokenTypes,tokenizerVersion}=require("ksana-corpus/tokenizer");
 
 const createCorpus=function(name,opts){
 	opts=opts||{};
