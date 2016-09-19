@@ -2,8 +2,7 @@ const Parsexml=require("./parsexml");
 const Ksanacount=require("ksana-corpus/ksanacount");
 const Ksanapos=require("ksana-corpus/ksanapos");
 const Romable=require("./romable");
-
-const {tokenize,TokenTypes,tokenizerVersion}=require("ksana-corpus/tokenizer");
+const Tokenizer=require("ksana-corpus/tokenizer");
 
 const createCorpus=function(name,opts){
 	opts=opts||{};
@@ -20,9 +19,12 @@ const createCorpus=function(name,opts){
 	var filecount=0, bookcount=0;
 	var textstack=[""];
 	var romable=Romable({inverted:!opts.textOnly});
-	const addressPattern=Ksanapos.parseAddress(opts.bits);
+	opts.tokenizerVersion=opts.tokenizerVersion||1;
+	const addressPattern=Ksanapos.buildAddressPattern(opts.bits);
 	var onBookStart,onBookEnd,onToken;
 
+	const tokenizer=Tokenizer.createTokenizer(opts.tokenizerVersion);
+	const TT=tokenizer.TokenTypes;
 
 	const addFile=function(fn){
 		Parsexml.addFile.call(this,fn);
@@ -72,18 +74,12 @@ const createCorpus=function(name,opts){
 	}
 	const makeKPos=function(book,page,column,line,character,pat){
 		pat=pat||addressPattern;
-		return Ksanapos.makeKPos([book,page,column,line,character],addressPattern);
+		return Ksanapos.makeKPos([book,page,column,line,character],pat);
 	}
-	const makeKRange=function(startkpos,endkpos){
-		if (isNaN(startkpos)||isNaN(endkpos)) {
-			return 0;
-		}
-		var r=endkpos-startkpos;
-		if (r>addressPattern.maxrange) {
-			//throw "range too far "+ r;
-			r=addressPattern.maxrange-1;
-		}
-		return startkpos*Math.pow(2,addressPattern.rangebits)+r;
+
+	const makeKRange=function(startkpos,endkpos,pat){
+		pat=pat||addressPattern;
+		return Ksanapos.makeKRange(startkpos,endkpos,pat);
 	}
 
 	//call newLine on begining of <lb>
@@ -102,12 +98,12 @@ const createCorpus=function(name,opts){
 	}
 	const putToken=function(tk,type){
 		var j,bi;
-		if (type===TokenTypes.PUNC && opts.removePunc) {
+		if (type===TT.PUNC && opts.removePunc) {
 			return;
 		}
 		var tk=onToken?onToken(tk):tk;
-		if (type!==TokenTypes.SPACE){
-			if (type!==TokenTypes.PUNC && type!==TokenTypes.NUMBER) {
+		if (type!==TT.SPACE){
+			if (type!==TT.PUNC && type!==TT.NUMBER) {
 				if (typeof tk==="string") {
 					if (bigrams[pTk+tk]) {
 						romable.putToken.call(this,pTk+tk,tPos-1);
@@ -137,7 +133,7 @@ const createCorpus=function(name,opts){
 		if (LineKStart<0) return;//first call to putLine has no effect
 		romable.putLine.call(this,str,LineKStart);	
 		var token=null,i;
-		var tokenized=tokenize(str);
+		var tokenized=tokenizer.tokenize(str);
 		for (i=0;i<tokenized.length;i++) {
 			var type=tokenized[i][3];
 			putToken(tokenized[i][0],type);
@@ -155,7 +151,8 @@ const createCorpus=function(name,opts){
 
 	const buildMeta=function(){
 		var meta={date:(new Date()).toString()};
-		meta.versions={tokenizer:tokenizerVersion};
+		meta.versions={tokenizer:tokenizer.version};
+		meta.bits=opts.bits;
 		return meta;
 	}
 
@@ -201,4 +198,4 @@ const createCorpus=function(name,opts){
 
 }
 
-module.exports={createCorpus,tokenize,TokenTypes};
+module.exports={createCorpus};

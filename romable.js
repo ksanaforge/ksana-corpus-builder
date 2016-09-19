@@ -124,7 +124,6 @@ const Romable=function(opts){
 			return {meta,texts,fields};
 		}
 	}
-	return {putLine,putLinePos,putBookPos,putField,getField,getField,putToken,
-						buildROM};
+	return {putLine,putLinePos,putBookPos,putField,getField,getField,putToken,buildROM};
 }
 module.exports=Romable;
