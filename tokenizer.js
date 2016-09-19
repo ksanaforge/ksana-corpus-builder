@@ -1,5 +1,4 @@
-const {code2TokenType,TokenTypes}=require("./tokentypes");
-
+const {version,getTokenTypeMap,TokenTypes}=require("./tokentypes");
 
 var parseIDS=function(str){ //return number of char used by one IDS
 	var count=0,i=0;
@@ -17,27 +16,28 @@ var parseIDS=function(str){ //return number of char used by one IDS
 each token 
 ['trimmed token','raw token',offset,tokentype]
 */
-const tokenize=function(s){
+const tokenize=function(s,ver){
+	const c2tt=getTokenTypeMap(ver); //default if not supply
 	var i=0,out=[],tk;
 	while (i<s.length) {
 		tk="";
-		var type=code2TokenType(s.charCodeAt(i));
+		var type=c2tt(s.charCodeAt(i));
 		if (type==TokenTypes.SURROGATE) {
 			tk=s.substr(i,2);
 			out.push([tk,null,i,type]);
 			i+=2;
-			type=code2TokenType(s.charCodeAt(i));
+			type=c2tt(s.charCodeAt(i));
 		} else if (type===TokenTypes.IDC) {
 			var c=parseIDS(s.substr(i));
 			tk=s.substr(i,c);
 			out.push([tk,null,i,type]);
 			i+=c;
-			type=code2TokenType(s.charCodeAt(i));
+			type=c2tt(s.charCodeAt(i));
 		} else if (type===TokenTypes.CJK || type===TokenTypes.PUNC) {
 			tk=s.substr(i,1);
 			out.push([tk,null,i,type]);
 			i++;
-			type=code2TokenType(s.charCodeAt(i));
+			type=c2tt(s.charCodeAt(i));
 		} else if (type===TokenTypes.TIBETAN || type===TokenTypes.LATIN|| type===TokenTypes.NUMBER) {
 			tk=s.substr(i,1);
 			out.push([tk,null,i,type]);
@@ -45,7 +45,7 @@ const tokenize=function(s){
 			var leadtype=type;
 			while (i<s.length) {
 				var code=s.charCodeAt(i);
-				var type=code2TokenType(code);
+				var type=c2tt(code);
 				if (type!=leadtype) break;
 				tk+=s.substr(i,1);
 				i++;
@@ -61,14 +61,13 @@ const tokenize=function(s){
 				tk+=s.substr(i,1);
 				i++;
 				var code=s.charCodeAt(i);
-				var type=code2TokenType(code);
+				var type=c2tt(code);
 				if (type!==TokenTypes.SPACE) break;
 			}
 		}
 		out.length&&(out[out.length-1][1]=tk);//token with tailing spaces
-
 	}
 	return out;
 }
 
-module.exports={tokenize,parseIDS,TokenTypes};
+module.exports={tokenize,parseIDS,TokenTypes,tokenizerVersion:version};

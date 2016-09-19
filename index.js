@@ -2,12 +2,14 @@ const Parsexml=require("./parsexml");
 const Ksanacount=require("./ksanacount");
 const Ksanapos=require("./ksanapos");
 const Romable=require("./romable");
-const Kdbw=require("./kdbw");
+
+const {tokenize,TokenTypes,tokenizerVersion}=require("./tokenizer");
+
 const createCorpus=function(name,opts){
 	opts=opts||{};
 	const bigrams=opts.bigrams||null;
 
-	var LineKStart=-1, //current line starting kpos
+	var LineKStart=0, //current line starting kpos
 	LineKCount=0, //character count of line line 
 	LineTPos=0, //tPos of begining of current line
 	tPos=1,     //current tPos, start from 1
@@ -17,7 +19,7 @@ const createCorpus=function(name,opts){
 	var prevlinekpos=-1;
 	var filecount=0, bookcount=0;
 	var textstack=[""];
-	var romable=Romable();
+	var romable=Romable({inverted:!opts.textOnly});
 	const addressPattern=Ksanapos.parseAddress(opts.bits);
 	var onBookStart,onBookEnd,onToken;
 
@@ -151,22 +153,23 @@ const createCorpus=function(name,opts){
 		bookcount&&onBookEnd&&onBookEnd.call(this);
 	}
 
-	const write=function(fn,finishcb){
-		var kdbw=Kdbw("yinshun.kdb");
+	const buildMeta=function(){
+		var meta={date:(new Date()).toString()};
+		meta.versions={tokenizer:tokenizerVersion};
+		return meta;
+	}
+
+	const writeKDB=function(fn,cb){
 		started&&stop();
-		const json=romable.buildROM({date:(new Date()).toString()});
-
-		kdbw.save(json,null,{autodelete:true});
-
-		kdbw.writeFile(fn,function(total,written) {
-			var progress=written/total;
-			console.log(progress);
-			if (finishcb && total==written) finishcb(total);
-		});
+		var okdb="./outputkdb";
+		const meta=buildMeta();
+		const rom=romable.buildROM(meta);
+		console.log(rom);
+		require(okdb).write(fn,rom,cb);
 	}
 
 	const instance={addFile, addBook, putField, putEmptyField,
-									 makeKPos, makeKRange,	start, romable, stop, write};
+									 makeKPos, makeKRange,	start, romable, stop, writeKDB};
 
 	Object.defineProperty(instance,"tPos",{ get:()=>tPos});
 	Object.defineProperty(instance,"kPos",{ get:()=>LineKStart+LineKCount});
@@ -197,5 +200,5 @@ const createCorpus=function(name,opts){
 	return instance;
 
 }
-const {tokenize,TokenTypes}=require("./tokenizer");
+
 module.exports={createCorpus,tokenize,TokenTypes};

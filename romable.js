@@ -1,7 +1,9 @@
 var Ksanapos=require("./ksanapos");
 
-const Romable=function(){
-	var fields={},texts=[],linepos=[],bookpos=[];
+const Romable=function(opts){
+	opts=opts||{};
+	const buildInverted=opts.inverted;
+	var fields={},texts=[],line2tpos=[],book2tpos=[];
 	var token_postings={};
 
 	var rom={texts,fields};
@@ -46,20 +48,18 @@ const Romable=function(){
 	//;inepos array is 2 dimensional, book+page*col*line
 	//core structure for TPos from/to KPos
 	const putLinePos=function(kpos,tpos){
+		if (!buildInverted)return;
 		var parts=Ksanapos.unpack(kpos,this.addressPattern);
 		var book=parts[0];
 		parts[0]=0;
 		var idx=Ksanapos.makeKPos(parts,this.addressPattern);
 		idx=idx/Math.pow(2,this.addressPattern.charbits);
-		if (!linepos[book]) linepos[book]=[];
-		linepos[book][idx]=tpos;
+		if (!line2tpos[book]) line2tpos[book]=[];
+		line2tpos[book][idx]=tpos;
 	}
 
 	const putBookPos=function(booknum,tpos){
-		bookpos[booknum]=tpos;
-	}
-	const getLinePos=function(){
-		return linepos;
+		book2tpos[booknum]=tpos;
 	}
 	const getTexts=function(){
 		return texts;
@@ -69,12 +69,12 @@ const Romable=function(){
 	const finalizeLinePos=function(){
 		//fill up the gap with previous value,
 		//it will be 0 when convert to delta encoding array.
-		var i,prev=linepos[0];
-		for (i=1;i<linepos.length;i++) {
-			if (!linepos[i]) linepos[i]=prev;
-			prev=linepos[i];
+		var i,prev=line2tpos[0];
+		for (i=1;i<line2tpos.length;i++) {
+			if (!line2tpos[i]) line2tpos[i]=prev;
+			prev=line2tpos[i];
 		}
-		return linepos;
+		return line2tpos;
 	}
 
 	const finalizeTokenPositings=function(){
@@ -93,19 +93,36 @@ const Romable=function(){
 //optimize for jsonrom
 //convert to column base single item array
 //kpos use vint and make use of stringarray
-	const optimize=function(){
-		//fill up 
+	const finalizeFields=function(){
+		var i,j;
+		for (i in fields) {
+			var pos=[], value=[], field=fields[i];
+			for (j=0;j<field.length;j++){
+				pos.push(field[j][0]);
+				if (field[j][1]) value.push(field[j][1]);
+			}
+			fields[i]={pos};
+			if (value.length) fields[i].value=value;
+		}
+
+		return fields;
 	}
 
 	const putToken=function(tk,tpos){
+		if (!buildInverted)return;
 		if (!token_postings[tk]) token_postings[tk]=[];
 		token_postings[tk].push(tpos);
 	}
 
 	const buildROM=function(meta){
-		var linepos=finalizeLinePos();
-		var {tokens,postings}=finalizeTokenPositings();
-		return {meta,tokens,postings,texts,linepos,bookpos};
+		var fields=finalizeFields();
+		if (buildInverted){
+			var line2tpos=finalizeLinePos();
+			var {tokens,postings}=finalizeTokenPositings();
+			return {meta,texts,fields,inverted:{tokens,postings,line2tpos,book2tpos}};
+		} else {
+			return {meta,texts,fields};
+		}
 	}
 	return {putLine,putLinePos,putBookPos,putField,getField,getField,putToken,
 						buildROM};

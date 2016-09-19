@@ -25,8 +25,12 @@ const buildMap=function(){
 	}
 	map=tokentypemap.split("");
 }
-const code2TokenType=function(code){
+const code2TokenType=function(code,ver){//now only have one version
 	if (!map.length) buildMap();	
 	return map[code];
 }
-module.exports={TokenTypes,code2TokenType}
+const getTokenTypeMap=function(ver){
+	return code2TokenType;
+}
+const version=1;
+module.exports={TokenTypes,getTokenTypeMap,version}
