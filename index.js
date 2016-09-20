@@ -62,7 +62,7 @@ const createCorpus=function(name,opts){
 		if (textstack.length==1) {
 			LineKCount+=this.kcount(t);
 			if (LineKCount>addressPattern.maxchar) {
-				var human=Ksanapos.stringify(this.kpos,this.addressPattern);
+				var human=Ksanapos.stringify(this.kPos,this.addressPattern);
 				longLines.push([this.kPos,human,t]);
 				lineKCount=this.addressPattern.maxchar;
 			}
