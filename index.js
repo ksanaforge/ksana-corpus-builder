@@ -15,19 +15,28 @@ const createCorpus=function(name,opts){
 	started=false, //text will be processed when true
 	pTk=null;
 	var totalPosting=0;
+	var totalTextSize=0;
 	var prevlinekpos=-1;
 	var filecount=0, bookcount=0;
 	var textstack=[""];
 	var romable=Romable({inverted:!opts.textOnly});
 	opts.tokenizerVersion=opts.tokenizerVersion||1;
-	const addressPattern=Ksanapos.buildAddressPattern(opts.bits);
-	var onBookStart,onBookEnd,onToken;
+	const addressPattern=Ksanapos.buildAddressPattern(opts.bits,opts.column);
+	var onBookStart,onBookEnd,onToken, onFileStart, onFileEnd;
 
 	const tokenizer=Tokenizer.createTokenizer(opts.tokenizerVersion);
 	const TT=tokenizer.TokenTypes;
+	var disorderPages=[];
+	var longLines=[];
 
 	const addFile=function(fn){
+		if (!require("fs").existsSync(fn)) {
+			if (fn.indexOf("#")==-1) console.log("file not found",fn);
+			return;
+		}
+		onFileStart&&onFileStart.call(this,fn,filecount);
 		Parsexml.addFile.call(this,fn);
+		filecount&&onFileEnd&&onFileEnd.call(this,fn,filecount);
 		filecount++;
 	}
 	const setHandlers=function(openhandlers,closehandlers,otherhandlers){
@@ -35,6 +44,8 @@ const createCorpus=function(name,opts){
 		Parsexml.setHandlers.call(this,openhandlers,closehandlers,otherhandlers);
 		onBookStart=otherhandlers.bookStart;
 		onBookEnd=otherhandlers.bookEnd;
+		onFileStart=otherhandlers.fileStart;
+		onFileEnd=otherhandlers.fileEnd;
 		onToken=otherhandlers.onToken;
 	}
 
@@ -51,7 +62,9 @@ const createCorpus=function(name,opts){
 		if (textstack.length==1) {
 			LineKCount+=this.kcount(t);
 			if (LineKCount>addressPattern.maxchar) {
-				throw "line too long "+LineKCount+" "+t;
+				var human=Ksanapos.stringify(this.kpos,this.addressPattern);
+				longLines.push([this.kPos,human,t]);
+				lineKCount=this.addressPattern.maxchar;
 			}
 		}
 		textstack[textstack.length-1]+=t;
@@ -67,14 +80,14 @@ const createCorpus=function(name,opts){
 		return s;
 	}
 	const addBook=function(){
-		bookcount&&onBookEnd&&onBookEnd.call(this);
+		bookcount&&onBookEnd&&onBookEnd.call(this,bookcount);
 		romable.putBookPos.call(this,bookcount,tPos);
 		bookcount++;
-		onBookStart&&onBookStart.call(this);
+		onBookStart&&onBookStart.call(this,bookcount);
 	}
-	const makeKPos=function(book,page,column,line,character,pat){
+	const makeKPos=function(book,page,line,character,pat){
 		pat=pat||addressPattern;
-		return Ksanapos.makeKPos([book,page,column,line,character],pat);
+		return Ksanapos.makeKPos([book,page,line,character],pat);
 	}
 
 	const makeKRange=function(startkpos,endkpos,pat){
@@ -85,9 +98,15 @@ const createCorpus=function(name,opts){
 	//call newLine on begining of <lb>
 	const newLine=function(kpos,tpos){ //reset Line to a new kpos
 		if (isNaN(kpos)||kpos<0) return;
-		if (prevlinekpos>=kpos) {
+		if (prevlinekpos>=kpos ) {
 			var human=Ksanapos.stringify(kpos,this.addressPattern);
-			throw "line kpos must be larger the previous one. kpos:"+human+this.popText();
+			var prevh=Ksanapos.stringify(prevlinekpos,this.addressPattern);
+			if (opts.randomPage) {
+				disorderPages.push([kpos,human,prevlinekpos,prevh]);
+			} else {
+				throw "line kpos must be larger the previous one. kpos:"+
+				human+"prev "+prevh;
+			}
 		}
 		romable.putLinePos.call(this,kpos,tpos);
 
@@ -105,7 +124,7 @@ const createCorpus=function(name,opts){
 		if (type!==TT.SPACE){
 			if (type!==TT.PUNC && type!==TT.NUMBER) {
 				if (typeof tk==="string") {
-					if (bigrams[pTk+tk]) {
+					if (bigrams&&bigrams[pTk+tk]) {
 						romable.putToken.call(this,pTk+tk,tPos-1);
 						totalPosting++;
 					}
@@ -129,11 +148,17 @@ const createCorpus=function(name,opts){
 		}
 	}
 	//call putLine on end of </lb>
-	const putLine=function(str){
+	const putLine=function(s){
 		if (LineKStart<0) return;//first call to putLine has no effect
-		romable.putLine.call(this,str,LineKStart);	
+		//trim tailing crlf
+		while (s.length && s[s.length-1]==="\n"||s[s.length-1]==="\r") {
+			s=s.substr(0,s.length-1);
+		}
+
+		romable.putLine.call(this,s,LineKStart);
+		totalTextSize+=s.length;
 		var token=null,i;
-		var tokenized=tokenizer.tokenize(str);
+		var tokenized=tokenizer.tokenize(s);
 		for (i=0;i<tokenized.length;i++) {
 			var type=tokenized[i][3];
 			putToken(tokenized[i][0],type);
@@ -153,6 +178,7 @@ const createCorpus=function(name,opts){
 		var meta={date:(new Date()).toString()};
 		meta.versions={tokenizer:tokenizer.version};
 		meta.bits=opts.bits;
+		meta.column=opts.column;
 		return meta;
 	}
 
@@ -162,7 +188,9 @@ const createCorpus=function(name,opts){
 		const meta=buildMeta();
 		const rom=romable.buildROM(meta);
 		console.log(rom);
-		require(okdb).write(fn,rom,cb);
+
+		const size=totalTextSize*5;
+		require(okdb).write(fn,rom,size,cb);
 	}
 
 	const instance={addFile, addBook, putField, putEmptyField,
@@ -170,10 +198,14 @@ const createCorpus=function(name,opts){
 
 	Object.defineProperty(instance,"tPos",{ get:()=>tPos});
 	Object.defineProperty(instance,"kPos",{ get:()=>LineKStart+LineKCount});
+	Object.defineProperty(instance,"kPosH",{ get:()=>Ksanapos.stringify(LineKStart+LineKCount,addressPattern)});
 	Object.defineProperty(instance,"fileCount",{ get:()=>filecount});
 	Object.defineProperty(instance,"bookCount",{ get:()=>bookcount});
 	Object.defineProperty(instance,"addressPattern",{ get:()=>addressPattern});
 	Object.defineProperty(instance,"totalPosting",{ get:()=>totalPosting});
+	Object.defineProperty(instance,"started",{ get:()=>started});
+	Object.defineProperty(instance,"disorderPages",{ get:()=>disorderPages});
+	Object.defineProperty(instance,"longLines",{ get:()=>longLines});
 
 	if (opts.inputformat==="xml") {
 		instance.setHandlers=setHandlers;

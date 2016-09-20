@@ -54,7 +54,6 @@ var pack_int = function (ar, savedelta) { // pack ar into
   return r;
 }
 var Kfs=function(path,opts) {
-	
 	var handle=null;
 	opts=opts||{};
 	opts.size=opts.size||65536*2048; 
@@ -133,7 +132,7 @@ var Kfs=function(path,opts) {
 		else if (unitsize===4)var func=dbuf.writeInt32BE;
 		else throw 'unsupported integer size';
 		if (!value.length) {
-			throw "empty fixed array "+key_writing;
+			throw 'empty fixed array"'+key_writing+'"';
 		}
 		for (var i = 0; i < value.length ; i++) {
 			try {
@@ -363,6 +362,7 @@ var Create=function(path,opts) {
 		opts=opts||{};
 		
 		if (typeof J=="null" || typeof J=="undefined") {
+			debugger;
 			throw 'cannot save null value of ['+key+'] folders'+JSON.stringify(folders);
 			return;
 		}
@@ -386,6 +386,10 @@ var Create=function(path,opts) {
 			} else {
 				openArray(key);
 				for (var i=0;i<J.length;i++) {
+					if (!J[i]) {
+						console.error(J);
+						throw "array has gap at "+i;
+					}
 					save(J[i],null,opts);
 					if (opts.autodelete) delete J[i];
 				}

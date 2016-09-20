@@ -29,21 +29,21 @@ const Romable=function(opts){
 		return fields;
 	}
 	const putLine=function(line,kpos){
-		var parts=Ksanapos.unpack(kpos,this.addressPattern);
-		var levels=[],i;
-		for (i=0;i<parts.length-1;i++){//drop ch
-			if (i && !this.addressPattern.bits[i]) continue;
+		var p=Ksanapos.unpack(kpos,this.addressPattern);
+		
+		if (!texts[p[0]])texts[p[0]]=[];
+		if (!texts[p[0]][p[1]])texts[p[0]][p[1]]=[];
 
-			levels.push(parts[i]);
+		const thispage=p[1];
+		var prevpage=thispage-1;
+		while (prevpage>0 && !texts[p[0]][prevpage]) {
+			texts[p[0]][prevpage--]=[" "]; //fill up the empty page with pseudo line
 		}
-		storepoint=texts;
-		for (i=0;i<levels.length-1;i++){
-			if (!storepoint[ levels[i] ]) {
-				storepoint[ levels[i] ]=[];
-			}
-			storepoint=storepoint[ levels[i] ];
+		if (!line && !p[2]) line=" ";//first line cannot empty, array might have one item only, causing total len=0
+		if (line && p[2] && texts[p[0]][p[1]][0]==" ") {
+			texts[p[0]][p[1]][0]="";//set first line to empty if more than one item
 		}
-		storepoint[levels[levels.length-1]]=line;
+		texts[p[0]][p[1]][p[2]]=line;
 	}
 	//;inepos array is 2 dimensional, book+page*col*line
 	//core structure for TPos from/to KPos
@@ -64,7 +64,6 @@ const Romable=function(opts){
 	const getTexts=function(){
 		return texts;
 	}
-
 
 	const finalizeLinePos=function(){
 		//fill up the gap with previous value,
@@ -97,6 +96,7 @@ const Romable=function(opts){
 		var i,j;
 		for (i in fields) {
 			var pos=[], value=[], field=fields[i];
+			field.sort((a,b)=>a[0]-b[0]); //make sure kpos is in order
 			for (j=0;j<field.length;j++){
 				pos.push(field[j][0]);
 				if (field[j][1]) value.push(field[j][1]);
@@ -104,7 +104,6 @@ const Romable=function(opts){
 			fields[i]={pos};
 			if (value.length) fields[i].value=value;
 		}
-
 		return fields;
 	}
 

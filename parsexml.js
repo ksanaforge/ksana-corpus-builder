@@ -13,7 +13,7 @@ var addContent=function(content,name){
 	var corpus=this;
 	corpus.content=content;
 	parser.ontext=function(t){
-		corpus.addText(t);
+			corpus.addText(t);			
 	}
 	parser.onopentag=function(tag){
 		tagstack.push(tag);
@@ -30,9 +30,7 @@ var addContent=function(content,name){
 		corpus.position=this.position;
 		handler&&handler.call(corpus,tag,true);
 	}	
-	this.otherhandlers.fileStart&&this.otherhandlers.fileStart.call(corpus);
 	parser.write(content);
-	this.otherhandlers.fileEnd&&this.otherhandlers.fileEnd.call(corpus);
 }
 var addFile=function(fn){
 	var content=fs.readFileSync(fn,"utf8").replace(/\r?\n/);

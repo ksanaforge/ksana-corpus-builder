@@ -1,10 +1,10 @@
 /* output to kdb format*/
 const Kdbw=require("./kdbw");
 
-const write=function(fn,rom,finishcb){
-	var kdbw=Kdbw(fn);
+const write=function(fn,rom,size,finishcb){
+	var kdbw=Kdbw(fn,{size});
 		
-		//TODO remove kdbw dependency in corpus
+	//TODO remove kdbw dependency in corpus
 	kdbw.save(rom,null);//,{autodelete:true}
 
 	kdbw.writeFile(fn,function(total,written) {
