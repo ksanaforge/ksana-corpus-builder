@@ -1,4 +1,5 @@
 const Parsexml=require("./parsexml");
+const Parsehtll=require("./parsehtll");
 const Ksanacount=require("ksana-corpus/ksanacount");
 const Ksanapos=require("ksana-corpus/ksanapos");
 const Romable=require("./romable");
@@ -21,7 +22,10 @@ const createCorpus=function(name,opts){
 	var textstack=[""];
 	var romable=Romable({inverted:!opts.textOnly});
 	opts.tokenizerVersion=opts.tokenizerVersion||1;
-	const addressPattern=Ksanapos.buildAddressPattern(opts.bits,opts.column);
+
+	const addressPattern=opts.bitPat?knownPatterns[opts.bitPat]:
+			Ksanapos.buildAddressPattern(opts.bits,opts.column);
+
 	var onBookStart,onBookEnd,onToken, onFileStart, onFileEnd;
 
 	const tokenizer=Tokenizer.createTokenizer(opts.tokenizerVersion);
@@ -35,13 +39,14 @@ const createCorpus=function(name,opts){
 			return;
 		}
 		onFileStart&&onFileStart.call(this,fn,filecount);
-		Parsexml.addFile.call(this,fn);
+		this.parser.addFile.call(this,fn);
 		filecount&&onFileEnd&&onFileEnd.call(this,fn,filecount);
 		filecount++;
 	}
+
 	const setHandlers=function(openhandlers,closehandlers,otherhandlers){
 		otherhandlers=otherhandlers||{};
-		Parsexml.setHandlers.call(this,openhandlers,closehandlers,otherhandlers);
+		this.parser.setHandlers.call(this,openhandlers,closehandlers,otherhandlers);
 		onBookStart=otherhandlers.bookStart;
 		onBookEnd=otherhandlers.bookEnd;
 		onFileStart=otherhandlers.fileStart;
@@ -57,18 +62,19 @@ const createCorpus=function(name,opts){
 		kpos=kpos||this.kPos; //default to current kpos
 		romable.putField(name,null,kpos);	
 	}
-	const addXMLTextNode=function(t){
-		if (!started)return;
+	const addText=function(t){
+		if (!started || !t)return;
 		if (textstack.length==1) {
 			LineKCount+=this.kcount(t);
 			if (LineKCount>addressPattern.maxchar) {
-				var human=Ksanapos.stringify(this.kPos,this.addressPattern);
+				var human=Ksanapos.stringify(this.kPos,addressPattern);
 				longLines.push([this.kPos,human,t]);
-				lineKCount=this.addressPattern.maxchar;
+				lineKCount=addressPattern.maxchar;
 			}
 		}
 		textstack[textstack.length-1]+=t;
 	}
+
 	const popBaseText=function(){
 		const s=textstack.shift();
 		textstack.unshift("");
@@ -95,12 +101,17 @@ const createCorpus=function(name,opts){
 		return Ksanapos.makeKRange(startkpos,endkpos,pat);
 	}
 
+	const nextLine=function(kpos) {//return kpos of nextline ch 0
+		var u=Ksanapos.unpack(kpos,addressPattern);
+		u[2]++;u[3]=0;
+		return Ksanapos.makeKPos(u,addressPattern);
+	}
 	//call newLine on begining of <lb>
 	const newLine=function(kpos,tpos){ //reset Line to a new kpos
 		if (isNaN(kpos)||kpos<0) return;
 		if (prevlinekpos>=kpos ) {
-			var human=Ksanapos.stringify(kpos,this.addressPattern);
-			var prevh=Ksanapos.stringify(prevlinekpos,this.addressPattern);
+			var human=Ksanapos.stringify(kpos,addressPattern);
+			var prevh=Ksanapos.stringify(prevlinekpos,addressPattern);
 			if (opts.randomPage) {
 				disorderPages.push([kpos,human,prevlinekpos,prevh]);
 			} else {
@@ -177,8 +188,9 @@ const createCorpus=function(name,opts){
 	const buildMeta=function(){
 		var meta={date:(new Date()).toString()};
 		meta.versions={tokenizer:tokenizer.version};
-		meta.bits=opts.bits;
-		meta.column=opts.column;
+		meta.bits=addressPattern.bits;
+		if (addressPattern.column) meta.column=addressPattern.column;
+		if (opts.language) meta.language.opts.language;
 		return meta;
 	}
 
@@ -187,14 +199,14 @@ const createCorpus=function(name,opts){
 		var okdb="./outputkdb";
 		const meta=buildMeta();
 		const rom=romable.buildROM(meta);
-		console.log(rom);
 
-		const size=totalTextSize*5;
+		var size=totalTextSize*5;
+		if (size<1000000) size=1000000;
 		require(okdb).write(fn,rom,size,cb);
 	}
-
-	const instance={addFile, addBook, putField, putEmptyField,
-									 makeKPos, makeKRange,	start, romable, stop, writeKDB};
+	const instance={textstack,popText,popBaseText,setHandlers, nextLine,
+		addFile, addText,addBook, putField, putEmptyField, newLine, putLine,
+		makeKPos, makeKRange,	start, romable, stop, writeKDB};
 
 	Object.defineProperty(instance,"tPos",{ get:()=>tPos});
 	Object.defineProperty(instance,"kPos",{ get:()=>LineKStart+LineKCount});
@@ -207,27 +219,29 @@ const createCorpus=function(name,opts){
 	Object.defineProperty(instance,"disorderPages",{ get:()=>disorderPages});
 	Object.defineProperty(instance,"longLines",{ get:()=>longLines});
 
-	if (opts.inputformat==="xml") {
-		instance.setHandlers=setHandlers;
-		instance.textstack=textstack;
-		instance.popText=popText;
-		instance.popBaseText=popBaseText;
-		instance.addText=addXMLTextNode;
-		instance.newLine=newLine;
-		instance.putLine=putLine;
+	if (opts.inputFormat==="xml") {
+		instance.parser=Parsexml;
+	} else if (opts.inputFormat==="htll") {
+		instance.parser=Parsehtll;
+	} else {
+		throw "unsupported input format "+opts.inputFormat;
 	}
 
-	instance.kcount=Ksanacount.cjk;
-	if (opts.language==="classical_chinese") {
-		instance.kcount=Ksanacount.cjk_nopunc;
-	}
+	instance.kcount=Ksanacount.getCounter(opts.language);
 
-	if(opts.autostart){
-		started=true;
-	}
+	if(opts.autoStart) started=true;
 	
 	return instance;
 
 }
+var knownPatterns={
+	"pts":Ksanapos.buildAddressPattern([7,10,6,7]),
+	"taisho":Ksanapos.buildAddressPattern([6,13,5,5],3),
+	"nanchuan":Ksanapos.buildAddressPattern([7,10,4,6])
+}
+const makeKPos=function(book,page,line,character,pat){
+	if (typeof pat==="string") pat=knownPatterns[pat];
+	return Ksanapos.makeKPos([book,page,line,character],pat);
+}
 
-module.exports={createCorpus};
+module.exports={createCorpus,makeKPos,knownPatterns};
