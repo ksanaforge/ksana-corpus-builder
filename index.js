@@ -5,10 +5,9 @@ const Ksanapos=require("ksana-corpus/ksanapos");
 const Romable=require("./romable");
 const Tokenizer=require("ksana-corpus/tokenizer");
 
-const createCorpus=function(name,opts){
+const createCorpus=function(opts){
 	opts=opts||{};
 	const bigrams=opts.bigrams||null;
-
 	var LineKStart=0, //current line starting kpos
 	LineKCount=0, //character count of line line 
 	LineTPos=0, //tPos of begining of current line
@@ -189,6 +188,7 @@ const createCorpus=function(name,opts){
 		var meta={date:(new Date()).toString()};
 		meta.versions={tokenizer:tokenizer.version};
 		meta.bits=addressPattern.bits;
+		meta.name=opts.name;
 		if (addressPattern.column) meta.column=addressPattern.column;
 		if (opts.language) meta.language.opts.language;
 		return meta;

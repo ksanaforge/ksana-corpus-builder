@@ -11,7 +11,7 @@ var addFile=function(fn){
 	addContent.call(this,content,fn);
 }
 var addContent=function(content,name){
-	var i=0,tag="",text="",c,kpos=0;
+	var i=0,tag="",text="",c,kpos=0,linetext;
 	content=this.otherhandlers.onContent?this.otherhandlers.onContent(content):content;
 	while (i<content.length) {
 		c=content[i];
@@ -28,10 +28,13 @@ var addContent=function(content,name){
 			tag="";
 		} else {
 			if (c=="\n") { 
-				const kpos=this.nextLine( this.kPos);
-				this.newLine( kpos ,this.tPos);
 				this.addText(text);
 				text="";
+
+				linetext=this.popBaseText();
+				this.putLine(linetext);
+				const kpos=this.nextLine( this.kPos);
+				this.newLine( kpos ,this.tPos);
 			} else {
 				text+=c;	
 			}
@@ -40,7 +43,7 @@ var addContent=function(content,name){
 	}
 	this.addText(text);
 
-	const linetext=this.popText();
+	linetext=this.popBaseText();
 	this.putLine(linetext);
 
 }
