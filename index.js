@@ -164,6 +164,9 @@ const createCorpus=function(opts){
 		while (s.length && s[s.length-1]==="\n"||s[s.length-1]==="\r") {
 			s=s.substr(0,s.length-1);
 		}
+		while (s[0]==="\n"||s[0]==="\r") {
+			s=s.substr(1);
+		}
 
 		romable.putLine.call(this,s,LineKStart);
 		totalTextSize+=s.length;

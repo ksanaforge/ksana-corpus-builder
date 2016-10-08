@@ -43,7 +43,9 @@ const Romable=function(opts){
 		if (line && p[2] && texts[p[0]][p[1]][0]==" ") {
 			texts[p[0]][p[1]][0]="";//set first line to empty if more than one item
 		}
-		texts[p[0]][p[1]][p[2]]=line;
+		if (!texts[p[0]][p[1]][p[2]]) {
+			texts[p[0]][p[1]][p[2]]=line;
+		}
 	}
 	//;inepos array is 2 dimensional, book+page*col*line
 	//core structure for TPos from/to KPos

@@ -22,7 +22,7 @@ var DT={
 	//kdb start with an object signature,
 	//type a kdb in command prompt shows nothing, avoiding annoying peep
 }
-var key_writing="";//for debugging
+var key_writing=[];//for debugging
 var pack_int = function (ar, savedelta) { // pack ar into
   if (!ar || ar.length === 0) return []; // empty array
   var r = [],
@@ -37,7 +37,7 @@ var pack_int = function (ar, savedelta) { // pack ar into
 		delta -= prev;
 	}
 	if (delta < 0) {
-	  console.trace('negative',prev,ar[i])
+	  console.trace('negative',prev,ar[i],'key:',key_writing)
 	  throw 'negetive';
 	  break;
 	}
@@ -94,7 +94,7 @@ var Kfs=function(path,opts) {
 		var v=value.join('\0');
 		var len=Buffer.byteLength(v, encoding);
 		if (0===len) {
-			throw "empty string array " + key_writing;
+			throw "empty string array " +JSON.stringify(key_writing);
 		}
 		dbuf.write(v,pos+1,len,encoding);
 		if (pos+len+1>cur) cur=pos+len+1;
@@ -132,7 +132,7 @@ var Kfs=function(path,opts) {
 		else if (unitsize===4)var func=dbuf.writeInt32BE;
 		else throw 'unsupported integer size';
 		if (!value.length) {
-			throw 'empty fixed array"'+key_writing+'"';
+			throw 'empty fixed array"'+JSON.stringify(key_writing)+'"';
 		}
 		for (var i = 0; i < value.length ; i++) {
 			try {
@@ -186,7 +186,6 @@ var Create=function(path,opts) {
 	//variable size int, not sorted , good for small ints
 	var saveVInt = function(arr,key) {
 		var start=cur;
-		key_writing=key;
 		cur+=kfs.writeSignature(DT.vint,cur);
 		writeVInt(arr);
 		var written = cur-start;
@@ -195,7 +194,6 @@ var Create=function(path,opts) {
 	}
 	var savePInt = function(arr,key) {
 		var start=cur;
-		key_writing=key;
 		cur+=kfs.writeSignature(DT.pint,cur);
 		writePInt(arr);
 		var written = cur-start;
@@ -224,7 +222,6 @@ var Create=function(path,opts) {
 	}	
 	var saveString = function(value,key,encoding) {
 		encoding=encoding||stringencoding;
-		key_writing=key;
 		var written=kfs.writeString(value,cur,encoding);
 		cur+=written;
 		pushitem(key,written);
@@ -232,7 +229,7 @@ var Create=function(path,opts) {
 	}
 	var saveStringArray = function(arr,key,encoding) {
 		encoding=encoding||stringencoding;
-		key_writing=key;
+		key_writing.push(key);
 		try {
 			var written=kfs.writeStringArray(arr,cur,encoding);
 		} catch(e) {
@@ -240,14 +237,16 @@ var Create=function(path,opts) {
 		}
 		cur+=written;
 		pushitem(key,written);
+		key_writing.pop();
 		return written;
 	}
 	
 	var saveBlob = function(value,key) {
-		key_writing=key;
+		key_writing.push(key);
 		var written=kfs.writeBlob(value,cur);
 		cur+=written;
 		pushitem(key,written);
+		key_writing.pop();
 		return written;
 	}
 
@@ -275,11 +274,11 @@ var Create=function(path,opts) {
 		folders.push(folder);
 	}
 	var openObject = function(key) {
-		key_writing=key;
+		key_writing.push(key);
 		open({type:DT.object,key:key});
 	}
 	var openArray = function(key) {
-		key_writing=key;
+		key_writing.push(key);
 		open({type:DT.array,key:key});
 	}
 	var saveInts=function(arr,key,func) {
@@ -301,6 +300,7 @@ var Create=function(path,opts) {
 		}
 		written=cur-folder.start;
 		pushitem(folder.key,written);
+		key_writing.pop();
 		return written;
 	}
 	
@@ -321,6 +321,10 @@ var Create=function(path,opts) {
 	// quick test if an array is sorted with Fibonacci
 	var isSorted=function(arr) {
 		var a=0,b=1,f=1;
+		//quick check , last value should be more than length
+		//for indexing partial taisho juan
+		if (arr.length>arr[arr.length-1])return false;
+
 		while (f<arr.length ) {
 			f = a+b;
 			if (arr[a]>arr[b]) return false;
