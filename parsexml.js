@@ -20,6 +20,7 @@ var addContent=function(content,name){
 		const handler=corpus.openhandlers[tag.name];
 		corpus.position=this.position;
 		if (handler&&handler.call(corpus,tag)) {
+		//handler return true. capturing the text
 			corpus.textstack.push("");
 		}
 	}

@@ -39,6 +39,7 @@ const createCorpus=function(opts){
 		}
 		onFileStart&&onFileStart.call(this,fn,filecount);
 		this.parser.addFile.call(this,fn);
+		this.putLine(this.popBaseText());
 		filecount&&onFileEnd&&onFileEnd.call(this,fn,filecount);
 		filecount++;
 	}
