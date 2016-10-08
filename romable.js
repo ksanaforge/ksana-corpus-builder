@@ -109,14 +109,13 @@ const Romable=function(opts){
 //convert to column base single item array
 //kpos use vint and make use of stringarray
 	const finalizeFields=function(){
-		debugger;
 		var i,j,k,f;
 		for (i in fields) {
 			var pos=[], value=[], field=fields[i];
 
 			if (typeof field[0][0]==="object") { //book field
 				for (k in field) {
-					f=field[k];
+					f=field[k]; pos=[],value=[];
 					f.sort(function(a,b){return a[0]-b[0]}); //make sure kpos is in order
 					for (j=0;j<f.length;j++){
 						pos.push(f[j][0]);
