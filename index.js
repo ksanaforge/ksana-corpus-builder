@@ -58,10 +58,22 @@ const createCorpus=function(opts){
 		kpos=kpos||this.kPos; //default to current kpos
 		romable.putField(name,value,kpos);
 	}
+	const putBookField=function(name,value,kpos){
+		kpos=kpos||this.kPos; //default to current kpos
+		const p=Ksanapos.unpack(kpos,this.addressPattern);
+		romable.putField(name,value,kpos,p[0]);
+	}
+
 	const putEmptyField=function(name,kpos){
 		kpos=kpos||this.kPos; //default to current kpos
 		romable.putField(name,null,kpos);	
 	}
+	const putEmptyBookField=function(name,kpos){
+		kpos=kpos||this.kPos; //default to current kpos
+		const p=Ksanapos.unpack(kpos,this.addressPattern);
+		romable.putField(name,null,kpos,p[0]);	
+	}
+
 	const addText=function(t){
 		if (!started || !t)return;
 		if (textstack.length==1) {
@@ -209,19 +221,21 @@ const createCorpus=function(opts){
 		require(okdb).write(fn,rom,size,cb);
 	}
 	const instance={textstack,popText,popBaseText,setHandlers, nextLine,
-		addFile, addText,addBook, putField, putEmptyField, newLine, putLine,
+		addFile, addText,addBook, putField, putEmptyField, 
+		putBookField,putEmptyBookField,
+		newLine, putLine,
 		makeKPos, makeKRange,	start, romable, stop, writeKDB};
 
-	Object.defineProperty(instance,"tPos",{ get:()=>tPos});
-	Object.defineProperty(instance,"kPos",{ get:()=>LineKStart+LineKCount});
-	Object.defineProperty(instance,"kPosH",{ get:()=>Ksanapos.stringify(LineKStart+LineKCount,addressPattern)});
-	Object.defineProperty(instance,"fileCount",{ get:()=>filecount});
-	Object.defineProperty(instance,"bookCount",{ get:()=>bookcount});
-	Object.defineProperty(instance,"addressPattern",{ get:()=>addressPattern});
-	Object.defineProperty(instance,"totalPosting",{ get:()=>totalPosting});
-	Object.defineProperty(instance,"started",{ get:()=>started});
-	Object.defineProperty(instance,"disorderPages",{ get:()=>disorderPages});
-	Object.defineProperty(instance,"longLines",{ get:()=>longLines});
+	Object.defineProperty(instance,"tPos",{ get:function(){return tPos}});
+	Object.defineProperty(instance,"kPos",{ get:function(){return LineKStart+LineKCount}});
+	Object.defineProperty(instance,"kPosH",{ get:function(){return Ksanapos.stringify(LineKStart+LineKCount,addressPattern)}});
+	Object.defineProperty(instance,"fileCount",{ get:function(){return filecount}});
+	Object.defineProperty(instance,"bookCount",{ get:function(){return bookcount}});
+	Object.defineProperty(instance,"addressPattern",{ get:function(){return addressPattern}});
+	Object.defineProperty(instance,"totalPosting",{ get:function(){return totalPosting}});
+	Object.defineProperty(instance,"started",{ get:function(){return started}});
+	Object.defineProperty(instance,"disorderPages",{ get:function(){return disorderPages}});
+	Object.defineProperty(instance,"longLines",{ get:function(){return longLines}});
 
 	if (opts.inputFormat==="xml") {
 		instance.parser=Parsexml;

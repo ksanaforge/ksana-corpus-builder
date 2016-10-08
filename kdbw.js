@@ -392,7 +392,7 @@ var Create=function(path,opts) {
 				for (var i=0;i<J.length;i++) {
 					if (!J[i]) {
 						console.error(J);
-						throw "array has gap at "+i;
+						throw "array has gap at "+i+" keys"+JSON.stringify(key_writing);
 					}
 					save(J[i],null,opts);
 					if (opts.autodelete) delete J[i];

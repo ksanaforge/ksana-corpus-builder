@@ -7,13 +7,22 @@ const Romable=function(opts){
 	var token_postings={};
 
 	var rom={texts,fields};
-	const putField=function(name,value,kpos){
+	const putField=function(name,value,kpos,storepoint){
 		if (!fields[name]) fields[name]=[];
-		fields[name].push([kpos,value]);
+		if (typeof storepoint!=="undefined") {
+			if (!fields[name][storepoint]) {
+				fields[name][storepoint]=[];
+			}
+			fields[name][storepoint].push([kpos,value]);
+		} else {
+			fields[name].push([kpos,value]);
+		}
 	}
-	const findField=function(name,kpos){
+	/*
+	const findField=function(name,kpos,storepoint){
 		var out=[];
 		if (!fields[name])return null;
+
 		for (var i=0;i<fields[name].length;i++) {
 			if (fields[name][0]==kpos	) {
 				out.push(fields[name[1]]);
@@ -21,8 +30,13 @@ const Romable=function(opts){
 		}
 		return out;
 	}
-	const getField=function(name){
-		return fields[name];
+	*/
+	const getField=function(name,book){
+		if (typeof book!=="undefined") {
+			return fields[name][book];
+		} else {
+			return fields[name];	
+		}
 	}
 
 	const getFields=function(){
@@ -95,16 +109,31 @@ const Romable=function(opts){
 //convert to column base single item array
 //kpos use vint and make use of stringarray
 	const finalizeFields=function(){
-		var i,j;
+		debugger;
+		var i,j,k,f;
 		for (i in fields) {
 			var pos=[], value=[], field=fields[i];
-			field.sort((a,b)=>a[0]-b[0]); //make sure kpos is in order
-			for (j=0;j<field.length;j++){
-				pos.push(field[j][0]);
-				if (field[j][1]) value.push(field[j][1]);
+
+			if (typeof field[0][0]==="object") { //book field
+				for (k in field) {
+					f=field[k];
+					f.sort(function(a,b){return a[0]-b[0]}); //make sure kpos is in order
+					for (j=0;j<f.length;j++){
+						pos.push(f[j][0]);
+						if (f[j][1]) value.push(f[j][1]);
+					}
+					field[k]={pos};
+					if (value.length) field[k].value=value;
+				}
+			} else {
+				field.sort(function(a,b){return a[0]-b[0]}); //make sure kpos is in order
+				for (j=0;j<field.length;j++){
+					pos.push(field[j][0]);
+					if (field[j][1]) value.push(field[j][1]);
+				}
+				fields[i]={pos};
+				if (value.length) fields[i].value=value;
 			}
-			fields[i]={pos};
-			if (value.length) fields[i].value=value;
 		}
 		return fields;
 	}
