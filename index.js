@@ -138,6 +138,12 @@ const createCorpus=function(opts){
 		LineKCount=0;
 		prevlinekpos=kpos;
 	}
+	const nextLineStart=function(kpos) {//return kpos of beginning of next line
+		const arr=Ksanapos.unpack(kpos,this.addressPattern);
+		arr[2]++;
+		arr[3]=0;
+		return Ksanapos.makeKPos(arr,this.addressPattern);
+	}
 	const putToken=function(tk,type){
 		var j,bi;
 		if (type===TT.PUNC && opts.removePunc) {
@@ -223,7 +229,7 @@ const createCorpus=function(opts){
 	const instance={textstack,popText,popBaseText,setHandlers, nextLine,
 		addFile, addText,addBook, putField, putEmptyField, 
 		putBookField,putEmptyBookField,
-		newLine, putLine,
+		newLine, putLine, nextLineStart,
 		makeKPos, makeKRange,	start, romable, stop, writeKDB};
 
 	Object.defineProperty(instance,"tPos",{ get:function(){return tPos}});
