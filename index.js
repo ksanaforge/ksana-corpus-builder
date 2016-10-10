@@ -226,10 +226,13 @@ const createCorpus=function(opts){
 		if (size<1000000) size=1000000;
 		require(okdb).write(fn,rom,size,cb);
 	}
+	const stringify=function(kpos) {
+		return Ksanapos.stringify(kpos,addressPattern);
+	}
 	const instance={textstack,popText,popBaseText,setHandlers, nextLine,
 		addFile, addText,addBook, putField, putEmptyField, 
 		putBookField,putEmptyBookField,
-		newLine, putLine, nextLineStart,
+		newLine, putLine, nextLineStart, stringify,
 		makeKPos, makeKRange,	start, romable, stop, writeKDB};
 
 	Object.defineProperty(instance,"tPos",{ get:function(){return tPos}});

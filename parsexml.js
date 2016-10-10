@@ -1,11 +1,11 @@
-var sax="sax";
-var fs=require("fs");
-var setHandlers=function(openhandlers,closehandlers,otherhandlers){
+const sax="sax";
+const fs=require("fs");
+const setHandlers=function(openhandlers,closehandlers,otherhandlers){
 	this.openhandlers=openhandlers||{};	
 	this.closehandlers=closehandlers||{};
 	this.otherhandlers=otherhandlers||{};
 }
-var addContent=function(content,name){
+const addContent=function(content,name){
 	const Sax=require("sax");
 	const parser = Sax.parser(true);
 	var tagstack=[];
@@ -22,6 +22,10 @@ var addContent=function(content,name){
 		if (handler&&handler.call(corpus,tag)) {
 		//handler return true. capturing the text
 			corpus.textstack.push("");
+			if (corpus.textstack.length>2) {
+				throw "nested text too depth (2)"+tag.name
+				+JSON.stringify(tag.attributes)+corpus.textstack;
+			}
 		}
 	}
 
@@ -33,7 +37,7 @@ var addContent=function(content,name){
 	}	
 	parser.write(content);
 }
-var addFile=function(fn){
+const addFile=function(fn){
 	var content=fs.readFileSync(fn,"utf8").replace(/\r?\n/);
 	this.filename=fn;
 	addContent.call(this,content,fn);

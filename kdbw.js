@@ -37,7 +37,9 @@ var pack_int = function (ar, savedelta) { // pack ar into
 		delta -= prev;
 	}
 	if (delta < 0) {
-	  console.trace('negative',prev,ar[i],'key:',key_writing)
+		debugger;
+		console.log(ar);
+	  console.trace('negative value at',i,'prev:',prev,'now:',ar[i],'key:',key_writing)
 	  throw 'negetive';
 	  break;
 	}

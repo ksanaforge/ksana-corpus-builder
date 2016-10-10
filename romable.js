@@ -53,9 +53,18 @@ const Romable=function(opts){
 		while (prevpage>0 && !texts[p[0]][prevpage]) {
 			texts[p[0]][prevpage--]=[" "]; //fill up the empty page with pseudo line
 		}
+		
 		if (!line && !p[2]) line=" ";//first line cannot empty, array might have one item only, causing total len=0
+		/*
 		if (line && p[2] && texts[p[0]][p[1]][0]==" ") {
-			texts[p[0]][p[1]][0]="";//set first line to empty if more than one item
+			texts[p[0]][p[1]][0]=" ";//set first line to empty if more than one item
+		}
+		*/
+		var prev=p[2]-1;
+		//prevent gap in array.
+		while (prev>=0 && !texts[p[0]][p[1]][prev]) {
+			texts[p[0]][p[1]][prev]=" ";
+			prev--;
 		}
 		if (!texts[p[0]][p[1]][p[2]]) {
 			texts[p[0]][p[1]][p[2]]=line;
@@ -116,10 +125,11 @@ const Romable=function(opts){
 			if (typeof field[0][0]==="object") { //book field
 				for (k in field) {
 					f=field[k]; pos=[],value=[];
+					const hasvalue=typeof f[0][1]!=="undefined";
 					f.sort(function(a,b){return a[0]-b[0]}); //make sure kpos is in order
 					for (j=0;j<f.length;j++){
 						pos.push(f[j][0]);
-						if (f[j][1]) value.push(f[j][1]);
+						if (hasvalue) value.push(f[j][1]);
 					}
 					field[k]={pos};
 					if (value.length) field[k].value=value;
