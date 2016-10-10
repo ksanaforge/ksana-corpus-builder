@@ -118,15 +118,18 @@ const Romable=function(opts){
 //convert to column base single item array
 //kpos use vint and make use of stringarray
 	const finalizeFields=function(){
-		var i,j,k,f;
+		var i,j,k,f,hasvalue;
 		for (i in fields) {
 			var pos=[], value=[], field=fields[i];
 
 			if (typeof field[0][0]==="object") { //book field
 				for (k in field) {
 					f=field[k]; pos=[],value=[];
-					const hasvalue=typeof f[0][1]!=="undefined";
-					f.sort(function(a,b){return a[0]-b[0]}); //make sure kpos is in order
+					hasvalue=f[0][1]!==null;
+					f.sort(function(a,b){
+						return a[0]===b[0]?(a[1]-b[1]):a[0]-b[0];
+					}); //make sure kpos and value is sorted,
+					//sort value is kpos is the same
 					for (j=0;j<f.length;j++){
 						pos.push(f[j][0]);
 						if (hasvalue) value.push(f[j][1]);
@@ -135,10 +138,11 @@ const Romable=function(opts){
 					if (value.length) field[k].value=value;
 				}
 			} else {
-				field.sort(function(a,b){return a[0]-b[0]}); //make sure kpos is in order
+				hasvalue=field[0][1]!==null;
+				field.sort(function(a,b){return a[0]===b[0]?(a[1]-b[1]):a[0]-b[0]}); //make sure kpos is in order
 				for (j=0;j<field.length;j++){
 					pos.push(field[j][0]);
-					if (field[j][1]) value.push(field[j][1]);
+					if (hasvalue) value.push(field[j][1]);
 				}
 				fields[i]={pos};
 				if (value.length) fields[i].value=value;
