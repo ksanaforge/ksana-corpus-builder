@@ -257,8 +257,10 @@ var Create=function(path,opts) {
 		var folder=folders[folders.length-1];	
 		if (!folder) return ;
 		folder.itemslength.push(written);
-		if (key) {
-			if (!folder.keys) throw 'cannot have key in array';
+		if (typeof key=="string") {
+			if (!folder.keys) {
+				throw 'cannot have key in array';
+			}
 			folder.keys.push(key);
 		}
 	}	
@@ -396,7 +398,7 @@ var Create=function(path,opts) {
 						console.error(J);
 						throw "array has gap at "+i+" keys"+JSON.stringify(key_writing);
 					}
-					save(J[i],null,opts);
+					save(J[i],i,opts);
 					if (opts.autodelete) delete J[i];
 				}
 				close();
