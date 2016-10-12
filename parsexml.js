@@ -13,7 +13,8 @@ const addContent=function(content,name){
 	var corpus=this;
 	corpus.content=content;
 	parser.ontext=function(t){
-			corpus.addText(t);			
+		if (!t||t=="undefined")return;
+		corpus.addText(t);			
 	}
 	parser.onopentag=function(tag){
 		tagstack.push(tag);
@@ -37,8 +38,9 @@ const addContent=function(content,name){
 	}	
 	parser.write(content);
 }
-const addFile=function(fn){
-	var content=fs.readFileSync(fn,"utf8").replace(/\r?\n/);
+const addFile=function(fn,encoding){
+	//remove bom
+	var content=fs.readFileSync(fn,encoding).replace(/\r?\n/).trim();
 	this.filename=fn;
 	addContent.call(this,content,fn);
 }

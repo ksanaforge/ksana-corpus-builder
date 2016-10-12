@@ -4,7 +4,7 @@ const Ksanacount=require("ksana-corpus/ksanacount");
 const Ksanapos=require("ksana-corpus/ksanapos");
 const Romable=require("./romable");
 const Tokenizer=require("ksana-corpus/tokenizer");
-
+const knownPatterns=require("./knownpatterns");
 const createCorpus=function(opts){
 	opts=opts||{};
 	const bigrams=opts.bigrams||null;
@@ -21,7 +21,7 @@ const createCorpus=function(opts){
 	var textstack=[""];
 	var romable=Romable({inverted:!opts.textOnly});
 	opts.tokenizerVersion=opts.tokenizerVersion||1;
-
+	
 	const addressPattern=opts.bitPat?knownPatterns[opts.bitPat]:
 			Ksanapos.buildAddressPattern(opts.bits,opts.column);
 
@@ -38,7 +38,7 @@ const createCorpus=function(opts){
 			return;
 		}
 		onFileStart&&onFileStart.call(this,fn,filecount);
-		this.parser.addFile.call(this,fn);
+		this.parser.addFile.call(this,fn,opts.encoding||"utf8");
 		this.putLine(this.popBaseText());
 		filecount&&onFileEnd&&onFileEnd.call(this,fn,filecount);
 		filecount++;
@@ -75,8 +75,9 @@ const createCorpus=function(opts){
 	}
 
 	const addText=function(t){
-		if (!started || !t)return;
-		if (textstack.length==1) {
+		if (!t)return;
+
+		if (textstack.length==1 && started) {
 			LineKCount+=this.kcount(t);
 			if (LineKCount>addressPattern.maxchar) {
 				var human=Ksanapos.stringify(this.kPos,addressPattern);
@@ -98,7 +99,14 @@ const createCorpus=function(opts){
 		return s;
 	}
 	const addBook=function(){
-		bookcount&&onBookEnd&&onBookEnd.call(this,bookcount);
+		if (bookcount){
+			//store last line
+			var s=this.popBaseText();
+			if (s[s.length-1]=="\n") s=s.substr(0,s.length-1);//dirty
+			if (s) this.putLine(s);
+			onBookEnd &&onBookEnd.call(this,bookcount);
+		}
+
 		romable.putBookPos.call(this,bookcount,tPos);
 		bookcount++;
 		onBookStart&&onBookStart.call(this,bookcount);
@@ -199,6 +207,7 @@ const createCorpus=function(opts){
 
 	const start=function(){
 		started=true;
+		return this.popText();
 	}
 
 	const stop=function(){
@@ -221,6 +230,7 @@ const createCorpus=function(opts){
 		var okdb="./outputkdb";
 		const meta=buildMeta();
 		const rom=romable.buildROM(meta);
+		console.log(rom)
 
 		var size=totalTextSize*5;
 		if (size<1000000) size=1000000;
@@ -229,9 +239,11 @@ const createCorpus=function(opts){
 	const stringify=function(kpos) {
 		return Ksanapos.stringify(kpos,addressPattern);
 	}
+	const lb=require("./handlers").lb;
+	const handlers={lb};
 	const instance={textstack,popText,popBaseText,setHandlers, nextLine,
 		addFile, addText,addBook, putField, putEmptyField, 
-		putBookField,putEmptyBookField,
+		putBookField,putEmptyBookField,handlers,
 		newLine, putLine, nextLineStart, stringify,
 		makeKPos, makeKRange,	start, romable, stop, writeKDB};
 
@@ -261,11 +273,7 @@ const createCorpus=function(opts){
 	return instance;
 
 }
-var knownPatterns={
-	"pts":Ksanapos.buildAddressPattern([7,10,6,7]),
-	"taisho":Ksanapos.buildAddressPattern([6,13,5,5],3),
-	"nanchuan":Ksanapos.buildAddressPattern([7,10,4,6])
-}
+
 const makeKPos=function(book,page,line,character,pat){
 	if (typeof pat==="string") pat=knownPatterns[pat];
 	return Ksanapos.makeKPos([book,page,line,character],pat);
