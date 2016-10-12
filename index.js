@@ -1,4 +1,5 @@
 const Parsexml=require("./parsexml");
+const Parseaccelon3=require("./parseaccelon3");
 const Parsehtll=require("./parsehtll");
 const Ksanacount=require("ksana-corpus/ksanacount");
 const Ksanapos=require("ksana-corpus/ksanapos");
@@ -135,6 +136,7 @@ const createCorpus=function(opts){
 			if (opts.randomPage) {
 				disorderPages.push([kpos,human,prevlinekpos,prevh]);
 			} else {
+				console.error("line",this.parser.line());
 				throw "line kpos must be larger the previous one. kpos:"+
 				human+"prev "+prevh;
 			}
@@ -260,8 +262,13 @@ const createCorpus=function(opts){
 
 	if (opts.inputFormat==="xml") {
 		instance.parser=Parsexml;
+		instance.parser.setOptions(opts);
+	} else if (opts.inputFormat==="accelon3") {
+		instance.parser=Parseaccelon3;
+		instance.parser.setOptions(opts);
 	} else if (opts.inputFormat==="htll") {
 		instance.parser=Parsehtll;
+		instance.parser.setOptions(opts);
 	} else {
 		throw "unsupported input format "+opts.inputFormat;
 	}

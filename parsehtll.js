@@ -4,6 +4,9 @@ var setHandlers=function(openhandlers,closehandlers,otherhandlers){
 	this.closehandlers=closehandlers||{};
 	this.otherhandlers=otherhandlers||{};
 }
+const setOptions=function(opts){
+
+}
 
 var addFile=function(fn){
 	var content=fs.readFileSync(fn,"utf8").replace(/\r?\n/g,"\n");
@@ -48,4 +51,4 @@ var addContent=function(content,name){
 
 }
 
-module.exports={addFile,addContent,setHandlers};
+module.exports={addFile,addContent,setHandlers,setOptions};

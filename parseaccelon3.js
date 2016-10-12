@@ -1,16 +1,29 @@
-const Sax=require("sax");
+/*
+	convert accelon3 format
+*/
+const sax="sax";
 const fs=require("fs");
-var parser;
+const format=require("./accelon3handler/format");
+const note=require("./accelon3handler/note");
+const prolog=require("./accelon3handler/prolog");
+var defaultopenhandlers={段:format.p,p:format.p,
+	頁:format.pb,註:note.ptr,釋:note.def};
+const defaultclosehandlers={釋:note.def};
+const setOptions=function(opts){
+	if (opts.articleTag) {
+		defaultopenhandlers[opts.articleTag]=format.article;
+		defaultclosehandlers[opts.articleTag]=format.article;
+	}
+}
 const setHandlers=function(openhandlers,closehandlers,otherhandlers){
-	this.openhandlers=openhandlers||{};	
-	this.closehandlers=closehandlers||{};
+
+	this.openhandlers=Object.assign(openhandlers||{},defaultopenhandlers);	
+	this.closehandlers=Object.assign(closehandlers||{},defaultclosehandlers);	
 	this.otherhandlers=otherhandlers||{};
 }
-const setOptions=function(opts){
-
-}
 const addContent=function(content,name){
-	parser = Sax.parser(true);
+	const Sax=require("sax");
+	const parser = Sax.parser(true);
 	var tagstack=[];
 	
 	var corpus=this;
@@ -22,6 +35,7 @@ const addContent=function(content,name){
 	parser.onopentag=function(tag){
 		tagstack.push(tag);
 		const handler=corpus.openhandlers[tag.name];
+		prolog.call(this,tag,parser);
 		var capture=false;
 		corpus.position=this.position;
 		if (handler&&handler.call(corpus,tag)) {
@@ -33,7 +47,7 @@ const addContent=function(content,name){
 			corpus.textstack.push("");
 			if (corpus.textstack.length>2) {
 				throw "nested text too depth (2)"+tag.name
-				+JSON.stringify(tag.attributes)+"line:"+parser.line;
+				+JSON.stringify(tag.attributes)+corpus.textstack;
 			}			
 		}
 	}
@@ -56,7 +70,5 @@ const addFile=function(fn,encoding){
 	this.filename=fn;
 	addContent.call(this,content,fn);
 }
-const line=function(){
-	return parser.line;
-}
-module.exports={addFile,addContent,setHandlers,setOptions,line};
+
+module.exports={addFile,addContent,setHandlers,setOptions};
