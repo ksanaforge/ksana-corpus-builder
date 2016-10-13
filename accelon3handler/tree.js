@@ -4,8 +4,8 @@ var ignoretags={頁:true,段:true,註:true,
 	釋:true,RM:true,RN:true,P:true,PB:true,圖:true,IMAGE:true,IMG:true,
 	圖文字:true,
 };
-const prolog=function(tag,saxparser){
-	if (ignoretags[tag.name])return -1;
+const prolog=function(tag,parser){
+	if (ignoretags[tag.name])return treetag;
 	var t=tag.attributes.t,l=tag.attributes.l;
 	var stoping=false;
 	var tags=[];
@@ -30,12 +30,12 @@ const prolog=function(tag,saxparser){
 	if (tags){
 		for (var i=0;i<tags.length;i++) knowntag[tags[i]]=true;		
 	}
+
 	const depth=treetag.indexOf(tag.name);
 	if (depth==-1 &&!knowntag[tag.name]) {
-		console.warn("unknown tag",tag.name,"at line",saxparser.line,"column",saxparser.line);
+		console.warn("unknown tag",tag.name,"at line",parser.line);
 	}
-
-	return depth;
+	return treetag;
 }
 
 

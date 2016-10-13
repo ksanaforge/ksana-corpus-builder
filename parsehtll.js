@@ -4,16 +4,14 @@ var setHandlers=function(openhandlers,closehandlers,otherhandlers){
 	this.closehandlers=closehandlers||{};
 	this.otherhandlers=otherhandlers||{};
 }
-const setOptions=function(opts){
 
-}
-
-var addFile=function(fn){
+var addFile=function(fn,opts){
+	const encoding=opts.encoding||"utf8";
 	var content=fs.readFileSync(fn,"utf8").replace(/\r?\n/g,"\n");
 	this.filename=fn;
-	addContent.call(this,content,fn);
+	addContent.call(this,content,fn,opts);
 }
-var addContent=function(content,name){
+var addContent=function(content,name,opts){
 	var i=0,tag="",text="",c,kpos=0,linetext;
 	content=this.otherhandlers.onContent?this.otherhandlers.onContent(content):content;
 	while (i<content.length) {
@@ -51,4 +49,4 @@ var addContent=function(content,name){
 
 }
 
-module.exports={addFile,addContent,setHandlers,setOptions};
+module.exports={addFile,addContent,setHandlers};

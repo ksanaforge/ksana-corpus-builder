@@ -1,11 +1,15 @@
-const Parsexml=require("./parsexml");
-const Parseaccelon3=require("./parseaccelon3");
-const Parsehtll=require("./parsehtll");
 const Ksanacount=require("ksana-corpus/ksanacount");
 const Ksanapos=require("ksana-corpus/ksanapos");
 const Romable=require("./romable");
 const Tokenizer=require("ksana-corpus/tokenizer");
 const knownPatterns=require("./knownpatterns");
+
+const parsers={
+	xml:require("./parsexml"),
+	htll:require("./parsehtll"),
+	accelon3:require("./parseaccelon3")
+}
+
 const createCorpus=function(opts){
 	opts=opts||{};
 	const bigrams=opts.bigrams||null;
@@ -39,7 +43,7 @@ const createCorpus=function(opts){
 			return;
 		}
 		onFileStart&&onFileStart.call(this,fn,filecount);
-		this.parser.addFile.call(this,fn,opts.encoding||"utf8");
+		this.parser.addFile.call(this,fn,opts);
 		this.putLine(this.popBaseText());
 		filecount&&onFileEnd&&onFileEnd.call(this,fn,filecount);
 		filecount++;
@@ -222,6 +226,7 @@ const createCorpus=function(opts){
 		meta.versions={tokenizer:tokenizer.version};
 		meta.bits=addressPattern.bits;
 		meta.name=opts.name;
+		if (opts.article) meta.article=opts.article;
 		if (addressPattern.column) meta.column=addressPattern.column;
 		if (opts.language) meta.language.opts.language;
 		return meta;
@@ -260,16 +265,8 @@ const createCorpus=function(opts){
 	Object.defineProperty(instance,"disorderPages",{ get:function(){return disorderPages}});
 	Object.defineProperty(instance,"longLines",{ get:function(){return longLines}});
 
-	if (opts.inputFormat==="xml") {
-		instance.parser=Parsexml;
-		instance.parser.setOptions(opts);
-	} else if (opts.inputFormat==="accelon3") {
-		instance.parser=Parseaccelon3;
-		instance.parser.setOptions(opts);
-	} else if (opts.inputFormat==="htll") {
-		instance.parser=Parsehtll;
-		instance.parser.setOptions(opts);
-	} else {
+	instance.parser=parsers[opts.inputFormat];
+	if (!instance.parser) {
 		throw "unsupported input format "+opts.inputFormat;
 	}
 

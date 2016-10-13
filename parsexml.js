@@ -6,10 +6,7 @@ const setHandlers=function(openhandlers,closehandlers,otherhandlers){
 	this.closehandlers=closehandlers||{};
 	this.otherhandlers=otherhandlers||{};
 }
-const setOptions=function(opts){
-
-}
-const addContent=function(content,name){
+const addContent=function(content,name,opts){
 	parser = Sax.parser(true);
 	var tagstack=[];
 	
@@ -50,8 +47,9 @@ const addContent=function(content,name){
 	}	
 	parser.write(content);
 }
-const addFile=function(fn,encoding){
+const addFile=function(fn,opts){
 	//remove bom
+	const encoding=opts.encoding||"utf8";
 	var content=fs.readFileSync(fn,encoding).replace(/\r?\n/).trim();
 	this.filename=fn;
 	addContent.call(this,content,fn);
@@ -59,4 +57,4 @@ const addFile=function(fn,encoding){
 const line=function(){
 	return parser.line;
 }
-module.exports={addFile,addContent,setHandlers,setOptions,line};
+module.exports={addFile,addContent,setHandlers,line};

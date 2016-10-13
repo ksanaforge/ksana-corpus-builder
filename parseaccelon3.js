@@ -5,45 +5,61 @@ const sax="sax";
 const fs=require("fs");
 const format=require("./accelon3handler/format");
 const note=require("./accelon3handler/note");
-const prolog=require("./accelon3handler/prolog");
+const a3Tree=require("./accelon3handler/tree");
+var parser;
+
 var defaultopenhandlers={段:format.p,p:format.p,
 	頁:format.pb,註:note.ptr,釋:note.def};
 const defaultclosehandlers={釋:note.def};
-const setOptions=function(opts){
-	if (opts.articleTag) {
-		defaultopenhandlers[opts.articleTag]=format.article;
-		defaultclosehandlers[opts.articleTag]=format.article;
-	}
-}
 const setHandlers=function(openhandlers,closehandlers,otherhandlers){
 
 	this.openhandlers=Object.assign(openhandlers||{},defaultopenhandlers);	
 	this.closehandlers=Object.assign(closehandlers||{},defaultclosehandlers);	
 	this.otherhandlers=otherhandlers||{};
 }
-const addContent=function(content,name){
+var tocobj=null;
+const addContent=function(content,name,opts){
+	opts=opts||{};
 	const Sax=require("sax");
-	const parser = Sax.parser(true);
+	parser = Sax.parser(true);
 	var tagstack=[];
 	
 	var corpus=this;
 	corpus.content=content;
+	
+
+	if (opts.article) {
+		defaultopenhandlers[opts.article]=format.article;
+		defaultclosehandlers[opts.article]=format.article;
+	}
+
 	parser.ontext=function(t){
 		if (!t||t=="undefined")return;
-		corpus.addText(t);			
+		corpus.addText(t);
+		if (tocobj) tocobj.text+=t;
 	}
 	parser.onopentag=function(tag){
+		var capturing=false;
 		tagstack.push(tag);
 		const handler=corpus.openhandlers[tag.name];
-		prolog.call(this,tag,parser);
-		var capture=false;
-		corpus.position=this.position;
-		if (handler&&handler.call(corpus,tag)) {
-			capture=true;
-		} else if (corpus.otherhandlers.onopentag) {
-			capture=corpus.otherhandlers.onopentag.call(corpus,tag);
+		const treetag=a3Tree.call(this,tag,parser);
+	
+		const depth=treetag.indexOf(tag.name);
+
+		if (depth>-1) {
+			if (tocobj) {
+				throw "nested Toc "+tag.name+" line:"+parser.line;
+			}
+			tocobj={tag:tag.name,pos:this.kPos,text:"",depth};
+		} else {
+			if (handler&&handler.call(corpus,tag)) {
+				capturing=true;
+			} else if (corpus.otherhandlers.onopentag) {
+				capturing=corpus.otherhandlers.onopentag.call(corpus,tag);
+			}
 		}
-		if (capture){
+
+		if (capturing){
 			corpus.textstack.push("");
 			if (corpus.textstack.length>2) {
 				throw "nested text too depth (2)"+tag.name
@@ -55,7 +71,13 @@ const addContent=function(content,name){
 	parser.onclosetag=function(tagname){
 		var tag=tagstack.pop();
 		const handler=corpus.closehandlers[tagname];
-		corpus.position=this.position;
+
+		if (tocobj && tagname==tocobj.tag){
+			corpus.putField("tree",tocobj.depth+"\t"+tocobj.text,tocobj.pos);
+			tocobj=null;
+		}
+		
+		//corpus.kPos;
 		if (handler) {
 			handler.call(corpus,tag,true);
 		} else if (corpus.otherhandlers.onclosetag) {
@@ -64,11 +86,14 @@ const addContent=function(content,name){
 	}	
 	parser.write(content);
 }
-const addFile=function(fn,encoding){
+const addFile=function(fn,opts){
 	//remove bom
+	const encoding=opts.encoding||"utf8";
 	var content=fs.readFileSync(fn,encoding).replace(/\r?\n/).trim();
 	this.filename=fn;
-	addContent.call(this,content,fn);
+	addContent.call(this,content,fn,opts);
 }
-
-module.exports={addFile,addContent,setHandlers,setOptions};
+const line=function(){
+	return parser.line;
+}
+module.exports={addFile,addContent,setHandlers};
