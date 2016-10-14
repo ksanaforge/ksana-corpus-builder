@@ -24,14 +24,14 @@ const addContent=function(content,name,opts){
 	const Sax=require("sax");
 	parser = Sax.parser(true);
 	var tagstack=[];
-	var subtree=[], prevtreekpos=0;
+	var subtreeitems=[], prevtreekpos=0;
 	var corpus=this;
 	corpus.content=content;
 	
 
-	if (opts.article) {
-		defaultopenhandlers[opts.article]=format.article;
-		defaultclosehandlers[opts.article]=format.article;
+	if (opts.article && !this.openhandlers[opts.article]) {
+		this.openhandlers[opts.article]=format.article;
+		this.closehandlers[opts.article]=format.article;
 	}
 
 	parser.ontext=function(t){
@@ -40,7 +40,7 @@ const addContent=function(content,name,opts){
 		if (tocobj) tocobj.text+=t;
 	}
 	parser.onopentag=function(tag){
-		var capturing=false;
+		var capturing=false,subtree=0;
 		tagstack.push(tag);
 		const handler=corpus.openhandlers[tag.name];
 		const treetag=a3Tree.call(this,tag,parser);
@@ -48,20 +48,17 @@ const addContent=function(content,name,opts){
 		const depth=treetag.indexOf(tag.name);
 
 		if (depth>-1) {
-			if (tocobj) {
-				throw "nested Toc "+tag.name+" line:"+parser.line;
+			if(tocobj)throw "nested Toc "+tag.name+" line:"+parser.line;
+			if (opts.subtoc) {
+				const subtreerootdepth=treetag.indexOf(opts.subtoc);
+				subtree=depth>subtreerootdepth?subtreerootdepth:0;
 			}
-			var isSubtree=false;
-			if (opts.subTree) {
-				isSubtree=depth>treetag.indexOf(opts.subTree);
-			}
-			tocobj={tag:tag.name,kpos:corpus.kPos,text:"",depth,isSubtree};
-		} else {
-			if (handler&&handler.call(corpus,tag)) {
-				capturing=true;
-			} else if (corpus.otherhandlers.onopentag) {
-				capturing=corpus.otherhandlers.onopentag.call(corpus,tag);
-			}
+			tocobj={tag:tag.name,kpos:corpus.kPos,text:"",depth,subtree};
+		} 
+		if (handler&&handler.call(corpus,tag)) {
+			capturing=true;
+		} else if (corpus.otherhandlers.onopentag) {
+			capturing=corpus.otherhandlers.onopentag.call(corpus,tag);
 		}
 
 		if (capturing){
@@ -78,13 +75,13 @@ const addContent=function(content,name,opts){
 		const handler=corpus.closehandlers[tagname];
 
 		if (tocobj && tagname==tocobj.tag){
-			if (tocobj.isSubtree){
-				subtree.push(encodeSubtreeItem(tocobj));
+			if (tocobj.subtree){
+				subtreeitems.push(encodeSubtreeItem(tocobj));
 			} else {
-				corpus.putField("tree",tocobj.depth+"\t"+tocobj.text,tocobj.kpos);	
-				if (subtree.length){
-					corpus.putField("subtree",subtree,prevtreekpos);
-					subtree=[];	
+				corpus.putField("toc",tocobj.depth+"\t"+tocobj.text,tocobj.kpos);	
+				if (subtreeitems.length){
+					corpus.putField("articletoc",subtreeitems,prevtreekpos);
+					subtreeitems=[];	
 				}
 				prevtreekpos=tocobj.kpos;
 			}
@@ -99,9 +96,7 @@ const addContent=function(content,name,opts){
 		}
 	}	
 	const finalize=function(){
-		if (subtree.length){
-			corpus.putField("subtree",subtree,prevtreekpos);
-		}
+		subtreeitems.length&&corpus.putField("subtree",subtreeitems,prevtreekpos);
 	}
 
 	parser.write(content);
