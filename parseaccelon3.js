@@ -6,6 +6,7 @@ const fs=require("fs");
 const format=require("./accelon3handler/format");
 const note=require("./accelon3handler/note");
 const a3Tree=require("./accelon3handler/tree");
+const encodeSubtreeItem=require("./subtree").encodeSubtreeItem;
 var parser;
 
 var defaultopenhandlers={段:format.p,p:format.p,
@@ -23,7 +24,7 @@ const addContent=function(content,name,opts){
 	const Sax=require("sax");
 	parser = Sax.parser(true);
 	var tagstack=[];
-	
+	var subtree=[], prevtreekpos=0;
 	var corpus=this;
 	corpus.content=content;
 	
@@ -50,7 +51,11 @@ const addContent=function(content,name,opts){
 			if (tocobj) {
 				throw "nested Toc "+tag.name+" line:"+parser.line;
 			}
-			tocobj={tag:tag.name,pos:this.kPos,text:"",depth};
+			var isSubtree=false;
+			if (opts.subTree) {
+				isSubtree=depth>treetag.indexOf(opts.subTree);
+			}
+			tocobj={tag:tag.name,kpos:corpus.kPos,text:"",depth,isSubtree};
 		} else {
 			if (handler&&handler.call(corpus,tag)) {
 				capturing=true;
@@ -73,7 +78,16 @@ const addContent=function(content,name,opts){
 		const handler=corpus.closehandlers[tagname];
 
 		if (tocobj && tagname==tocobj.tag){
-			corpus.putField("tree",tocobj.depth+"\t"+tocobj.text,tocobj.pos);
+			if (tocobj.isSubtree){
+				subtree.push(encodeSubtreeItem(tocobj));
+			} else {
+				corpus.putField("tree",tocobj.depth+"\t"+tocobj.text,tocobj.kpos);	
+				if (subtree.length){
+					corpus.putField("subtree",subtree,prevtreekpos);
+					subtree=[];	
+				}
+				prevtreekpos=tocobj.kpos;
+			}
 			tocobj=null;
 		}
 		
@@ -84,7 +98,14 @@ const addContent=function(content,name,opts){
 			corpus.otherhandlers.onclosetag.call(corpus,tag,true);
 		}
 	}	
+	const finalize=function(){
+		if (subtree.length){
+			corpus.putField("subtree",subtree,prevtreekpos);
+		}
+	}
+
 	parser.write(content);
+	finalize();
 }
 const addFile=function(fn,opts){
 	//remove bom

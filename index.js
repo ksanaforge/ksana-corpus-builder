@@ -13,7 +13,7 @@ const parsers={
 const createCorpus=function(opts){
 	opts=opts||{};
 	const bigrams=opts.bigrams||null;
-	var LineKStart=0, //current line starting kpos
+	var LineKStart=1, //current line starting kpos, kpos start from 1
 	LineKCount=0, //character count of line line 
 	LineTPos=0, //tPos of begining of current line
 	tPos=1,     //current tPos, start from 1
@@ -61,21 +61,21 @@ const createCorpus=function(opts){
 	}
 
 	const putField=function(name,value,kpos){
-		if (typeof kpos=="undefined") kpos=this.kPos;
+		kpos=kpos||this.kPos;
 		romable.putField(name,value,kpos);
 	}
 	const putBookField=function(name,value,kpos){
-		if (typeof kpos=="undefined") kpos=this.kPos;
+		kpos=kpos||this.kPos;
 		const p=Ksanapos.unpack(kpos,this.addressPattern);
 		romable.putField(name,value,kpos,p[0]);
 	}
 
 	const putEmptyField=function(name,kpos){
-		if (typeof kpos=="undefined") kpos=this.kPos;
+		kpos=kpos||this.kPos;
 		romable.putField(name,null,kpos);	
 	}
 	const putEmptyBookField=function(name,kpos){
-		if (typeof kpos=="undefined") kpos=this.kPos;
+		kpos=kpos||this.kPos;
 		const p=Ksanapos.unpack(kpos,this.addressPattern);
 		romable.putField(name,null,kpos,p[0]);	
 	}
@@ -134,7 +134,7 @@ const createCorpus=function(opts){
 	}
 	//call newLine on begining of <lb>
 	const newLine=function(kpos,tpos){ //reset Line to a new kpos
-		if (isNaN(kpos)||kpos<0) return;
+		if (isNaN(kpos)||kpos<1) return;
 		if (prevlinekpos>=kpos ) {
 			var human=Ksanapos.stringify(kpos,addressPattern);
 			var prevh=Ksanapos.stringify(prevlinekpos,addressPattern);
@@ -193,7 +193,7 @@ const createCorpus=function(opts){
 	}
 	//call putLine on end of </lb>
 	const putLine=function(s){
-		if (LineKStart<0) return;//first call to putLine has no effect
+		if (LineKStart<1) return;//first call to putLine has no effect
 		//trim tailing crlf
 		while (s.length && s[s.length-1]==="\n"||s[s.length-1]==="\r") {
 			s=s.substr(0,s.length-1);

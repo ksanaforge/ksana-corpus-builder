@@ -28,7 +28,7 @@ const addContent=function(content,name,opts){
 		}
 		if (capture){
 			corpus.textstack.push("");
-			if (corpus.textstack.length>2) {
+			if (corpus.textstack.length>opts.maxTextStackDepth) {
 				throw "nested text too depth (2)"+tag.name
 				+JSON.stringify(tag.attributes)+"line:"+parser.line;
 			}			
@@ -52,7 +52,7 @@ const addFile=function(fn,opts){
 	const encoding=opts.encoding||"utf8";
 	var content=fs.readFileSync(fn,encoding).replace(/\r?\n/).trim();
 	this.filename=fn;
-	addContent.call(this,content,fn);
+	addContent.call(this,content,fn,opts);
 }
 const line=function(){
 	return parser.line;
