@@ -26,6 +26,7 @@ const createCorpus=function(opts){
 	var textstack=[""];
 	var romable=Romable({inverted:!opts.textOnly});
 	opts.tokenizerVersion=opts.tokenizerVersion||1;
+	opts.maxTextStackDepth=opts.maxTextStackDepth||2;
 	
 	const addressPattern=opts.bitPat?knownPatterns[opts.bitPat]:
 			Ksanapos.buildAddressPattern(opts.bits,opts.column);
@@ -45,7 +46,7 @@ const createCorpus=function(opts){
 		onFileStart&&onFileStart.call(this,fn,filecount);
 		this.parser.addFile.call(this,fn,opts);
 		this.putLine(this.popBaseText());
-		filecount&&onFileEnd&&onFileEnd.call(this,fn,filecount);
+		onFileEnd&&onFileEnd.call(this,fn,filecount);
 		filecount++;
 	}
 
@@ -60,21 +61,21 @@ const createCorpus=function(opts){
 	}
 
 	const putField=function(name,value,kpos){
-		kpos=kpos||this.kPos; //default to current kpos
+		if (typeof kpos=="undefined") kpos=this.kPos;
 		romable.putField(name,value,kpos);
 	}
 	const putBookField=function(name,value,kpos){
-		kpos=kpos||this.kPos; //default to current kpos
+		if (typeof kpos=="undefined") kpos=this.kPos;
 		const p=Ksanapos.unpack(kpos,this.addressPattern);
 		romable.putField(name,value,kpos,p[0]);
 	}
 
 	const putEmptyField=function(name,kpos){
-		kpos=kpos||this.kPos; //default to current kpos
+		if (typeof kpos=="undefined") kpos=this.kPos;
 		romable.putField(name,null,kpos);	
 	}
 	const putEmptyBookField=function(name,kpos){
-		kpos=kpos||this.kPos; //default to current kpos
+		if (typeof kpos=="undefined") kpos=this.kPos;
 		const p=Ksanapos.unpack(kpos,this.addressPattern);
 		romable.putField(name,null,kpos,p[0]);	
 	}
