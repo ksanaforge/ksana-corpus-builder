@@ -34,9 +34,41 @@ const addContent=function(content,name,opts){
 		this.closehandlers[opts.article]=format.article;
 	}
 
+	const addLines=function(s){
+		if( s=="\n" && this._pbline==0) return;//ignore crlf after <pb>
+		var kpos;
+		const lines=s.trim().split("\n");
+		for (var i=0;i<lines.length;i++) {
+			kpos=this.makeKPos(this.bookCount-1,this._pb-1,this._pbline+i,0);
+			if (kpos==-1) {
+				console.log("error kpos",this.bookCount-1,this._pb-1,this._pbline+i);
+			}
+			try{
+				this.newLine(kpos, this.tPos);
+			} catch(e) {
+				console.log(e)
+			}
+			this.putLine(lines[i]);
+		}
+		this._pbline+=lines.length;
+
+		if (this._pbline<this.addressPattern.maxline){
+			kpos=this.makeKPos(this.bookCount-1,this._pb-1,this._pbline,0);
+			this.setPos(kpos,this.tPos);			
+		}
+	}
+
 	parser.ontext=function(t){
 		if (!t||t=="undefined")return;
-		corpus.addText(t);
+
+		if (t.indexOf("\n")==-1) {
+			corpus.addText(t);	
+		} else {
+			var text=corpus.popBaseText(t);
+			text+=t;
+			addLines.call(corpus,text);
+		}
+		
 		if (tocobj) tocobj.text+=t;
 	}
 	parser.onopentag=function(tag){
@@ -112,4 +144,4 @@ const addFile=function(fn,opts){
 const line=function(){
 	return parser.line;
 }
-module.exports={addFile,addContent,setHandlers};
+module.exports={addFile,addContent,setHandlers,line};

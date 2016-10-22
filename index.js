@@ -132,10 +132,19 @@ const createCorpus=function(opts){
 		u[2]++;u[3]=0;
 		return Ksanapos.makeKPos(u,addressPattern);
 	}
+
+	//for xml without lb, call setKPos to set kpos
+	const setPos=function(kpos,tpos){
+		LineKStart=kpos;
+		LineTPos=tpos;
+		LineKCount=0;
+		prevlinekpos=kpos;		
+	}
+
 	//call newLine on begining of <lb>
 	const newLine=function(kpos,tpos){ //reset Line to a new kpos
 		if (isNaN(kpos)||kpos<1) return;
-		if (prevlinekpos>=kpos ) {
+		if (prevlinekpos>kpos ) {
 			var human=Ksanapos.stringify(kpos,addressPattern);
 			var prevh=Ksanapos.stringify(prevlinekpos,addressPattern);
 			if (opts.randomPage) {
@@ -147,11 +156,7 @@ const createCorpus=function(opts){
 			}
 		}
 		romable.putLinePos.call(this,kpos,tpos);
-
-		LineKStart=kpos;
-		LineTPos=tpos;
-		LineKCount=0;
-		prevlinekpos=kpos;
+		setPos(kpos,tpos);
 	}
 	const nextLineStart=function(kpos) {//return kpos of beginning of next line
 		const arr=Ksanapos.unpack(kpos,this.addressPattern);
@@ -252,7 +257,7 @@ const createCorpus=function(opts){
 	const instance={textstack,popText,popBaseText,setHandlers, nextLine,
 		addFile, addText,addBook, putField, putEmptyField, 
 		putBookField,putEmptyBookField,handlers,
-		newLine, putLine, nextLineStart, stringify,
+		setPos, newLine, putLine, nextLineStart, stringify,
 		makeKPos, makeKRange,	start, romable, stop, writeKDB};
 
 	Object.defineProperty(instance,"tPos",{ get:function(){return tPos}});

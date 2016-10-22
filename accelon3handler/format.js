@@ -1,46 +1,28 @@
-var page,prevpage=0,pageKPos=0;
+var prevpage=0;
 const pb=function(tag,closing){
-	const s=this.popBaseText();
-	if (s) {
-		const lines=s.trim().split("\n");
-
-		for (var i=0;i<lines.length;i++) {
-			const kpos=this.makeKPos(this.bookCount-1,prevpage-1,i,0);
-			if (kpos==-1) {
-				console.log("error kpos",this.bookCount-1,prevpage-1,i);
-			}
-			try{
-				this.newLine(kpos, this.tPos);	
-			} catch(e) {
-				debugger;
-				console.log(e)
-			}
-			
-			this.putLine(lines[i]);
-		}
-	}
-
-
 	const n=tag.attributes.id;
 	if (!n || n.indexOf("p")==-1){
 		return;
 	}
 	var pbn=n.split(/[\.p]/);
-	page=parseInt(pbn.length==2?pbn[1]:pbn[0],10);
+	var page=parseInt(pbn.length==2?pbn[1]:pbn[0],10);
 
 	if (page===1) {
 		this.addBook();
 	} else if (page!==prevpage+1) {//newpage
-		debugger;
 		throw "wrong page number "+page+", prev:"+prevpage;		
 	}
+	this._pb=page;
+	this._pbline=0;
+	const kpos=this.makeKPos(this.bookCount-1,page-1,0,0);
+	this.setPos(kpos,this.tPos);
 	prevpage=page;
-	pageKPos=this.makeKPos(this.bookCount-1,page,0,0);
 }
 var maxarticlelen=0, prevtpos=0;
 const article=function(tag,closing){
 	if (closing) {
 		const caption=this.popText();
+		this.addText(caption);
 		this.putField("article",caption,this.wenPos);
 	} else {
 		const tree=tag.attributes.t;
