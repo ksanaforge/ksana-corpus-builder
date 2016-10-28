@@ -1,7 +1,7 @@
 var prevpage=0;
 const lb=function(str_page,str_line,tag){
-	var page=parseInt(str_book,10), line=parseInt(str_page,10)-1;
-	if (isNaN(page)) page=parseInt(str_book.substr(1),10);
+	var page=parseInt(str_page,10), line=parseInt(str_line,10)-1;
+	if (isNaN(page)) page=parseInt(str_page.substr(1),10);
 	if (page<1) {
 		console.log("negative page number, ",tag.name,"n=",tag.attributes.n);
 		throw "negative page number";
@@ -11,12 +11,12 @@ const lb=function(str_page,str_line,tag){
 	var s=this.popBaseText();
 	this.putLine(s);
 
-	if (prevpage!==str_book && page===1) {
+	if (prevpage!==str_page && page===1) {
 		this.addBook();
 	}
 
 	if (isNaN(page)) {
-		throw "error page number "+str_book;
+		throw "error page number "+str_page;
 	}
 	page--;
 	if (this.bookCount){
@@ -26,6 +26,6 @@ const lb=function(str_page,str_line,tag){
 		}
 		this.newLine(kpos, this.tPos);
 	}
-	prevpage=str_book;
+	prevpage=str_page;
 }
 module.exports={lb};

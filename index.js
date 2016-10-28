@@ -25,13 +25,14 @@ const createCorpus=function(opts){
 	var filecount=0, bookcount=0;
 	var textstack=[""];
 	var romable=Romable({inverted:!opts.textOnly});
+	var finalized=false;
 	opts.tokenizerVersion=opts.tokenizerVersion||1;
 	opts.maxTextStackDepth=opts.maxTextStackDepth||2;
 	
 	const addressPattern=opts.bitPat?knownPatterns[opts.bitPat]:
 			Ksanapos.buildAddressPattern(opts.bits,opts.column);
 
-	var onBookStart,onBookEnd,onToken, onFileStart, onFileEnd;
+	var onBookStart,onBookEnd,onToken, onFileStart, onFileEnd, onFinalize;
 
 	const tokenizer=Tokenizer.createTokenizer(opts.tokenizerVersion);
 	const TT=tokenizer.TokenTypes;
@@ -39,6 +40,9 @@ const createCorpus=function(opts){
 	var longLines=[];
 
 	const addFile=function(fn){
+		if (finalized) {
+			throw "cannot add file "+fn+" after finalized";
+		}
 		if (!require("fs").existsSync(fn)) {
 			if (fn.indexOf("#")==-1) console.log("file not found",fn);
 			return;
@@ -58,6 +62,7 @@ const createCorpus=function(opts){
 		onFileStart=otherhandlers.fileStart;
 		onFileEnd=otherhandlers.fileEnd;
 		onToken=otherhandlers.onToken;
+		onFinalize=otherhandlers.finalize;
 	}
 
 	const putField=function(name,value,kpos){
@@ -237,9 +242,14 @@ const createCorpus=function(opts){
 		if (opts.language) meta.language.opts.language;
 		return meta;
 	}
+	const finalize=function(){
+		handlers
+	}
 
 	const writeKDB=function(fn,cb){
 		started&&stop();
+		onFinalize&&onFinalize.call(this);
+		finalized=true;
 		var okdb="./outputkdb";
 		const meta=buildMeta();
 		const rom=romable.buildROM(meta);

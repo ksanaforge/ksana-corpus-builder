@@ -24,7 +24,7 @@ const addContent=function(content,name,opts){
 	const Sax=require("sax");
 	parser = Sax.parser(true);
 	var tagstack=[];
-	var subtreeitems=[], prevtreekpos=0;
+	var subtreeitems=[], subtreekpos=0;
 	var corpus=this;
 	corpus.content=content;
 	
@@ -107,15 +107,16 @@ const addContent=function(content,name,opts){
 		const handler=corpus.closehandlers[tagname];
 
 		if (tocobj && tagname==tocobj.tag){
-			if (tocobj.subtree){
+			if (tocobj.subtree){ //is a subtree
 				subtreeitems.push(encodeSubtreeItem(tocobj));
 			} else {
 				corpus.putField("toc",tocobj.depth+"\t"+tocobj.text,tocobj.kpos);	
 				if (subtreeitems.length){
-					corpus.putField("articletoc",subtreeitems,prevtreekpos);
+					corpus.putField("subtoc",subtreeitems,subtreekpos);
+					corpus.putField("subtoc_range",corpus.kPos,subtreekpos);
 					subtreeitems=[];	
 				}
-				prevtreekpos=tocobj.kpos;
+				subtreekpos=tocobj.kpos;
 			}
 			tocobj=null;
 		}
@@ -128,7 +129,10 @@ const addContent=function(content,name,opts){
 		}
 	}	
 	const finalize=function(){
-		subtreeitems.length&&corpus.putField("subtree",subtreeitems,prevtreekpos);
+		if(subtreeitems.length) {
+			corpus.putField("subtoc",subtreeitems,subtreekpos);
+			corpus.putField("subtoc_range",corpus.kPos,subtreekpos);
+		}
 	}
 
 	parser.write(content);

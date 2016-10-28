@@ -29,8 +29,9 @@ const addContent=function(content,name,opts){
 		if (capture){
 			corpus.textstack.push("");
 			if (corpus.textstack.length>opts.maxTextStackDepth) {
-				throw "nested text too depth (2)"+tag.name
-				+JSON.stringify(tag.attributes)+"line:"+parser.line;
+				throw "nested text too depth "+tag.name
+				+JSON.stringify(tag.attributes)+"line:"+parser.line+
+				corpus.textstack;
 			}			
 		}
 	}

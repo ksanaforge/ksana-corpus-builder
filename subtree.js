@@ -1,5 +1,5 @@
 const encodeSubtreeItem=function(tocobj){
-	return (tocobj.depth-tocobj.subtree)+"\t"+tocobj.text+"\t"+tocobj.kpos.toString(36);
+	return (tocobj.depth-(tocobj.subtree||0))+"\t"+tocobj.text+"\t"+tocobj.kpos.toString(36);
 }
 const decodeSubtreeItem=function(str){
 	const r=str.split("\t");
