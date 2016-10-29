@@ -240,10 +240,8 @@ const createCorpus=function(opts){
 		if (opts.article) meta.article=opts.article;
 		if (addressPattern.column) meta.column=addressPattern.column;
 		if (opts.language) meta.language.opts.language;
+		meta.endpos=LineKStart+LineKCount;
 		return meta;
-	}
-	const finalize=function(){
-		handlers
 	}
 
 	const writeKDB=function(fn,cb){
