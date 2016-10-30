@@ -12,8 +12,13 @@ const parsers={
 
 const createCorpus=function(opts){
 	opts=opts||{};
+
 	const bigrams=opts.bigrams||null;
-	var LineKStart=1, //current line starting kpos, kpos start from 1
+	const addressPattern=opts.bitPat?knownPatterns[opts.bitPat]:
+			Ksanapos.buildAddressPattern(opts.bits,opts.column);
+
+			//start from vol=1, to make range always bigger than pos
+	var LineKStart=Ksanapos.makeKPos([1,0,0,0],addressPattern), 
 	LineKCount=0, //character count of line line 
 	LineTPos=0, //tPos of begining of current line
 	tPos=1,     //current tPos, start from 1
@@ -29,8 +34,6 @@ const createCorpus=function(opts){
 	opts.tokenizerVersion=opts.tokenizerVersion||1;
 	opts.maxTextStackDepth=opts.maxTextStackDepth||2;
 	
-	const addressPattern=opts.bitPat?knownPatterns[opts.bitPat]:
-			Ksanapos.buildAddressPattern(opts.bits,opts.column);
 
 	var onBookStart,onBookEnd,onToken, onFileStart, onFileEnd, onFinalize;
 
@@ -72,7 +75,7 @@ const createCorpus=function(opts){
 	const putBookField=function(name,value,kpos){
 		kpos=kpos||this.kPos;
 		const p=Ksanapos.unpack(kpos,this.addressPattern);
-		romable.putField(name,value,kpos,p[0]);
+		romable.putField(name,value,kpos,p[0]-1);
 	}
 
 	const putEmptyField=function(name,kpos){
@@ -82,7 +85,7 @@ const createCorpus=function(opts){
 	const putEmptyBookField=function(name,kpos){
 		kpos=kpos||this.kPos;
 		const p=Ksanapos.unpack(kpos,this.addressPattern);
-		romable.putField(name,null,kpos,p[0]);	
+		romable.putField(name,null,kpos,p[0]-1);	
 	}
 
 	const addText=function(t){

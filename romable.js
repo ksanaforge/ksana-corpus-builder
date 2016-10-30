@@ -44,31 +44,29 @@ const Romable=function(opts){
 	}
 	const putLine=function(line,kpos){
 		var p=Ksanapos.unpack(kpos,this.addressPattern);
-		
-		if (!texts[p[0]])texts[p[0]]=[];
-		if (!texts[p[0]][p[1]])texts[p[0]][p[1]]=[];
+		const bk=p[0]-1,pg=p[1],ln=p[2];
+		if (!texts[bk])texts[bk]=[];
+		if (!texts[bk][pg])texts[bk][pg]=[];
 
 		const thispage=p[1];
 		var prevpage=thispage-1;
-		while (prevpage>0 && !texts[p[0]][prevpage]) {
-			texts[p[0]][prevpage--]=[" "]; //fill up the empty page with pseudo line
+		while (prevpage>0 && !texts[bk][prevpage]) {
+			texts[bk][prevpage--]=[" "]; //fill up the empty page with pseudo line
 		}
 		
-		if (!line && !p[2]) line=" ";//first line cannot empty, array might have one item only, causing total len=0
+		if (!line && !ln) line=" ";//first line cannot empty, array might have one item only, causing total len=0
 		/*
 		if (line && p[2] && texts[p[0]][p[1]][0]==" ") {
 			texts[p[0]][p[1]][0]=" ";//set first line to empty if more than one item
 		}
 		*/
-		var prev=p[2]-1;
+		var prev=ln-1;
 		//prevent gap in array.
-		while (prev>=0 && !texts[p[0]][p[1]][prev]) {
-			texts[p[0]][p[1]][prev]=" ";
+		while (prev>=0 && !texts[bk][pg][prev]) {
+			texts[bk][pg][prev]=" ";
 			prev--;
 		}
-		if (!texts[p[0]][p[1]][p[2]]) {
-			texts[p[0]][p[1]][p[2]]=line;
-		}
+		texts[bk][pg][ln]=line;
 	}
 	//;inepos array is 2 dimensional, book+page*col*line
 	//core structure for TPos from/to KPos
