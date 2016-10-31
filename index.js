@@ -112,6 +112,9 @@ const createCorpus=function(opts){
 		if (textstack.length==0) textstack.push("");//make sure text stack has at least one entry
 		return s;
 	}
+	const peekText=function(){
+		return textstack[textstack.length-1]||"";
+	}
 	const addBook=function(){
 		if (bookcount){
 			//store last line
@@ -263,9 +266,8 @@ const createCorpus=function(opts){
 	const stringify=function(kpos) {
 		return Ksanapos.stringify(kpos,addressPattern);
 	}
-	const lb=require("./handlers").lb;
-	const handlers={lb};
-	const instance={textstack,popText,popBaseText,setHandlers, nextLine,
+	const handlers=require("./handlers");
+	const instance={textstack,popText,peekText,popBaseText,setHandlers, nextLine,
 		addFile, addText,addBook, putField, putEmptyField, 
 		putBookField,putEmptyBookField,handlers,
 		setPos, newLine, putLine, nextLineStart, stringify,

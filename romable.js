@@ -8,13 +8,14 @@ const Romable=function(opts){
 
 	var rom={texts,fields};
 	const putField=function(name,value,kpos,storepoint){
-		if (!fields[name]) fields[name]=[];
 		if (typeof storepoint!=="undefined") {
+			if (!fields[name]) fields[name]={}; //storepoint as key
 			if (!fields[name][storepoint]) {
 				fields[name][storepoint]=[];
 			}
 			fields[name][storepoint].push([kpos,value]);
 		} else {
+			if (!fields[name]) fields[name]=[];
 			fields[name].push([kpos,value]);
 		}
 	}
@@ -120,8 +121,17 @@ const Romable=function(opts){
 		for (i in fields) {
 			var pos=[], value=[], field=fields[i];
 
-			if (typeof field[0][0]==="object") { //book field
-				for (k in field) {
+			if (field instanceof Array) { 
+				hasvalue=field[0][1]!==null;
+				field.sort(function(a,b){return a[0]===b[0]?(a[1]-b[1]):a[0]-b[0]}); //make sure kpos is in order
+				for (j=0;j<field.length;j++){
+					pos.push(field[j][0]);
+					if (hasvalue) value.push(field[j][1]);
+				}
+				fields[i]={pos};
+				if (value.length) fields[i].value=value;
+			} else {
+				for (k in field) {// per book field
 					f=field[k]; pos=[],value=[];
 					hasvalue=f[0][1]!==null;
 					f.sort(function(a,b){
@@ -135,15 +145,6 @@ const Romable=function(opts){
 					field[k]={pos};
 					if (value.length) field[k].value=value;
 				}
-			} else {
-				hasvalue=field[0][1]!==null;
-				field.sort(function(a,b){return a[0]===b[0]?(a[1]-b[1]):a[0]-b[0]}); //make sure kpos is in order
-				for (j=0;j<field.length;j++){
-					pos.push(field[j][0]);
-					if (hasvalue) value.push(field[j][1]);
-				}
-				fields[i]={pos};
-				if (value.length) fields[i].value=value;
 			}
 		}
 		return fields;
