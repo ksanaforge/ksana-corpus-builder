@@ -44,11 +44,14 @@ var pack_int = function (ar, savedelta) { // pack ar into
 	  break;
 	}
 	
-	r[j++] = delta & 0x7f;
-	delta >>= 7;
+	//r[j++] = delta & 0x7f;
+	r[j++] = delta % 0x80;
+	//delta >>= 7;
+	delta=Math.floor(delta/128);
 	while (delta > 0) {
-	  r[j++] = (delta & 0x7f) | 0x80;
-	  delta >>= 7;
+	  r[j++] = (delta % 0x80) | 0x80;
+	  //delta >>= 7;
+	  delta=Math.floor(delta/128);
 	}
 	prev = ar[i];
 	i++;

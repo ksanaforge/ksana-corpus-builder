@@ -19,19 +19,7 @@ const Romable=function(opts){
 			fields[name].push([kpos,value]);
 		}
 	}
-	/*
-	const findField=function(name,kpos,storepoint){
-		var out=[];
-		if (!fields[name])return null;
 
-		for (var i=0;i<fields[name].length;i++) {
-			if (fields[name][0]==kpos	) {
-				out.push(fields[name[1]]);
-			}
-		}
-		return out;
-	}
-	*/
 	const getField=function(name,book){
 		if (typeof book!=="undefined") {
 			return fields[name][book];
@@ -69,7 +57,7 @@ const Romable=function(opts){
 		}
 		texts[bk][pg][ln]=line;
 	}
-	//;inepos array is 2 dimensional, book+page*col*line
+	//linepos array is 2 dimensional, book+page*col*line
 	//core structure for TPos from/to KPos
 	const putLinePos=function(kpos,tpos){
 		if (!buildInverted)return;
