@@ -257,7 +257,7 @@ const createCorpus=function(opts){
 		var okdb="./outputkdb";
 		const meta=buildMeta();
 		const rom=romable.buildROM(meta);
-		console.log(rom)
+		if (typeof window!=="undefined") console.log(rom);
 
 		var size=totalTextSize*5;
 		if (size<1000000) size=1000000;

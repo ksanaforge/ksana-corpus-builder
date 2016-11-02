@@ -1,4 +1,4 @@
-var prevpage=0;
+var prevpage=0,prevline=0;
 const lb_page_line=function(tag){
 	const n=tag.attributes.n;
 	if (!n || n.indexOf(".")==-1){
@@ -16,12 +16,15 @@ const lb_page_line=function(tag){
 		throw "negative page number";
 		return;
 	}
-
 	var s=this.popBaseText();
 	this.putLine(s);
 
 	if (prevpage!==str_page && page===1) {
 		this.addBook();
+	} else {
+		if (line!=1 && line-prevline>1) {
+			console.log("Gap at page ",page,"line ",line,",previous line",prevline);
+		}
 	}
 
 	if (isNaN(page)) {
@@ -35,6 +38,7 @@ const lb_page_line=function(tag){
 		this.newLine(kpos, this.tPos);
 	}
 	prevpage=str_page;
+	prevline=line;
 }
 var subtreeitems=[];
 var subtreekpos;
