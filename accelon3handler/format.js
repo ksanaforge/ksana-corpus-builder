@@ -23,10 +23,10 @@ const article=function(tag,closing){
 	if (closing) {
 		const caption=this.popText();
 		this.addText(caption);
-		this.putField("article",caption,this.wenPos);
+		this.putField("article",caption,this.articlePos);
 	} else {
 		const tree=tag.attributes.t;
-		this.wenPos=this.kPos;
+		this.articlePos=this.kPos;
 		if (this.tPos-prevtpos>maxarticlelen) maxarticlelen=this.tPos-prevtpos;
 		prevtpos=this.tPos;
 		return true;
