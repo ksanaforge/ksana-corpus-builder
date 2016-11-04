@@ -49,7 +49,7 @@ const head_subtree_finalize=function(){
 
 const encodeSubtreeItem=require("./subtree").encodeSubtreeItem;
 
-const head_subtree=function(tag,closing,depth){
+const head_subtree=function(tag,closing,depth,removetext){
 	if (closing){
 		const text=this.popText();
 
@@ -64,7 +64,7 @@ const head_subtree=function(tag,closing,depth){
 		const tocobj={depth,text,kpos:this.kPos};
 		subtreeitems.push(encodeSubtreeItem(tocobj));
 
-		this.addText(text);
+		if (!removetext) this.addText(text);
 	} else {
 		return true;
 	}
