@@ -245,7 +245,7 @@ const createCorpus=function(opts){
 		meta.name=opts.name;
 		if (opts.article) meta.article=opts.article;
 		if (addressPattern.column) meta.column=addressPattern.column;
-		if (opts.language) meta.language.opts.language;
+		if (opts.language) meta.language=opts.language;
 		meta.endpos=LineKStart+LineKCount;
 		return meta;
 	}
