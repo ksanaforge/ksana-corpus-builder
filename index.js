@@ -29,7 +29,7 @@ const createCorpus=function(opts){
 	var prevlinekpos=-1;
 	var filecount=0, bookcount=0;
 	var textstack=[""];
-	var romable=Romable({inverted:!opts.textOnly});
+	var romable=Romable({inverted:!opts.textOnly,invertAField:opts.invertAField});
 	var finalized=false;
 	opts.tokenizerVersion=opts.tokenizerVersion||1;
 	opts.maxTextStackDepth=opts.maxTextStackDepth||2;
@@ -70,6 +70,7 @@ const createCorpus=function(opts){
 
 	const putField=function(name,value,kpos){
 		kpos=kpos||this.kPos;
+		if (name=="article") throw "use putArticle";
 		romable.putField(name,value,kpos);
 	}
 	const putBookField=function(name,value,kpos){
@@ -88,6 +89,20 @@ const createCorpus=function(opts){
 		romable.putField(name,null,kpos,p[0]);	
 	}
 
+	const putArticleField=function(name,value,kpos){
+		kpos=kpos||this.kPos;
+		romable.putAField(name,value,kpos);
+	}
+
+	const putEmptyArticleField=function(name,kpos){
+		kpos=kpos||this.kPos;
+		romable.putAField(name,null,kpos);
+	}
+
+	const putArticle=function(articlename,kpos){
+		kpos=kpos||this.kPos;
+		romable.putArticle(articlename,kpos);		
+	}
 	const addText=function(t){
 		if (!t)return;
 
@@ -269,6 +284,7 @@ const createCorpus=function(opts){
 	const handlers=require("./handlers");
 	const instance={textstack,popText,peekText,popBaseText,setHandlers, nextLine,
 		addFile, addText,addBook, putField, putEmptyField, 
+		putArticle,putArticleField,putEmptyArticleField,
 		putBookField,putEmptyBookField,handlers,
 		setPos, newLine, putLine, nextLineStart, stringify,
 		makeKPos, makeKRange,	start, romable, stop, writeKDB};

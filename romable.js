@@ -3,10 +3,11 @@ var Ksanapos=require("ksana-corpus/ksanapos");
 const Romable=function(opts){
 	opts=opts||{};
 	const buildInverted=opts.inverted;
-	var fields={},texts=[],line2tpos=[],book2tpos=[];
+	var fields={},afields={},texts=[],line2tpos=[],book2tpos=[];
 	var token_postings={};
+	var articlecount=0;
 
-	var rom={texts,fields};
+	var rom={texts,fields,afields};
 	const putField=function(name,value,kpos,storepoint){
 		if (typeof storepoint!=="undefined") {
 			if (!fields[name]) fields[name]={}; //storepoint as key
@@ -19,6 +20,21 @@ const Romable=function(opts){
 			fields[name].push([kpos,value]);
 		}
 	}
+	const putArticle=function(value,kpos){
+		articlecount++;
+		putField("article",value,kpos);
+	}
+	const putAField=function(name,value,kpos){
+		const a=articlecount-1;
+		if (a<0)return;
+		if (!afields[a]) {
+			afields[a]={};
+		}
+		if (!afields[a][name]) {
+			afields[a][name]=[];
+		}
+		afields[a][name].push([kpos,value]);
+	}
 
 	const getField=function(name,book){
 		if (typeof book!=="undefined") {
@@ -28,8 +44,16 @@ const Romable=function(opts){
 		}
 	}
 
-	const getFields=function(){
-		return fields;
+	const getAField=function(article,name){
+		if (typeof name!=="undefined"){
+			return fields[article][name];	
+		} else {
+			return fields[article];
+		}
+	}
+
+	const getAFields=function(article){
+		return afields;
 	}
 	const putLine=function(line,kpos){
 		var p=Ksanapos.unpack(kpos,this.addressPattern);
@@ -101,6 +125,39 @@ const Romable=function(opts){
 		token_postings={};
 		return {tokens,postings};
 	}
+
+	const invertAField=function(name,value,inverttype){
+		if (inverttype=="range") {
+			putField(name+"_range", value[value.length-1],value[0]);
+		}
+	}
+
+	const finalizeAFields=function(){
+		for (article in afields) {
+			const afield=afields[article];
+
+			for (name in afield) {
+				const field=afield[name];
+				var pos=[],value=[];
+
+				hasvalue=field[0][1]!==null;
+				field.sort(function(a,b){return a[0]===b[0]?(a[1]-b[1]):a[0]-b[0]}); //make sure kpos is in order
+
+				for (j=0;j<field.length;j++){
+					pos.push(field[j][0]);
+					if (hasvalue) value.push(field[j][1]);
+				}
+				afield[name]={pos};
+				if (value.length) afield[name].value=value;
+
+				if(opts.invertAField&&opts.invertAField[name]){
+					invertAField(name,value,opts.invertAField[name]);	
+				}				
+			}
+		}
+		return afields;
+	}
+
 //optimize for jsonrom
 //convert to column base single item array
 //kpos use vint and make use of stringarray
@@ -145,16 +202,23 @@ const Romable=function(opts){
 	}
 
 	const buildROM=function(meta){
+		var afields=finalizeAFields();
 		var fields=finalizeFields();
+		var r={meta,texts};
 		if (buildInverted){
 			var line2tpos=finalizeLinePos();
 			var {tokens,postings}=finalizeTokenPositings();
-			return {meta,texts,fields,inverted:{tokens,postings,line2tpos,book2tpos}};
-		} else {
-			return {meta,texts,fields};
+			r.inverted={tokens,postings,line2tpos,book2tpos};
 		}
+		if (Object.keys(fields).length) r.fields=fields;
+		if (Object.keys(afields).length) r.afields=afields;
+		return r;
 	}
-	return {putLine,putLinePos,putBookPos,putField,
+
+	return {putLine,putLinePos,putBookPos,
+		putArticle,
+		putField,putAField,
+		getAField,getAFields,
 		getField,getField,putToken,buildROM};
 }
 module.exports=Romable;
