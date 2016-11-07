@@ -126,9 +126,10 @@ const Romable=function(opts){
 		return {tokens,postings};
 	}
 
-	const invertAField=function(name,value,inverttype){
-		if (inverttype=="range") {
-			putField(name+"_range", value[value.length-1],value[0]);
+	const invertAField=function(name,pos,value,inverttype){
+		if (inverttype=="startend_unsorted") {
+			putField(name+"_start", value[0],pos[0]);
+			putField(name+"_end", value[value.length-1],pos[pos.length-1]);
 		}
 	}
 
@@ -151,7 +152,7 @@ const Romable=function(opts){
 				if (value.length) afield[name].value=value;
 
 				if(opts.invertAField&&opts.invertAField[name]){
-					invertAField(name,value,opts.invertAField[name]);	
+					invertAField(name,pos,value,opts.invertAField[name]);	
 				}				
 			}
 		}

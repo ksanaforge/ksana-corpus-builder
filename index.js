@@ -261,6 +261,7 @@ const createCorpus=function(opts){
 		if (opts.article) meta.article=opts.article;
 		if (addressPattern.column) meta.column=addressPattern.column;
 		if (opts.language) meta.language=opts.language;
+		if (opts.invertAField) meta.invertAField=opts.invertAField;
 		meta.endpos=LineKStart+LineKCount;
 		return meta;
 	}
