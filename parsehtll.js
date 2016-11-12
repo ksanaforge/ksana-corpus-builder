@@ -11,6 +11,7 @@ var addFile=function(fn,opts){
 	this.filename=fn;
 	addContent.call(this,content,fn,opts);
 }
+var linetext;
 var addContent=function(content,name,opts){
 	var i=0,tag="",text="",c,kpos=0,linetext;
 	content=this.otherhandlers.onContent?this.otherhandlers.onContent(content):content;
@@ -48,5 +49,7 @@ var addContent=function(content,name,opts){
 	this.putLine(linetext);
 
 }
-
-module.exports={addFile:addFile,addContent:addContent,setHandlers:setHandlers};
+const line=function(){
+	return linetext;
+}
+module.exports={addFile:addFile,addContent:addContent,setHandlers:setHandlers,line:line};
