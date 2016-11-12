@@ -49,4 +49,4 @@ var addContent=function(content,name,opts){
 
 }
 
-module.exports={addFile,addContent,setHandlers};
+module.exports={addFile:addFile,addContent:addContent,setHandlers:setHandlers};

@@ -7,7 +7,7 @@ const Romable=function(opts){
 	var token_postings={};
 	var articlecount=0;
 
-	var rom={texts,fields,afields};
+	var rom={texts:texts,fields:fields,afields:afields};
 	const putField=function(name,value,kpos,storepoint){
 		if (typeof storepoint!=="undefined") {
 			if (!fields[name]) fields[name]={}; //storepoint as key
@@ -123,7 +123,7 @@ const Romable=function(opts){
 		var tokens=arr.map(function(item){return item[0]});
 		var postings=arr.map(function(item){return item[1]});
 		token_postings={};
-		return {tokens,postings};
+		return {tokens:tokens,postings:postings};
 	}
 
 	const invertAField=function(name,pos,value,inverttype){
@@ -148,7 +148,7 @@ const Romable=function(opts){
 					pos.push(field[j][0]);
 					if (hasvalue) value.push(field[j][1]);
 				}
-				afield[name]={pos};
+				afield[name]={pos:pos};
 				if (value.length) afield[name].value=value;
 
 				if(opts.invertAField&&opts.invertAField[name]){
@@ -174,7 +174,7 @@ const Romable=function(opts){
 					pos.push(field[j][0]);
 					if (hasvalue) value.push(field[j][1]);
 				}
-				fields[i]={pos};
+				fields[i]={pos:pos};
 				if (value.length) fields[i].value=value;
 			} else {
 				for (k in field) {// per book field
@@ -188,7 +188,7 @@ const Romable=function(opts){
 						pos.push(f[j][0]);
 						if (hasvalue) value.push(f[j][1]);
 					}
-					field[k]={pos};
+					field[k]={pos:pos};
 					if (value.length) field[k].value=value;
 				}
 			}
@@ -203,23 +203,23 @@ const Romable=function(opts){
 	}
 
 	const buildROM=function(meta){
-		var afields=finalizeAFields();
-		var fields=finalizeFields();
-		var r={meta,texts};
+		const afields=finalizeAFields();
+		const fields=finalizeFields();
+		const r={meta:meta,texts:texts};
 		if (buildInverted){
-			var line2tpos=finalizeLinePos();
-			var {tokens,postings}=finalizeTokenPositings();
-			r.inverted={tokens,postings,line2tpos,book2tpos};
+			const line2tpos=finalizeLinePos();
+			const f=finalizeTokenPositings();
+			r.inverted={tokens:f.tokens,postings:f.postings,line2tpos:line2tpos,book2tpos:book2tpos};
 		}
 		if (Object.keys(fields).length) r.fields=fields;
 		if (Object.keys(afields).length) r.afields=afields;
 		return r;
 	}
 
-	return {putLine,putLinePos,putBookPos,
-		putArticle,
-		putField,putAField,
-		getAField,getAFields,
-		getField,getField,putToken,buildROM};
+	return {putLine:putLine,putLinePos:putLinePos,putBookPos:putBookPos,
+		putArticle:putArticle,
+		putField:putField,putAField:putAField,
+		getAField:getAField,getAFields:getAFields,
+		getField:getField,putToken:putToken,buildROM:buildROM};
 }
 module.exports=Romable;

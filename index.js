@@ -270,25 +270,27 @@ const createCorpus=function(opts){
 		started&&stop();
 		onFinalize&&onFinalize.call(this);
 		finalized=true;
-		var okdb="./outputkdb";
+		//var okdb="./outputkdb";
 		const meta=buildMeta();
 		const rom=romable.buildROM(meta);
 		if (typeof window!=="undefined") console.log(rom);
 
 		var size=totalTextSize*5;
 		if (size<1000000) size=1000000;
-		require(okdb).write(fn,rom,size,cb);
+		require("./outputkdb").write(fn,rom,size,cb);
 	}
 	const stringify=function(kpos) {
 		return Ksanapos.stringify(kpos,addressPattern);
 	}
 	const handlers=require("./handlers");
-	const instance={textstack,popText,peekText,popBaseText,setHandlers, nextLine,
-		addFile, addText,addBook, putField, putEmptyField, 
-		putArticle,putArticleField,putEmptyArticleField,
-		putBookField,putEmptyBookField,handlers,
-		setPos, newLine, putLine, nextLineStart, stringify,
-		makeKPos, makeKRange,	start, romable, stop, writeKDB};
+	const instance={textstack:textstack,popText:popText,
+		peekText:peekText,popBaseText:popBaseText,setHandlers:setHandlers, nextLine:nextLine,
+		addFile:addFile, addText:addText,addBook:addBook, 
+		putField:putField, putEmptyField:putEmptyField, 
+		putArticle:putArticle,putArticleField:putArticleField,putEmptyArticleField:putEmptyArticleField,
+		putBookField:putBookField,putEmptyBookField:putEmptyBookField,handlers:handlers,
+		setPos:setPos, newLine:newLine, putLine:putLine, nextLineStart:nextLineStart, stringify:stringify,
+		makeKPos:makeKPos, makeKRange:makeKRange,	start:start, romable:romable, stop:stop, writeKDB:writeKDB};
 
 	Object.defineProperty(instance,"tPos",{ get:function(){return tPos}});
 	Object.defineProperty(instance,"kPos",{ get:function(){return LineKStart+LineKCount}});
@@ -319,4 +321,4 @@ const makeKPos=function(book,page,line,character,pat){
 	return Ksanapos.makeKPos([book,page,line,character],pat);
 }
 
-module.exports={createCorpus,makeKPos,knownPatterns};
+module.exports={createCorpus:createCorpus,makeKPos:makeKPos,knownPatterns:knownPatterns};

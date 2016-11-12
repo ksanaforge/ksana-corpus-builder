@@ -85,7 +85,7 @@ const addContent=function(content,name,opts){
 				const subtreerootdepth=treetag.indexOf(opts.subtoc);
 				subtree=depth>subtreerootdepth?subtreerootdepth:0;
 			}
-			tocobj={tag:tag.name,kpos:corpus.kPos,text:"",depth,subtree};
+			tocobj={tag:tag.name,kpos:corpus.kPos,text:"",depth:depth,subtree:subtree};
 		} 
 		if (handler&&handler.call(corpus,tag)) {
 			capturing=true;
@@ -148,4 +148,4 @@ const addFile=function(fn,opts){
 const line=function(){
 	return parser.line;
 }
-module.exports={addFile,addContent,setHandlers,line};
+module.exports={addFile:addFile,addContent:addContent,setHandlers:setHandlers,line:line};

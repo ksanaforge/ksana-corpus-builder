@@ -15,4 +15,4 @@ const write=function(fn,rom,size,finishcb){
 
 }
 
-module.exports={write};
+module.exports={write:write};

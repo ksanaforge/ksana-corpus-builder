@@ -58,4 +58,4 @@ const addFile=function(fn,opts){
 const line=function(){
 	return parser.line;
 }
-module.exports={addFile,addContent,setHandlers,line};
+module.exports={addFile:addFile,addContent:addContent,setHandlers:setHandlers,line:line};

@@ -61,7 +61,7 @@ const head_subtree=function(tag,closing,depth,removetext){
 			}
 			subtreekpos=this.kPos;
 		}
-		const tocobj={depth,text,kpos:this.kPos};
+		const tocobj={depth:depth,text:text,kpos:this.kPos};
 		subtreeitems.push(encodeSubtreeItem(tocobj));
 
 		if (!removetext) this.addText(text);
@@ -69,4 +69,5 @@ const head_subtree=function(tag,closing,depth,removetext){
 		return true;
 	}
 }
-module.exports={lb_page_line,head_subtree,head_subtree_finalize};
+module.exports={lb_page_line:lb_page_line,head_subtree:head_subtree,
+	head_subtree_finalize:head_subtree_finalize};
