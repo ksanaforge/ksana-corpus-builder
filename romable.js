@@ -3,7 +3,7 @@ var Ksanapos=require("ksana-corpus/ksanapos");
 const Romable=function(opts){
 	opts=opts||{};
 	const buildInverted=opts.inverted;
-	var fields={},afields={},texts=[],line2tpos=[],book2tpos=[];
+	var fields={},afields={},texts=[],line2tpos={},book2tpos=[];
 	var token_postings={};
 	var articlecount=0;
 
@@ -85,11 +85,12 @@ const Romable=function(opts){
 	//core structure for TPos from/to KPos
 	const putLinePos=function(kpos,tpos){
 		if (!buildInverted)return;
-		var parts=Ksanapos.unpack(kpos,this.addressPattern);
-		var book=parts[0];
-		parts[0]=0;
-		var idx=Ksanapos.makeKPos(parts,this.addressPattern);
-		idx=idx/Math.pow(2,this.addressPattern.charbits);
+
+		const C=Math.pow(2,this.addressPattern.charbits);
+		const R=Math.pow(2,this.addressPattern.rangebits);
+		idx=Math.floor((kpos%R)/C);
+		book=Math.floor(kpos/R) ; //book start from 1 and might have gap, use object
+
 		if (!line2tpos[book]) line2tpos[book]=[];
 		line2tpos[book][idx]=tpos;
 	}
@@ -102,13 +103,6 @@ const Romable=function(opts){
 	}
 
 	const finalizeLinePos=function(){
-		//fill up the gap with previous value,
-		//it will be 0 when convert to delta encoding array.
-		var i,prev=line2tpos[0];
-		for (i=1;i<line2tpos.length;i++) {
-			if (!line2tpos[i]) line2tpos[i]=prev;
-			prev=line2tpos[i];
-		}
 		return line2tpos;
 	}
 
@@ -209,7 +203,8 @@ const Romable=function(opts){
 		if (buildInverted){
 			const line2tpos=finalizeLinePos();
 			const f=finalizeTokenPositings();
-			r.inverted={tokens:f.tokens,postings:f.postings,line2tpos:line2tpos,book2tpos:book2tpos};
+			r.inverted={tokens:f.tokens,postings:f.postings,
+				line2tpos:line2tpos,book2tpos:book2tpos};
 		}
 		if (Object.keys(fields).length) r.fields=fields;
 		if (Object.keys(afields).length) r.afields=afields;
