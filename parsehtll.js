@@ -17,7 +17,7 @@ var addContent=function(content,name,opts){
 	content=this.otherhandlers.onContent?this.otherhandlers.onContent(content):content;
 	while (i<content.length) {
 		c=content[i];
-		if (c==="^"||c==="~"||c==="@"||c==="#") {
+		if (c==="~"||c==="@"||c==="#") {
 			this.addText(text);
 			text="";
 			tag+=c;
@@ -26,6 +26,20 @@ var addContent=function(content,name,opts){
 				tag+=c;
 				c=content[++i];
 			}
+
+			this.otherhandlers.onTag?this.otherhandlers.onTag.call(this,tag):null;
+			tag="";
+		} else if (c==="^") {
+			this.addText(text);
+			text="";
+			tag+=c;
+			c=content[++i];
+			while (i<content.length && c!=="\n") {
+				tag+=c;
+				c=content[++i];
+			}
+			if (c=="\n") i++;
+
 			this.otherhandlers.onTag?this.otherhandlers.onTag.call(this,tag):null;
 			tag="";
 		} else {
