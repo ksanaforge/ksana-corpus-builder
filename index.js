@@ -3,6 +3,7 @@ const Ksanapos=require("ksana-corpus/ksanapos");
 const Romable=require("./romable");
 const Tokenizer=require("ksana-corpus/tokenizer");
 const knownPatterns=require("./knownpatterns");
+const builderVersion=20161121;
 
 const parsers={
 	xml:require("./parsexml"),
@@ -50,9 +51,13 @@ const createCorpus=function(opts){
 			if (fn.indexOf("#")==-1) console.log("file not found",fn);
 			return;
 		}
+		this.putArticle(fn); 
+		//make sure each file has at least one article, and not crossing file boundary
+
 		onFileStart&&onFileStart.call(this,fn,filecount);
 		this.parser.addFile.call(this,fn,opts);
 		this.putLine(this.popBaseText());
+
 		onFileEnd&&onFileEnd.call(this,fn,filecount);
 		filecount++;
 	}
@@ -255,13 +260,14 @@ const createCorpus=function(opts){
 
 	const buildMeta=function(){
 		var meta={date:(new Date()).toString()};
-		meta.versions={tokenizer:tokenizer.version};
+		meta.versions={tokenizer:tokenizer.version,builder:builderVersion};
 		meta.bits=addressPattern.bits;
 		meta.name=opts.name;
 		if (opts.article) meta.article=opts.article;
 		if (addressPattern.column) meta.column=addressPattern.column;
 		if (opts.language) meta.language=opts.language;
 		if (opts.invertAField) meta.invertAField=opts.invertAField;
+		if (opts.articleFields) meta.articleFields=opts.articleFields;
 		meta.endpos=LineKStart+LineKCount;
 		return meta;
 	}
