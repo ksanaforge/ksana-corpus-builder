@@ -33,7 +33,7 @@ var pack_int = function (ar, savedelta) { // pack ar into
   prev = 0;
   
   do {
-	delta = ar[i] || prev;
+	delta = ar[i] || prev; //use previous value if undefined (gap in array)
 	if (savedelta) {
 		delta -= prev;
 	}
