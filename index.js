@@ -3,6 +3,7 @@ const Ksanapos=require("ksana-corpus/ksanapos");
 const Romable=require("./romable");
 const Tokenizer=require("ksana-corpus/tokenizer");
 const knownPatterns=require("./knownpatterns");
+const genBigram=require("./genbigram");
 const builderVersion=20161121;
 const createInverted=require("./inverted").createInverted;
 const parsers={
@@ -290,4 +291,5 @@ const makeKPos=function(book,page,line,character,pat){
 	return Ksanapos.makeKPos([book,page,line,character],pat);
 }
 
-module.exports={createCorpus:createCorpus,makeKPos:makeKPos,knownPatterns:knownPatterns};
+module.exports={createCorpus:createCorpus,makeKPos:makeKPos,knownPatterns:knownPatterns
+,genBigram:genBigram};
