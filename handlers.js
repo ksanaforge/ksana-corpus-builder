@@ -35,7 +35,7 @@ const lb_page_line=function(tag){
 		if (kpos==-1) {
 			throw "error lb "+tag.attributes.n;
 		}
-		this.newLine(kpos, this.tPos);
+		this.newLine(kpos);
 	}
 	prevpage=str_page;
 	prevline=line;

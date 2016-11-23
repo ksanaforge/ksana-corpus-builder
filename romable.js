@@ -2,8 +2,7 @@ var Ksanapos=require("ksana-corpus/ksanapos");
 
 const Romable=function(opts){
 	opts=opts||{};
-	const buildInverted=opts.inverted;
-	var fields={},afields={},texts=[],line2tpos={},book2tpos=[];
+	var fields={},afields={},texts=[];
 	var token_postings={};
 	var articlecount=0;
 
@@ -81,43 +80,9 @@ const Romable=function(opts){
 		}
 		texts[bk][pg][ln]=line;
 	}
-	//linepos array is 2 dimensional, book+page*col*line
-	//core structure for TPos from/to KPos
-	const putLinePos=function(kpos,tpos){
-		if (!buildInverted)return;
 
-		const C=Math.pow(2,this.addressPattern.charbits);
-		const R=Math.pow(2,this.addressPattern.rangebits);
-		idx=Math.floor((kpos%R)/C);
-		book=Math.floor(kpos/R) ; //book start from 1 and might have gap, use object
-
-		if (!line2tpos[book]) line2tpos[book]=[];
-		line2tpos[book][idx]=tpos;
-	}
-
-	const putBookPos=function(booknum,tpos){
-		book2tpos[booknum]=tpos;
-	}
 	const getTexts=function(){
 		return texts;
-	}
-
-	const finalizeLinePos=function(){
-		return line2tpos;
-	}
-
-	const finalizeTokenPositings=function(){
-		var arr=[];
-		for (var i in token_postings){
-			arr.push([i,token_postings[i]]);
-		}
-		//sort token alphabetically
-		arr.sort(function(a,b){return (a[0]==b[0])?0:((a[0]>b[0])?1:-1)});
-		
-		var tokens=arr.map(function(item){return item[0]});
-		var postings=arr.map(function(item){return item[1]});
-		token_postings={};
-		return {tokens:tokens,postings:postings};
 	}
 
 	const invertAField=function(name,pos,value,inverttype){
@@ -190,31 +155,24 @@ const Romable=function(opts){
 		return fields;
 	}
 
-	const putToken=function(tk,tpos){
-		if (!buildInverted)return;
-		if (!token_postings[tk]) token_postings[tk]=[];
-		token_postings[tk].push(tpos);
-	}
 
-	const buildROM=function(meta){
+	const buildROM=function(meta,inverted){
 		const afields=finalizeAFields();
 		const fields=finalizeFields();
 		const r={meta:meta,texts:texts};
-		if (buildInverted){
-			const line2tpos=finalizeLinePos();
-			const f=finalizeTokenPositings();
-			r.inverted={tokens:f.tokens,postings:f.postings,
-				line2tpos:line2tpos,book2tpos:book2tpos};
+
+		if (inverted){
+			r.inverted=inverted.finalize();
 		}
 		if (Object.keys(fields).length) r.fields=fields;
 		if (Object.keys(afields).length) r.afields=afields;
 		return r;
 	}
 
-	return {putLine:putLine,putLinePos:putLinePos,putBookPos:putBookPos,
+	return {putLine:putLine,
 		putArticle:putArticle,
 		putField:putField,putAField:putAField,
 		getAField:getAField,getAFields:getAFields,
-		getField:getField,putToken:putToken,buildROM:buildROM};
+		getField:getField,buildROM:buildROM};
 }
 module.exports=Romable;

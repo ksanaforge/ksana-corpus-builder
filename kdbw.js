@@ -29,10 +29,11 @@ var pack_int = function (ar, savedelta) { // pack ar into
   i = 0,
   j = 0,
   delta = 0,
+  lastv=0,
   prev = 0;
   
   do {
-	delta = ar[i];
+	delta = ar[i] || prev;
 	if (savedelta) {
 		delta -= prev;
 	}
@@ -53,7 +54,7 @@ var pack_int = function (ar, savedelta) { // pack ar into
 	  //delta >>= 7;
 	  delta=Math.floor(delta/128);
 	}
-	prev = ar[i];
+	prev = ar[i]||prev;
 	i++;
   } while (i < ar.length);
   return r;

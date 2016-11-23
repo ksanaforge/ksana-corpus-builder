@@ -4,7 +4,7 @@ const Romable=require("./romable");
 const Tokenizer=require("ksana-corpus/tokenizer");
 const knownPatterns=require("./knownpatterns");
 const builderVersion=20161121;
-
+const createInverted=require("./inverted").createInverted;
 const parsers={
 	xml:require("./parsexml"),
 	htll:require("./parsehtll"),
@@ -21,25 +21,23 @@ const createCorpus=function(opts){
 			//start from vol=1, to make range always bigger than pos
 	var LineKStart=Ksanapos.makeKPos([1,0,0,0],addressPattern), 
 	LineKCount=0, //character count of line line 
-	LineTPos=0, //tPos of begining of current line
-	tPos=1,     //current tPos, start from 1
-	started=false, //text will be processed when true
-	pTk=null;
-	var totalPosting=0;
+	started=false; //text will be processed when true
 	var totalTextSize=0;
 	var prevlinekpos=-1;
 	var filecount=0, bookcount=0;
 	var textstack=[""];
-	var romable=Romable({inverted:!opts.textOnly,invertAField:opts.invertAField});
+	const tokenizerVersion=opts.tokenizerVersion||1;
+
+	var romable=Romable({invertAField:opts.invertAField});
+	const inverted=opts.textOnly?null:
+		createInverted({tokenizerVersion:tokenizerVersion,addressPattern:addressPattern
+			,bigrams:bigrams,removePunc:opts.removePunc});
+
 	var finalized=false;
-	opts.tokenizerVersion=opts.tokenizerVersion||1;
 	opts.maxTextStackDepth=opts.maxTextStackDepth||2;
 	
-
 	var onBookStart,onBookEnd,onToken, onFileStart, onFileEnd, onFinalize;
 
-	const tokenizer=Tokenizer.createTokenizer(opts.tokenizerVersion);
-	const TT=tokenizer.TokenTypes;
 	var disorderPages=[];
 	var longLines=[];
 
@@ -144,7 +142,7 @@ const createCorpus=function(opts){
 			onBookEnd &&onBookEnd.call(this,bookcount);
 		}
 
-		romable.putBookPos.call(this,bookcount,tPos);
+		inverted&&inverted.putBookPos.call(this,bookcount,inverted.tPos() );
 		bookcount++;
 		onBookStart&&onBookStart.call(this,bookcount);
 	}
@@ -165,15 +163,14 @@ const createCorpus=function(opts){
 	}
 
 	//for xml without lb, call setKPos to set kpos
-	const setPos=function(kpos,tpos){
+	const setPos=function(kpos){
 		LineKStart=kpos;
-		LineTPos=tpos;
 		LineKCount=0;
 		prevlinekpos=kpos;		
 	}
 
 	//call newLine on begining of <lb>
-	const newLine=function(kpos,tpos){ //reset Line to a new kpos
+	const newLine=function(kpos){ //reset Line to a new kpos
 		if (isNaN(kpos)||kpos<1) return;
 		if (prevlinekpos>kpos ) {
 			var human=Ksanapos.stringify(kpos,addressPattern);
@@ -186,8 +183,8 @@ const createCorpus=function(opts){
 				human+"prev "+prevh;
 			}
 		}
-		romable.putLinePos.call(this,kpos,tpos);
-		setPos(kpos,tpos);
+		inverted&&inverted.putLinePos.call(this,kpos);
+		setPos(kpos);
 	}
 	const nextLineStart=function(kpos) {//return kpos of beginning of next line
 		const arr=Ksanapos.unpack(kpos,this.addressPattern);
@@ -195,38 +192,7 @@ const createCorpus=function(opts){
 		arr[3]=0;
 		return Ksanapos.makeKPos(arr,this.addressPattern);
 	}
-	const putToken=function(tk,type){
-		var j,bi;
-		if (type===TT.PUNC && opts.removePunc) {
-			return;
-		}
-		var tk=onToken?onToken(tk):tk;
-		if (type!==TT.SPACE){
-			if (type!==TT.PUNC && type!==TT.NUMBER) {
-				if (typeof tk==="string") {
-					if (bigrams&&bigrams[pTk+tk]) {
-						romable.putToken.call(this,pTk+tk,tPos-1);
-						totalPosting++;
-					}
-					romable.putToken.call(this,tk,tPos);
-					totalPosting++;
-				} else {
-					for (j=0;j<tk.length;j++){ //onToken return an array
-						if (bigrams[pTk+tk[j]]){
-							totalPosting++;
-							romable.putToken.call(this,pTk+tk[j],tPos-1);
-						}
-						romable.putToken.call(this,tk[j],tPos);	
-						totalPosting++;
-					}
-				}
-				tPos++;
-			}
-			pTk=tk;
-		} else {
-			pTk=null;
-		}
-	}
+
 	//call putLine on end of </lb>
 	const putLine=function(s){
 		if (LineKStart<1) return;//first call to putLine has no effect
@@ -241,11 +207,7 @@ const createCorpus=function(opts){
 		romable.putLine.call(this,s,LineKStart);
 		totalTextSize+=s.length;
 		var token=null,i;
-		var tokenized=tokenizer.tokenize(s);
-		for (i=0;i<tokenized.length;i++) {
-			var type=tokenized[i][3];
-			putToken(tokenized[i][0],type);
-		};
+		inverted.putLine(s);
 	}
 
 	const start=function(){
@@ -260,7 +222,7 @@ const createCorpus=function(opts){
 
 	const buildMeta=function(){
 		var meta={date:(new Date()).toString()};
-		meta.versions={tokenizer:tokenizer.version,builder:builderVersion};
+		meta.versions={tokenizer:tokenizerVersion,builder:builderVersion};
 		meta.bits=addressPattern.bits;
 		meta.name=opts.name;
 		if (opts.article) meta.article=opts.article;
@@ -278,7 +240,8 @@ const createCorpus=function(opts){
 		finalized=true;
 		//var okdb="./outputkdb";
 		const meta=buildMeta();
-		const rom=romable.buildROM(meta);
+		const rom=romable.buildROM(meta,inverted);
+
 		if (typeof window!=="undefined") console.log(rom);
 
 		var size=totalTextSize*5;
@@ -298,13 +261,13 @@ const createCorpus=function(opts){
 		setPos:setPos, newLine:newLine, putLine:putLine, nextLineStart:nextLineStart, stringify:stringify,
 		makeKPos:makeKPos, makeKRange:makeKRange,	start:start, romable:romable, stop:stop, writeKDB:writeKDB};
 
-	Object.defineProperty(instance,"tPos",{ get:function(){return tPos}});
+	Object.defineProperty(instance,"tPos",{ get:inverted.tPos});
 	Object.defineProperty(instance,"kPos",{ get:function(){return LineKStart+LineKCount}});
 	Object.defineProperty(instance,"kPosH",{ get:function(){return Ksanapos.stringify(LineKStart+LineKCount,addressPattern)}});
 	Object.defineProperty(instance,"fileCount",{ get:function(){return filecount}});
 	Object.defineProperty(instance,"bookCount",{ get:function(){return bookcount}});
 	Object.defineProperty(instance,"addressPattern",{ get:function(){return addressPattern}});
-	Object.defineProperty(instance,"totalPosting",{ get:function(){return totalPosting}});
+	Object.defineProperty(instance,"totalPosting",{ get:inverted.totalPosting});
 	Object.defineProperty(instance,"started",{ get:function(){return started}});
 	Object.defineProperty(instance,"disorderPages",{ get:function(){return disorderPages}});
 	Object.defineProperty(instance,"longLines",{ get:function(){return longLines}});
