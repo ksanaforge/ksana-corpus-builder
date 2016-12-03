@@ -106,6 +106,7 @@ const createCorpus=function(opts){
 	const putArticle=function(articlename,kpos){
 		kpos=kpos||this.kPos;
 		romable.putArticle(articlename,kpos);		
+		inverted&&inverted.putArticle();
 	}
 	const addText=function(t){
 		if (!t)return;
@@ -143,7 +144,7 @@ const createCorpus=function(opts){
 			onBookEnd &&onBookEnd.call(this,bookcount);
 		}
 
-		inverted&&inverted.putBookPos.call(this,bookcount,inverted.tPos() );
+		inverted&&inverted.putBookPos.call(this,bookcount);
 		bookcount++;
 		onBookStart&&onBookStart.call(this,bookcount);
 	}

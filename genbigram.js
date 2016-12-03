@@ -42,11 +42,11 @@ var getunigramhit=function(bi) {
 	unigram[bi.charCodeAt(1)-0x4e00]
 }
 var report=function(bigramarr) {
-	var tokencount=unigram.reduce(function(p,i){return p+i},0);
-	console.log("token count", tokencount);
-	var bigramcount=bigramarr.reduce(function(p,i){return p+i[1]},0);
-	console.log("bigram count", bigramcount);
-	console.log("overhead",bigramcount/tokencount);
+	var tokenlength=unigram.reduce(function(p,i){return p+i},0);
+	console.log("token length", tokenlength);
+	var bigramlength=bigramarr.reduce(function(p,i){return p+i[1]},0);
+	console.log("bigram length", bigramlength);
+	console.log("overhead",bigramlength/tokenlength);
 }
 var summary=function(opts){
 	console.log("bigramcount",bigramcount);
@@ -68,8 +68,6 @@ var summary=function(opts){
 	console.log("writing")
 	require("fs").writeFileSync("bigrams.txt",bigramarr.join("\n"),"utf8");	
 
-	bigramarr=bigramarr.filter(function(b){return b[4]<opts.maxrate});
-
 	report(bigramarr);
 	bigramarr=bigramarr.map(function(b){return b[0]});
 	//bigramarr.sort(function(a,b){return a>b?1:b>a?-1:0});
@@ -85,7 +83,7 @@ var genbigram=function(corpus,opts) {
 			dobooks(data);
 			console.timeEnd("bigram")
 			console.time("summary");
-			summary({minoccur:opts.minoccur||1000,maxrate:0.5});
+			summary({minoccur:opts.minoccur||1000});
 			console.timeEnd("summary");
 		});		
 	})

@@ -1,8 +1,9 @@
-const Tokenizer=require("ksana-corpus/tokenizer");
+const createTokenizer=require("ksana-corpus/tokenizer").createTokenizer;
 
 const createInverted=function(opts){
-	const putBookPos=function(booknum,tpos){
-		book2tpos[booknum]=tpos;
+	const putBookPos=function(booknum){
+		book2tpos[booknum]=tPos;
+		tPos+=1000;
 	}
 
 	//linepos array is 2 dimensional, book+page*col*line
@@ -63,6 +64,11 @@ const createInverted=function(opts){
 		};
 	}
 
+	const putArticle=function(){
+		article2tpos.push(tPos);
+		tPos+=500;
+	}
+
 	const finalize=function(){
 		var arr=[],posting_length=[];
 		for (var i in token_postings){
@@ -78,14 +84,14 @@ const createInverted=function(opts){
 		var postings=arr.map(function(item){return item[1]});
 		token_postings={};
 
-		return {tokens:tokens,postings:postings,
+		return {tokens:tokens,postings:postings,article2tpos:article2tpos,
 			line2tpos:line2tpos,book2tpos:book2tpos,posting_length:posting_length};
 	}
 
-	const tokenizer=Tokenizer.createTokenizer(opts.tokenizerVersion);
+	const tokenizer=createTokenizer(opts.tokenizerVersion);
 	const TT=tokenizer.TokenTypes;
 	var instance={},bigrams,removePunc;
-	var token_postings={},line2tpos={},book2tpos=[];
+	var token_postings={},line2tpos={},book2tpos=[],article2tpos=[];
 	var	pTk=null,tPos=1 ,totalPosting=0;
 
 	instance.putLine=putLine;
@@ -96,6 +102,7 @@ const createInverted=function(opts){
 	instance.totalPosting=function(){return totalPosting};
 	instance.putBookPos=putBookPos;
 	instance.putToken=putToken;
+	instance.putArticle=putArticle;
 	instance.finalize=finalize;
 	instance.putLinePos=putLinePos;
 
