@@ -27,30 +27,31 @@ const createInverted=function(opts){
 	const putToken=function(tk,type){
 		var j,bi;
 		if (type===TT.PUNC && removePunc) {
+			pTk=null;
 			return;
 		}
 
 		if (type!==TT.SPACE){
-			if (type!==TT.PUNC && type!==TT.NUMBER) {
-				if (typeof tk==="string") {
-					if (bigrams&&bigrams[pTk+tk]) {
-						posting(pTk+tk,tPos-1);
-						totalPosting++;
-					}
-					posting(tk,tPos);
-					totalPosting++;
-				} else {
-					for (j=0;j<tk.length;j++){ //onToken return an array
-						if (bigrams[pTk+tk[j]]){
-							totalPosting++;
-							posting(pTk+tk[j],tPos-1);
-						}
-						posting(tk[j],tPos);	
-						totalPosting++;
-					}
-				}
+			if (type==TT.PUNC || type==TT.NUMBER) { //not indexed
 				tPos++;
+			} else if (typeof tk==="string") {
+				if (bigrams&&bigrams[pTk+tk]) {
+					posting(pTk+tk,tPos-1);
+					totalPosting++;
+				}
+				posting(tk,tPos);
+				totalPosting++;
+			} else {
+				for (j=0;j<tk.length;j++){ //onToken return an array
+					if (bigrams[pTk+tk[j]]){
+						totalPosting++;
+						posting(pTk+tk[j],tPos-1);
+					}
+					posting(tk[j],tPos);	
+					totalPosting++;
+				}
 			}
+			tPos++;
 			pTk=tk;
 		} else {
 			pTk=null;

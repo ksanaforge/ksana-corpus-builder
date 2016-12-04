@@ -232,6 +232,7 @@ const createCorpus=function(opts){
 		if (opts.language) meta.language=opts.language;
 		if (opts.invertAField) meta.invertAField=opts.invertAField;
 		if (opts.articleFields) meta.articleFields=opts.articleFields;
+		if (opts.removePunc) meta.removePunc=opts.removePunc;
 		meta.endpos=LineKStart+LineKCount;
 		return meta;
 	}
