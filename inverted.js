@@ -69,6 +69,10 @@ const createInverted=function(opts){
 		tPos+=500;
 	}
 
+	const putGroup=function(){
+		group2tpos.push(tPos);
+	}
+
 	const finalize=function(){
 		var arr=[],posting_length=[];
 		for (var i in token_postings){
@@ -85,6 +89,7 @@ const createInverted=function(opts){
 		token_postings={};
 
 		return {tokens:tokens,postings:postings,article2tpos:article2tpos,
+			group2tpos:group2tpos,
 			line2tpos:line2tpos,book2tpos:book2tpos,posting_length:posting_length};
 	}
 
@@ -92,6 +97,7 @@ const createInverted=function(opts){
 	const TT=tokenizer.TokenTypes;
 	var instance={},bigrams,removePunc;
 	var token_postings={},line2tpos={},book2tpos=[],article2tpos=[];
+	var group2tpos=[];
 	var	pTk=null,tPos=1 ,totalPosting=0;
 
 	instance.putLine=putLine;
@@ -103,6 +109,7 @@ const createInverted=function(opts){
 	instance.putBookPos=putBookPos;
 	instance.putToken=putToken;
 	instance.putArticle=putArticle;
+	instance.putGroup=putGroup;
 	instance.finalize=finalize;
 	instance.putLinePos=putLinePos;
 

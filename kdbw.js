@@ -417,7 +417,7 @@ var Create=function(path,opts) {
 		} else if (type==='Buffer') {
 			saveBlob(J,key);
 		} else {
-			throw 'unsupported type '+type;
+			throw 'unsupported type '+type+" keys"+JSON.stringify(key_writing);
 		}
 	}
 	

@@ -108,6 +108,11 @@ const createCorpus=function(opts){
 		romable.putArticle(articlename,kpos);		
 		inverted&&inverted.putArticle();
 	}
+	const putGroup=function(groupname,kpos){
+		kpos=kpos||this.kPos;
+		romable.putField("group",groupname,kpos);
+		inverted&&inverted.putGroup();	
+	}
 	const addText=function(t){
 		if (!t)return;
 
@@ -234,6 +239,7 @@ const createCorpus=function(opts){
 		if (opts.articleFields) meta.articleFields=opts.articleFields;
 		if (opts.removePunc) meta.removePunc=opts.removePunc;
 		meta.endpos=LineKStart+LineKCount;
+		if (inverted) meta.endtpos=inverted.tPos();
 		return meta;
 	}
 
@@ -260,6 +266,7 @@ const createCorpus=function(opts){
 		addFile:addFile, addText:addText,addBook:addBook, 
 		putField:putField, putEmptyField:putEmptyField, 
 		putArticle:putArticle,putArticleField:putArticleField,putEmptyArticleField:putEmptyArticleField,
+		putGroup:putGroup,
 		putBookField:putBookField,putEmptyBookField:putEmptyBookField,handlers:handlers,
 		setPos:setPos, newLine:newLine, putLine:putLine, nextLineStart:nextLineStart, stringify:stringify,
 		makeKPos:makeKPos, makeKRange:makeKRange,	start:start, romable:romable, stop:stop, writeKDB:writeKDB};
