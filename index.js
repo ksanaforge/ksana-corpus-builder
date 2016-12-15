@@ -1,5 +1,6 @@
 const Ksanacount=require("ksana-corpus/ksanacount");
 const Ksanapos=require("ksana-corpus/ksanapos");
+const Textutil=require("ksana-corpus/textutil");
 const Romable=require("./romable");
 const Tokenizer=require("ksana-corpus/tokenizer");
 const knownPatterns=require("./knownpatterns");
@@ -42,6 +43,8 @@ const createCorpus=function(opts){
 	var disorderPages=[];
 	var longLines=[];
 
+	var prevArticlePos=0;
+
 	const addFile=function(fn){
 		if (finalized) {
 			throw "cannot add file "+fn+" after finalized";
@@ -50,9 +53,6 @@ const createCorpus=function(opts){
 			if (fn.indexOf("#")==-1) console.log("file not found",fn);
 			return;
 		}
-		this.putArticle(fn); 
-		//make sure each file has at least one article, and not crossing file boundary
-
 		onFileStart&&onFileStart.call(this,fn,filecount);
 		this.parser.addFile.call(this,fn,opts);
 		this.putLine(this.popBaseText());
@@ -105,8 +105,14 @@ const createCorpus=function(opts){
 
 	const putArticle=function(articlename,kpos){
 		kpos=kpos||this.kPos;
+		const book=Textutil.bookOf.call(this,kpos,this.addressPattern);
+		const prevbook=Textutil.bookOf.call(this,prevArticlePos);
+		if (book>prevbook) {
+			kpos=Ksanapos.bookStartPos(kpos,this.addressPattern);
+		}
 		romable.putArticle(articlename,kpos);		
 		inverted&&inverted.putArticle();
+		prevArticlePos=kpos;
 	}
 	const putGroup=function(groupname,kpos){
 		kpos=kpos||this.kPos;
