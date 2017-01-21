@@ -220,7 +220,7 @@ const createCorpus=function(opts){
 		romable.putLine.call(this,s,LineKStart);
 		totalTextSize+=s.length;
 		var token=null,i;
-		inverted.putLine(s);
+		inverted&&inverted.putLine(s);
 	}
 
 	const start=function(){
@@ -244,6 +244,7 @@ const createCorpus=function(opts){
 		if (opts.invertAField) meta.invertAField=opts.invertAField;
 		if (opts.articleFields) meta.articleFields=opts.articleFields;
 		if (opts.removePunc) meta.removePunc=opts.removePunc;
+		if (opts.title) meta.title=opts.title;
 		meta.endpos=LineKStart+LineKCount;
 		if (inverted) meta.endtpos=inverted.tPos();
 		return meta;
@@ -277,16 +278,16 @@ const createCorpus=function(opts){
 		setPos:setPos, newLine:newLine, putLine:putLine, nextLineStart:nextLineStart, stringify:stringify,
 		makeKPos:makeKPos, makeKRange:makeKRange,	start:start, romable:romable, stop:stop, writeKDB:writeKDB};
 
-	Object.defineProperty(instance,"tPos",{ get:inverted.tPos});
 	Object.defineProperty(instance,"kPos",{ get:function(){return LineKStart+LineKCount}});
 	Object.defineProperty(instance,"kPosH",{ get:function(){return Ksanapos.stringify(LineKStart+LineKCount,addressPattern)}});
 	Object.defineProperty(instance,"fileCount",{ get:function(){return filecount}});
 	Object.defineProperty(instance,"bookCount",{ get:function(){return bookcount}});
 	Object.defineProperty(instance,"addressPattern",{ get:function(){return addressPattern}});
-	Object.defineProperty(instance,"totalPosting",{ get:inverted.totalPosting});
 	Object.defineProperty(instance,"started",{ get:function(){return started}});
 	Object.defineProperty(instance,"disorderPages",{ get:function(){return disorderPages}});
 	Object.defineProperty(instance,"longLines",{ get:function(){return longLines}});
+	inverted&&Object.defineProperty(instance,"tPos",{ get:inverted.tPos});
+	inverted&&Object.defineProperty(instance,"totalPosting",{ get:inverted.totalPosting});
 
 	instance.parser=parsers[opts.inputFormat];
 	if (!instance.parser) {
