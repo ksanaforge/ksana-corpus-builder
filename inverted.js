@@ -64,13 +64,15 @@ const createInverted=function(opts){
 		};
 	}
 
-	const putArticle=function(){
-		article2tpos.push(tPos);
+	const putArticle=function(tpos){
+		tpos=tpos||tPos;
+		article2tpos.push(tpos);
 		tPos+=500;
 	}
 
-	const putGroup=function(){
-		group2tpos.push(tPos);
+	const putGroup=function(tpos){
+		tpos=tpos||tPos;
+		group2tpos.push(tpos);
 	}
 
 	const finalize=function(){

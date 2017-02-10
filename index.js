@@ -24,7 +24,7 @@ const createCorpus=function(opts){
 	var LineKStart=Ksanapos.makeKPos([1,0,0,0],addressPattern), 
 	LineKCount=0, //character count of line line 
 	started=false; //text will be processed when true
-	var totalTextSize=0;
+	var totalTextSize= 0;
 	var prevlinekpos=-1;
 	var filecount=0, bookcount=0;
 	var textstack=[""];
@@ -103,21 +103,20 @@ const createCorpus=function(opts){
 		romable.putAField(name,null,kpos);
 	}
 
-	const putArticle=function(articlename,kpos){
+	const putArticle=function(articlename,kpos,tpos){
 		kpos=kpos||this.kPos;
 		const book=Textutil.bookOf.call(this,kpos,this.addressPattern);
 		const prevbook=Textutil.bookOf.call(this,prevArticlePos);
 		if (book>prevbook) {
 			kpos=Ksanapos.bookStartPos(kpos,this.addressPattern);
 		}
-		romable.putArticle(articlename,kpos);		
-		inverted&&inverted.putArticle();
+		romable.putArticle(articlename,kpos);
+		inverted&&inverted.putArticle(tpos);
 		prevArticlePos=kpos;
 	}
-	const putGroup=function(groupname,kpos){
-		kpos=kpos||this.kPos;
+	const putGroup=function(groupname,kpos,tpos){
 		romable.putField("group",groupname,kpos);
-		inverted&&inverted.putGroup();	
+		inverted&&inverted.putGroup(tpos);	
 	}
 	const addText=function(t){
 		if (!t)return;
@@ -191,6 +190,7 @@ const createCorpus=function(opts){
 			if (opts.randomPage) {
 				disorderPages.push([kpos,human,prevlinekpos,prevh]);
 			} else {
+				debugger;
 				console.error("line",this.parser.line());
 				throw "line kpos must be larger the previous one. kpos:"+
 				human+"prev "+prevh;
@@ -216,6 +216,7 @@ const createCorpus=function(opts){
 		while (s[0]==="\n"||s[0]==="\r") {
 			s=s.substr(1);
 		}
+		s=s.replace(/\r?\n/g," ");//replace internal crlf with space
 
 		romable.putLine.call(this,s,LineKStart);
 		totalTextSize+=s.length;
@@ -245,6 +246,7 @@ const createCorpus=function(opts){
 		if (opts.articleFields) meta.articleFields=opts.articleFields;
 		if (opts.removePunc) meta.removePunc=opts.removePunc;
 		if (opts.title) meta.title=opts.title;
+		if (opts.groupPrefix) meta.groupPrefix=opts.groupPrefix;
 		meta.endpos=LineKStart+LineKCount;
 		if (inverted) meta.endtpos=inverted.tPos();
 		return meta;
@@ -259,8 +261,8 @@ const createCorpus=function(opts){
 		const rom=romable.buildROM(meta,inverted);
 
 		if (typeof window!=="undefined") console.log(rom);
-
-		var size=totalTextSize*5;
+		console.log(opts.extrasize)
+		var size=totalTextSize*5 + (opts.extrasize||0) ;
 		if (size<1000000) size=1000000;
 		require("./outputkdb").write(fn,rom,size,cb);
 	}
@@ -271,7 +273,7 @@ const createCorpus=function(opts){
 	const instance={textstack:textstack,popText:popText,
 		peekText:peekText,popBaseText:popBaseText,setHandlers:setHandlers, nextLine:nextLine,
 		addFile:addFile, addText:addText,addBook:addBook, 
-		putField:putField, putEmptyField:putEmptyField, 
+		putField:putField, putEmptyField:putEmptyField,
 		putArticle:putArticle,putArticleField:putArticleField,putEmptyArticleField:putEmptyArticleField,
 		putGroup:putGroup,
 		putBookField:putBookField,putEmptyBookField:putEmptyBookField,handlers:handlers,
