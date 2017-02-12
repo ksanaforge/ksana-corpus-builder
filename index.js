@@ -93,14 +93,14 @@ const createCorpus=function(opts){
 		romable.putField(name,null,kpos,p[0]);	
 	}
 
-	const putArticleField=function(name,value,kpos){
+	const putArticleField=function(name,value,kpos,article){
 		kpos=kpos||this.kPos;
-		romable.putAField(name,value,kpos);
+		romable.putAField(name,value,kpos,article);
 	}
 
-	const putEmptyArticleField=function(name,kpos){
+	const putEmptyArticleField=function(name,kpos,article){
 		kpos=kpos||this.kPos;
-		romable.putAField(name,null,kpos);
+		romable.putAField(name,null,kpos,article);
 	}
 
 	const putArticle=function(articlename,kpos,tpos){
@@ -115,6 +115,8 @@ const createCorpus=function(opts){
 		prevArticlePos=kpos;
 	}
 	const putGroup=function(groupname,kpos,tpos){
+		kpos=this.kPos||kpos;
+		tpos=this.tPos||tpos;
 		romable.putField("group",groupname,kpos);
 		inverted&&inverted.putGroup(tpos);	
 	}
@@ -247,6 +249,7 @@ const createCorpus=function(opts){
 		if (opts.removePunc) meta.removePunc=opts.removePunc;
 		if (opts.title) meta.title=opts.title;
 		if (opts.groupPrefix) meta.groupPrefix=opts.groupPrefix;
+		if (opts.linkTo) meta.linkTo=opts.linkTo;
 		meta.endpos=LineKStart+LineKCount;
 		if (inverted) meta.endtpos=inverted.tPos();
 		return meta;
@@ -269,15 +272,19 @@ const createCorpus=function(opts){
 	const stringify=function(kpos) {
 		return Ksanapos.stringify(kpos,addressPattern);
 	}
+	const parseRange=function(s){
+		return Textutil.parseRange(s,addressPattern);
+	}
 	const handlers=require("./handlers");
 	const instance={textstack:textstack,popText:popText,
 		peekText:peekText,popBaseText:popBaseText,setHandlers:setHandlers, nextLine:nextLine,
 		addFile:addFile, addText:addText,addBook:addBook, 
 		putField:putField, putEmptyField:putEmptyField,
 		putArticle:putArticle,putArticleField:putArticleField,putEmptyArticleField:putEmptyArticleField,
-		putGroup:putGroup,
+		putGroup:putGroup,parseRange,
 		putBookField:putBookField,putEmptyBookField:putEmptyBookField,handlers:handlers,
 		setPos:setPos, newLine:newLine, putLine:putLine, nextLineStart:nextLineStart, stringify:stringify,
+		findArticle:romable.findArticle,
 		makeKPos:makeKPos, makeKRange:makeKRange,	start:start, romable:romable, stop:stop, writeKDB:writeKDB};
 
 	Object.defineProperty(instance,"kPos",{ get:function(){return LineKStart+LineKCount}});

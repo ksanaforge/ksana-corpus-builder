@@ -1,5 +1,5 @@
 var Ksanapos=require("ksana-corpus/ksanapos");
-
+var bsearch=require("ksana-corpus/bsearch");
 const Romable=function(opts){
 	opts=opts||{};
 	var fields={},afields={},texts=[];
@@ -21,10 +21,32 @@ const Romable=function(opts){
 	}
 	const putArticle=function(value,kpos){
 		articlecount++;
+		articlepos=null;//invalidate build time articlepos
 		putField("article",value,kpos);
 	}
-	const putAField=function(name,value,kpos){
-		const a=articlecount-1;
+
+	var articlepos=null,articlename=null;
+
+	const findArticle=function(kRange_address){
+		var kRange=kRange_address;
+		const pat=this.addressPattern;
+		if (typeof kRange_address=="string") {
+			kRange=Ksanapos.parse(kRange_address,pat);
+		}
+		const range=Ksanapos.breakKRange(kRange,pat);
+		if (!articlepos) {
+			articlepos=[],articlename=[];
+			fields.article.forEach(function(a){
+				articlepos.push(a[0]);
+				articlename.push(a[1]);
+			});
+		}
+		var at=bsearch(articlepos,range.start+1,true)-1;
+		return at;
+	}
+
+	const putAField=function(name,value,kpos,article){
+		const a=article||articlecount-1;
 		if (a<0)return;
 		if (!afields[a]) {
 			afields[a]={};
@@ -173,6 +195,6 @@ const Romable=function(opts){
 		putArticle:putArticle,
 		putField:putField,putAField:putAField,
 		getAField:getAField,getAFields:getAFields,
-		getField:getField,buildROM:buildROM};
+		getField:getField,buildROM:buildROM,findArticle:findArticle};
 }
 module.exports=Romable;
