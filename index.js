@@ -115,8 +115,8 @@ const createCorpus=function(opts){
 		prevArticlePos=kpos;
 	}
 	const putGroup=function(groupname,kpos,tpos){
-		kpos=this.kPos||kpos;
-		tpos=this.tPos||tpos;
+		kpos=kpos||this.kPos;
+		tpos=tpos||this.tPos;
 		romable.putField("group",groupname,kpos);
 		inverted&&inverted.putGroup(tpos);	
 	}
