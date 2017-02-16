@@ -2,7 +2,7 @@
 const Kdbw=require("./kdbw");
 
 const write=function(fn,rom,size,finishcb){
-	var kdbw=Kdbw(fn,{size});
+	var kdbw=Kdbw(fn,{size:size});
 		
 	//TODO remove kdbw dependency in corpus
 	kdbw.save(rom,null);//,{autodelete:true}

@@ -83,7 +83,7 @@ const createInverted=function(opts){
 		//sort token alphabetically
 		arr.sort(function(a,b){return (a[0]==b[0])?0:((a[0]>b[0])?1:-1)});
 		
-		for (let j=0;j<arr.length;j++) {
+		for (var j=0;j<arr.length;j++) {
 			posting_length.push(arr[j][1].length);
 		}
 		var tokens=arr.map(function(item){return item[0]});
@@ -118,4 +118,4 @@ const createInverted=function(opts){
 	removePunc=!!opts.removePunc;
 	return instance;
 }
-module.exports={createInverted};
+module.exports={createInverted:createInverted};

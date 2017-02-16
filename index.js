@@ -281,7 +281,7 @@ const createCorpus=function(opts){
 		addFile:addFile, addText:addText,addBook:addBook, 
 		putField:putField, putEmptyField:putEmptyField,
 		putArticle:putArticle,putArticleField:putArticleField,putEmptyArticleField:putEmptyArticleField,
-		putGroup:putGroup,parseRange,
+		putGroup:putGroup,parseRange:parseRange,
 		putBookField:putBookField,putEmptyBookField:putEmptyBookField,handlers:handlers,
 		setPos:setPos, newLine:newLine, putLine:putLine, nextLineStart:nextLineStart, stringify:stringify,
 		findArticle:romable.findArticle,

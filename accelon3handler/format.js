@@ -36,4 +36,4 @@ const p=function(tag,closing){
 	if (closing) return;
 	this.putEmptyBookField("p");
 }
-module.exports={p,pb,article,maxArticle:()=>maxarticlelen};
+module.exports={p:p,pb:pb,article:article,maxArticle:function(){return maxarticlelen}};

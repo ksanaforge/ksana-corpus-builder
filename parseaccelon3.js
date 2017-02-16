@@ -9,9 +9,9 @@ const a3Tree=require("./accelon3handler/tree");
 const encodeSubtreeItem=require("./subtree").encodeSubtreeItem;
 var parser;
 
-var defaultopenhandlers={段:format.p,p:format.p,
-	頁:format.pb,註:note.ptr,釋:note.def};
-const defaultclosehandlers={釋:note.def};
+var defaultopenhandlers={"段":format.p,p:format.p,
+	"頁":format.pb,"註":note.ptr,"釋":note.def};
+const defaultclosehandlers={"釋":note.def};
 const setHandlers=function(openhandlers,closehandlers,otherhandlers){
 
 	this.openhandlers=Object.assign(openhandlers||{},defaultopenhandlers);	

@@ -29,4 +29,4 @@ const def=function(tag,closing){
 	}
 	
 }
-module.exports={ptr,def};
+module.exports={ptr:ptr,def:def};
