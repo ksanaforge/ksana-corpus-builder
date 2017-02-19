@@ -16,7 +16,7 @@ const def=function(tag,closing){
 			console.warn("釋 without n",this.stringify(this.kPos));
 			return;
 		}
-		const defrange=this.makeKRange(defstart,this.kPos);
+		const defrange=this.makeRange(defstart,this.kPos);
 		ptrpos=noteid[n];
 		if (!ptrpos) {
 			throw "no such ptr "+n;

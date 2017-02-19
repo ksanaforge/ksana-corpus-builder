@@ -3,7 +3,7 @@ const Ksanapos=require("ksana-corpus/ksanapos");
 const Textutil=require("ksana-corpus/textutil");
 const Romable=require("./romable");
 const Tokenizer=require("ksana-corpus/tokenizer");
-const knownPatterns=require("./knownpatterns");
+const knownPatterns=require("ksana-corpus").knownPatterns;
 const genBigram=require("./genbigram");
 const builderVersion=20161121;
 const createInverted=require("./inverted").createInverted;
@@ -165,9 +165,9 @@ const createCorpus=function(opts){
 		return Ksanapos.makeKPos([book,page,line,character],pat);
 	}
 
-	const makeKRange=function(startkpos,endkpos,pat){
+	const makeRange=function(startkpos,endkpos,pat){
 		pat=pat||addressPattern;
-		return Ksanapos.makeKRange(startkpos,endkpos,pat);
+		return Ksanapos.makeRange(startkpos,endkpos,pat);
 	}
 
 	const nextLine=function(kpos) {//return kpos of nextline ch 0
@@ -285,7 +285,7 @@ const createCorpus=function(opts){
 		putBookField:putBookField,putEmptyBookField:putEmptyBookField,handlers:handlers,
 		setPos:setPos, newLine:newLine, putLine:putLine, nextLineStart:nextLineStart, stringify:stringify,
 		findArticle:romable.findArticle,
-		makeKPos:makeKPos, makeKRange:makeKRange,	start:start, romable:romable, stop:stop, writeKDB:writeKDB};
+		makeKPos:makeKPos, makeRange:makeRange,	start:start, romable:romable, stop:stop, writeKDB:writeKDB};
 
 	Object.defineProperty(instance,"kPos",{ get:function(){return LineKStart+LineKCount}});
 	Object.defineProperty(instance,"kPosH",{ get:function(){return Ksanapos.stringify(LineKStart+LineKCount,addressPattern)}});
@@ -316,5 +316,4 @@ const makeKPos=function(book,page,line,character,pat){
 	return Ksanapos.makeKPos([book,page,line,character],pat);
 }
 
-module.exports={createCorpus:createCorpus,makeKPos:makeKPos,knownPatterns:knownPatterns
-,genBigram:genBigram};
+module.exports={createCorpus:createCorpus,makeKPos:makeKPos,genBigram:genBigram};

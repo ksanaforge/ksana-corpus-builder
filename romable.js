@@ -27,13 +27,13 @@ const Romable=function(opts){
 
 	var articlepos=null,articlename=null;
 
-	const findArticle=function(kRange_address){
-		var kRange=kRange_address;
+	const findArticle=function(range_address){
+		var range=range_address;
 		const pat=this.addressPattern;
-		if (typeof kRange_address=="string") {
-			kRange=Ksanapos.parse(kRange_address,pat);
+		if (typeof range_address=="string") {
+			range=Ksanapos.parse(range_address,pat);
 		}
-		const range=Ksanapos.breakKRange(kRange,pat);
+		const range=Ksanapos.breakRange(range,pat);
 		if (!articlepos) {
 			articlepos=[],articlename=[];
 			fields.article.forEach(function(a){
