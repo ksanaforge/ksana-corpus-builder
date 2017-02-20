@@ -7,6 +7,7 @@ const knownPatterns=require("ksana-corpus").knownPatterns;
 const genBigram=require("./genbigram");
 const builderVersion=20161121;
 const createInverted=require("./inverted").createInverted;
+const importExternalMarkup=require("./externalmarkup").importExternalMarkup;
 const parsers={
 	xml:require("./parsexml"),
 	htll:require("./parsehtll"),
@@ -264,7 +265,7 @@ const createCorpus=function(opts){
 		const rom=romable.buildROM(meta,inverted);
 
 		if (typeof window!=="undefined") console.log(rom);
-		console.log(opts.extrasize)
+		opts.extrasize&&console.log("extra size",opts.extrasize)
 		var size=totalTextSize*5 + (opts.extrasize||0) ;
 		if (size<1000000) size=1000000;
 		require("./outputkdb").write(fn,rom,size,cb);
@@ -285,6 +286,7 @@ const createCorpus=function(opts){
 		putBookField:putBookField,putEmptyBookField:putEmptyBookField,handlers:handlers,
 		setPos:setPos, newLine:newLine, putLine:putLine, nextLineStart:nextLineStart, stringify:stringify,
 		findArticle:romable.findArticle,
+		importExternalMarkup:importExternalMarkup,
 		makeKPos:makeKPos, makeRange:makeRange,	start:start, romable:romable, stop:stop, writeKDB:writeKDB};
 
 	Object.defineProperty(instance,"kPos",{ get:function(){return LineKStart+LineKCount}});

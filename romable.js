@@ -33,7 +33,7 @@ const Romable=function(opts){
 		if (typeof range_address=="string") {
 			range=Ksanapos.parse(range_address,pat);
 		}
-		const range=Ksanapos.breakRange(range,pat);
+		const r=Ksanapos.breakRange(range,pat);
 		if (!articlepos) {
 			articlepos=[],articlename=[];
 			fields.article.forEach(function(a){
@@ -41,7 +41,7 @@ const Romable=function(opts){
 				articlename.push(a[1]);
 			});
 		}
-		var at=bsearch(articlepos,range.start+1,true)-1;
+		var at=bsearch(articlepos,r.start+1,true)-1;
 		return at;
 	}
 
