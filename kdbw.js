@@ -400,6 +400,7 @@ var Create=function(path,opts) {
 				for (var i=0;i<J.length;i++) {
 					if (!J[i]) {
 						console.error(J);
+						debugger;
 						throw "array has gap at "+i+" keys"+JSON.stringify(key_writing);
 					}
 					save(J[i],i,opts);

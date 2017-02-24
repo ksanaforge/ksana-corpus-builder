@@ -193,7 +193,6 @@ const createCorpus=function(opts){
 			if (opts.randomPage) {
 				disorderPages.push([kpos,human,prevlinekpos,prevh]);
 			} else {
-				debugger;
 				console.error("line",this.parser.line());
 				throw "line kpos must be larger the previous one. kpos:"+
 				human+"prev "+prevh;
@@ -291,6 +290,7 @@ const createCorpus=function(opts){
 
 	Object.defineProperty(instance,"kPos",{ get:function(){return LineKStart+LineKCount}});
 	Object.defineProperty(instance,"kPosH",{ get:function(){return Ksanapos.stringify(LineKStart+LineKCount,addressPattern)}});
+	Object.defineProperty(instance,"articleCount",{ get:function(){return romable.articleCount()}});
 	Object.defineProperty(instance,"fileCount",{ get:function(){return filecount}});
 	Object.defineProperty(instance,"bookCount",{ get:function(){return bookcount}});
 	Object.defineProperty(instance,"addressPattern",{ get:function(){return addressPattern}});

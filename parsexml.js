@@ -17,14 +17,14 @@ const addContent=function(content,name,opts){
 		corpus.addText(t);			
 	}
 	parser.onopentag=function(tag){
-		tagstack.push(tag);
+		tagstack.push({tag:tag,kpos:corpus.kPos,tpos:corpus.tPos});
 		const handler=corpus.openhandlers[tag.name];
 		var capture=false;
 		corpus.position=this.position;
 		if (handler&&handler.call(corpus,tag)) {
 			capture=true;
 		} else if (corpus.otherhandlers.onopentag) {
-			capture=corpus.otherhandlers.onopentag.call(corpus,tag);
+			capture=corpus.otherhandlers.onopentag.call(corpus,tag,false,kpos,tpos);
 		}
 		if (capture){
 			corpus.textstack.push("");
@@ -37,13 +37,14 @@ const addContent=function(content,name,opts){
 	}
 
 	parser.onclosetag=function(tagname){
-		var tag=tagstack.pop();
+		const t=tagstack.pop();
+		const tag=t.tag, kpos=t.kpos,tpos=t.tpos;
 		const handler=corpus.closehandlers[tagname];
 		corpus.position=this.position;
 		if (handler) {
-			handler.call(corpus,tag,true);
+			handler.call(corpus,tag,true,kpos,tpos);
 		} else if (corpus.otherhandlers.onclosetag) {
-			corpus.otherhandlers.onclosetag.call(corpus,tag,true);
+			corpus.otherhandlers.onclosetag.call(corpus,tag,true,kpos,tpos);
 		}
 	}	
 	parser.write(content);

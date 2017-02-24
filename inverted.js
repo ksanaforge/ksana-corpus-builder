@@ -14,7 +14,14 @@ const createInverted=function(opts){
 		idx=Math.floor((kpos%R)/C);
 		book=Math.floor(kpos/R) ; //book start from 1 and might have gap, use object
 
-		if (!line2tpos[book]) line2tpos[book]=[];
+		if (!line2tpos[book]) {
+			line2tpos[book]=[];
+			if (idx!==0) {
+				var gap=idx;
+				while (gap>0) line2tpos[book][--gap]=tPos;
+			}
+		}
+
 		line2tpos[book][idx]=tPos;
 	}
 

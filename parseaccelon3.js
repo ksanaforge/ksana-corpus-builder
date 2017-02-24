@@ -28,20 +28,20 @@ const addContent=function(content,name,opts){
 	var corpus=this;
 	corpus.content=content;
 	
-
 	if (opts.article && !this.openhandlers[opts.article]) {
 		this.openhandlers[opts.article]=format.article;
 		this.closehandlers[opts.article]=format.article;
 	}
 
 	const addLines=function(s){
+
 		if( s=="\n" && this._pbline==0) return;//ignore crlf after <pb>
 		var kpos;
 		const lines=s.trim().split("\n");
 		for (var i=0;i<lines.length;i++) {
-			kpos=this.makeKPos(this.bookCount-1,this._pb-1,this._pbline+i,0);
+			kpos=this.makeKPos(this.bookCount,this._pb-1,this._pbline+i,0);
 			if (kpos==-1) {
-				console.log("error kpos",this.bookCount-1,this._pb-1,this._pbline+i);
+				console.log("error kpos",this.bookCount,this._pb-1,this._pbline+i);
 			}
 			try{
 				this.newLine(kpos, this.tPos);
@@ -53,7 +53,7 @@ const addContent=function(content,name,opts){
 		this._pbline+=lines.length;
 
 		if (this._pbline<this.addressPattern.maxline){
-			kpos=this.makeKPos(this.bookCount-1,this._pb-1,this._pbline,0);
+			kpos=this.makeKPos(this.bookCount,this._pb-1,this._pbline,0);
 			this.setPos(kpos,this.tPos);			
 		}
 	}
@@ -73,9 +73,9 @@ const addContent=function(content,name,opts){
 	}
 	parser.onopentag=function(tag){
 		var capturing=false,subtree=0;
-		tagstack.push(tag);
+		tagstack.push({tag:tag,kpos:corpus.kPos,tpos:corpus.tPos});
 		const handler=corpus.openhandlers[tag.name];
-		const treetag=a3Tree.call(this,tag,parser);
+		const treetag=a3Tree.call(corpus,tag,parser);
 	
 		const depth=treetag.indexOf(tag.name);
 
@@ -90,12 +90,12 @@ const addContent=function(content,name,opts){
 		if (handler&&handler.call(corpus,tag)) {
 			capturing=true;
 		} else if (corpus.otherhandlers.onopentag) {
-			capturing=corpus.otherhandlers.onopentag.call(corpus,tag);
+			capturing=corpus.otherhandlers.onopentag.call(corpus,tag,false,kpos,tpos);
 		}
 
 		if (capturing){
 			corpus.textstack.push("");
-			if (corpus.textstack.length>2) {
+			if (corpus.textstack.length>opts.maxTextStackDepth) {
 				throw "nested text too depth (2)"+tag.name
 				+JSON.stringify(tag.attributes)+corpus.textstack;
 			}			
@@ -103,11 +103,16 @@ const addContent=function(content,name,opts){
 	}
 
 	parser.onclosetag=function(tagname){
-		var tag=tagstack.pop();
+		const t=tagstack.pop();
+		const tag=t.tag, kpos=t.kpos,tpos=t.tpos;
 		const handler=corpus.closehandlers[tagname];
 
 		if (tocobj && tagname==tocobj.tag){
 			if (tocobj.subtree){ //is a subtree
+				const d=tocobj.depth-(tocobj.subtree||0);
+				const len=corpus.kcount(tocobj.text);
+				corpus.putArticleField("head",d,corpus.makeRange(kpos,kpos+len));
+				corpus.putEmptyArticleField("p",kpos);
 				subtreeitems.push(encodeSubtreeItem(tocobj));
 			} else {
 				corpus.putField("toc",tocobj.depth+"\t"+tocobj.text,tocobj.kpos);	
@@ -123,9 +128,9 @@ const addContent=function(content,name,opts){
 		
 		//corpus.kPos;
 		if (handler) {
-			handler.call(corpus,tag,true);
+			handler.call(corpus,tag,true,kpos,tpos);
 		} else if (corpus.otherhandlers.onclosetag) {
-			corpus.otherhandlers.onclosetag.call(corpus,tag,true);
+			corpus.otherhandlers.onclosetag.call(corpus,tag,true,kpos,tpos);
 		}
 	}	
 	const finalize=function(){

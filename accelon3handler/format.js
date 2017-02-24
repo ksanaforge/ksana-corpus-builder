@@ -14,7 +14,7 @@ const pb=function(tag,closing){
 	}
 	this._pb=page;
 	this._pbline=0;
-	const kpos=this.makeKPos(this.bookCount-1,page-1,0,0);
+	const kpos=this.makeKPos(this.bookCount,page-1,0,0);
 	this.setPos(kpos,this.tPos);
 	prevpage=page;
 }
@@ -23,10 +23,11 @@ const article=function(tag,closing){
 	if (closing) {
 		const caption=this.popText();
 		this.addText(caption);
-		this.putField("article",caption,this.articlePos);
+		this.putArticle(caption,this.articlePos,this.articleTPos);
 	} else {
 		const tree=tag.attributes.t;
 		this.articlePos=this.kPos;
+		this.articleTPos=this.tPos;
 		if (this.tPos-prevtpos>maxarticlelen) maxarticlelen=this.tPos-prevtpos;
 		prevtpos=this.tPos;
 		return true;
@@ -34,6 +35,6 @@ const article=function(tag,closing){
 }
 const p=function(tag,closing){
 	if (closing) return;
-	this.putEmptyBookField("p");
+	this.putEmptyArticleField("p");
 }
 module.exports={p:p,pb:pb,article:article,maxArticle:function(){return maxarticlelen}};

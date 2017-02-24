@@ -46,7 +46,8 @@ const Romable=function(opts){
 	}
 
 	const putAField=function(name,value,kpos,article){
-		const a=article||articlecount-1;
+		var a=article;
+		if (!a && typeof a!=="number") a=articlecount-1;
 		if (a<0)return;
 		if (!afields[a]) {
 			afields[a]={};
@@ -84,7 +85,7 @@ const Romable=function(opts){
 
 		const thispage=p[1];
 		var prevpage=thispage-1;
-		while (prevpage>0 && !texts[bk][prevpage]) {
+		while (prevpage>=0 && !texts[bk][prevpage]) {
 			texts[bk][prevpage--]=[" "]; //fill up the empty page with pseudo line
 		}
 		
@@ -193,6 +194,7 @@ const Romable=function(opts){
 
 	return {putLine:putLine,
 		putArticle:putArticle,
+		articleCount:function(){return articlecount},
 		putField:putField,putAField:putAField,
 		getAField:getAField,getAFields:getAFields,
 		getField:getField,buildROM:buildROM,findArticle:findArticle};
