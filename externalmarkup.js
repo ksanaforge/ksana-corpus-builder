@@ -12,4 +12,4 @@ const importExternalMarkup=function(json){
 		}
 	}
 }
-module.exports={importExternalMarkup};
+module.exports={importExternalMarkup:importExternalMarkup};
