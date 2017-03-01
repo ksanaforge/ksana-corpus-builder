@@ -1,4 +1,24 @@
-var noteid={};
+
+/*external note*/
+var footnotes={};
+const footnote=function(tag,closing){
+	if (closing)return;
+	const n=tag.attributes.n;
+	if (!footnotes[n]) {
+		console.error("footnote ",n,"note found");
+	} else {
+		const ndef=footnotes[n];
+		this.putArticleField("footnote",n+"\t"+ndef);
+		delete footnotes[n];
+	}
+}
+const setFootnotes=function(_notes){
+	footnotes=_notes;
+}
+const getFootnotes=function(){
+	return footnotes;
+}
+/* internal note*/
 const ptr=function(tag,closing){
 	if (closing)return;
 	const n=tag.attributes.n;
@@ -7,8 +27,10 @@ const ptr=function(tag,closing){
 	}
 	noteid[tag.attributes.n]=this.kPos;
 }
-var defstart;
-const def=function(tag,closing){
+
+var noteid={};
+
+const def=function(tag,closing,kpos){
 	if (closing) {
 		const s=this.popText();
 		const n=tag.attributes.n;
@@ -16,7 +38,7 @@ const def=function(tag,closing){
 			console.warn("釋 without n",this.stringify(this.kPos));
 			return;
 		}
-		const defrange=this.makeRange(defstart,this.kPos);
+		const defrange=this.makeRange(kpos,this.kPos);
 		ptrpos=noteid[n];
 		if (!ptrpos) {
 			throw "no such ptr "+n;
@@ -24,9 +46,10 @@ const def=function(tag,closing){
 		this.addText(s);
 		this.putField("note",defrange, ptrpos);
 	} else {
-		defstart=this.kPos;
 		return true;
 	}
 	
 }
-module.exports={ptr:ptr,def:def};
+
+
+module.exports={ptr:ptr,def:def,footnote:footnote,setFootnotes:setFootnotes,getFootnotes:getFootnotes};

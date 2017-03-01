@@ -11,7 +11,8 @@ const importExternalMarkup=require("./externalmarkup").importExternalMarkup;
 const parsers={
 	xml:require("./parsexml"),
 	htll:require("./parsehtll"),
-	accelon3:require("./parseaccelon3")
+	accelon3:require("./parseaccelon3"),
+	xhtml:require("./parsexhtml")
 }
 
 const createCorpus=function(opts){
@@ -260,6 +261,8 @@ const createCorpus=function(opts){
 	const writeKDB=function(fn,cb){
 		started&&stop();
 		onFinalize&&onFinalize.call(this);
+		instance.parser.finalize&&	instance.parser.finalize(opts);
+
 		finalized=true;
 		//var okdb="./outputkdb";
 		const meta=buildMeta();
@@ -299,6 +302,7 @@ const createCorpus=function(opts){
 	Object.defineProperty(instance,"started",{ get:function(){return started}});
 	Object.defineProperty(instance,"disorderPages",{ get:function(){return disorderPages}});
 	Object.defineProperty(instance,"longLines",{ get:function(){return longLines}});
+	Object.defineProperty(instance,"id",{ get:function(){return opts.name}});
 	inverted&&Object.defineProperty(instance,"tPos",{ get:inverted.tPos});
 	inverted&&Object.defineProperty(instance,"totalPosting",{ get:inverted.totalPosting});
 
@@ -307,9 +311,15 @@ const createCorpus=function(opts){
 		throw "unsupported input format "+opts.inputFormat;
 	}
 
+	instance.parser.initialize&&	instance.parser.initialize(opts);
+
 	instance.kcount=Ksanacount.getCounter(opts.language);
 
-	if(opts.autoStart) started=true;
+	if (typeof opts.autoStart!=="undefined") {
+		started=opts.autoStart;
+	} else {
+		started=true; //default start 
+	}
 	
 	return instance;
 
