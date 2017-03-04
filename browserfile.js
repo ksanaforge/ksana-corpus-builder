@@ -15,7 +15,7 @@ const getConfigJSON=function(filelist,cb){
 			return;
 		}
 	}
-	cb&&cb(null);
+	cb&&cb("Missing corpus configuration json.",null);
 }
 const isDataJSON=function(name){
 	return name.match(/.json$/) && !name.match(/-corpus.json$/);
