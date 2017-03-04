@@ -17,6 +17,10 @@ const getConfigJSON=function(filelist,cb){
 	}
 	cb&&cb(null);
 }
+const isDataJSON=function(name){
+	return name.match(/.json$/) && !name.match(/-corpus.json$/);
+}
+
 const prepareHTMLFile=function(files,cb){
 	getConfigJSON.call(this,files,function(err,json){
 		if (err) {
@@ -28,11 +32,7 @@ const prepareHTMLFile=function(files,cb){
 			filenameat.push([f.name,i]);
 		}
 		//json should comes first
-		filenameat.sort(function(a,b){
-			if (a[0].indexOf(".json")>0) return -1;
-			if (b[0].indexOf(".json")>0) return 1;
-			return a[0]>b[0]?1:(a[0]<b[0]?-1:0)  
-		});
+		filenameat.sort(function(a,b){return a[0]>b[0]?1:(a[0]<b[0]?-1:0)});
 		const filenames=filenameat.map(function(a){return a[0]});
 		const fileat=filenameat.map(function(a){return a[1]});
 		if (!json.files) { //use all file in the folder
@@ -47,6 +47,18 @@ const prepareHTMLFile=function(files,cb){
 				} else {
 					cb("file "+f+" not found in folder");
 					return;
+				}
+			}
+			const xmlfiles=out.map(function(f){return f.name});
+			//add data json
+			
+			for (var i=0;i<filenames.length;i++) {
+				const jsonfn=filenames[i];
+				if (isDataJSON(jsonfn)) {
+					if (xmlfiles.indexOf(jsonfn)==-1) {
+						const at=filenames.indexOf(jsonfn);
+						out.unshift(files[fileat[at]]);
+					}
 				}
 			}
 		}
@@ -88,7 +100,7 @@ const addBrowserFiles=function(filelist,cb){
 
 		if (f.type.match('text/')){
 			filetype="text";
-		} else if (f.name.match('.json') && !f.name.match('-corpus.json')){
+		} else if (isDataJSON(f.name)){
 			filetype="json";
 		} else {
 			continue;
