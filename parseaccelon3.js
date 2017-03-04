@@ -27,7 +27,6 @@ const addContent=function(content,name,opts){
 	var subtreeitems=[], subtreekpos=0;
 	var corpus=this;
 	corpus.content=content;
-	
 	if (opts.article && !this.openhandlers[opts.article]) {
 		this.openhandlers[opts.article]=format.article;
 		this.closehandlers[opts.article]=format.article;

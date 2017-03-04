@@ -59,7 +59,7 @@ var pack_int = function (ar, savedelta) { // pack ar into
   } while (i < ar.length);
   return r;
 }
-var Kfs=function(path,opts) {
+var Kfs=function(opts) {
 	var handle=null;
 	opts=opts||{};
 	opts.size=opts.size||65536*2048; 
@@ -167,9 +167,9 @@ var Kfs=function(path,opts) {
 	return this;
 }
 
-var Create=function(path,opts) {
+var Create=function(opts) {
 	opts=opts||{};
-	var kfs=new Kfs(path,opts);
+	var kfs=new Kfs(opts);
 	var cur=0;
 
 	var handle={};
@@ -420,6 +420,7 @@ var Create=function(path,opts) {
 		} else {
 			throw 'unsupported type '+type+" keys"+JSON.stringify(key_writing);
 		}
+		return kfs.buf;
 	}
 	
 	var free=function() {
@@ -433,7 +434,8 @@ var Create=function(path,opts) {
 	Object.defineProperty(handle, "size", {get : function(){ return cur; }});
 
 	var writeFile=function(fn,opts,cb) {
-		var fs=require('fs');
+		const _fs="fs";
+		var fs=require(_fs);
 		var totalbyte=handle.currentsize();
 		var written=0,batch=0;
 		

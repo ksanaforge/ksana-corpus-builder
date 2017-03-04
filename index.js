@@ -47,6 +47,45 @@ const createCorpus=function(opts){
 
 	var prevArticlePos=0;
 
+	const addBrowserFiles=function(filelist,cb){
+		if (typeof opts=="function") {
+			cb=opts;
+			opts={};
+		}
+		if (finalized) {
+			throw "cannot add file "+fn+" after finalized";
+		}
+		var remain=0;
+		const addContent=function(content,fn,opts){
+			onFileStart&&onFileStart.call(this,fn,filecount);
+			this.parser.addContent.call(this,content,name,opts);
+			this.putLine(this.popBaseText());
+			onFileEnd&&onFileEnd.call(this,fn,filecount);
+			filecount++;
+			remain--;
+		}
+		for (var i=0, f ; f=filelist[i];i++){
+			if (!f.type.match('text')){
+				continue;
+			}
+			remain++;
+			var reader=new FileReader();
+			var name=this.filename=f.name;
+			const me=this;
+			reader.onload=(function(thefile,fn,options){
+				return function(e){
+					addContent.call(me,e.target.result,fn,options);
+				}
+			})(f,name,opts);
+			reader.readAsText(f,opts.encoding||"UTF-8");
+			setTimeout(function(){
+				if (!remain) {
+					console.log("done");
+					cb&&cb();
+				}
+			}.bind(this),100);
+		}
+	}
 	const addFile=function(fn){
 		if (finalized) {
 			throw "cannot add file "+fn+" after finalized";
@@ -272,7 +311,11 @@ const createCorpus=function(opts){
 		opts.extrasize&&console.log("extra size",opts.extrasize)
 		var size=totalTextSize*5 + (opts.extrasize||0) ;
 		if (size<1000000) size=1000000;
-		require("./outputkdb").write(fn,rom,size,cb);
+		if (!fn && typeof Window!=="undefined") {
+			return require("./outputkdb").writeToBlob(rom,size,cb);
+		} else {
+			require("./outputkdb").write(fn,rom,size,cb);
+		}
 	}
 	const stringify=function(kpos) {
 		return Ksanapos.stringify(kpos,addressPattern);
@@ -284,6 +327,7 @@ const createCorpus=function(opts){
 	const instance={textstack:textstack,popText:popText,
 		peekText:peekText,popBaseText:popBaseText,setHandlers:setHandlers, nextLine:nextLine,
 		addFile:addFile, addText:addText,addBook:addBook, 
+		addBrowserFiles:addBrowserFiles,
 		putField:putField, putEmptyField:putEmptyField,
 		putArticle:putArticle,putArticleField:putArticleField,putEmptyArticleField:putEmptyArticleField,
 		putGroup:putGroup,parseRange:parseRange,
