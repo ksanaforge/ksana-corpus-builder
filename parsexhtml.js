@@ -6,7 +6,7 @@ const fs=require("fs");
 const format=require("./accelon3handler/format");
 const note=require("./accelon3handler/note");
 const anchor=require("./accelon3handler/anchor");
-
+var log=console.log;
 const encodeSubtreeItem=require("./subtree").encodeSubtreeItem;
 var parser;
 
@@ -14,10 +14,10 @@ var defaultopenhandlers={p:format.p,article:format.article,origin:format.origin,
 	a:anchor.a,anchor:anchor.a,
 	pb:format.pb,ptr:note.ptr,def:note.def, footnote:note.footnote, fn:note.footnote};
 const defaultclosehandlers={def:note.def,article:format.article};
-const setHandlers=function(openhandlers,closehandlers,otherhandlers){
-	this.openhandlers=Object.assign(openhandlers||{},defaultopenhandlers);	
-	this.closehandlers=Object.assign(closehandlers||{},defaultclosehandlers);	
-	this.otherhandlers=otherhandlers||{};
+const setHandlers=function(corpus,openhandlers,closehandlers,otherhandlers){
+	corpus.openhandlers=Object.assign(corpus.openhandlers,openhandlers,defaultopenhandlers);
+	corpus.closehandlers=Object.assign(corpus.closehandlers,closehandlers,defaultclosehandlers);	
+	corpus.otherhandlers=Object.assign(corpus.otherhandlers,otherhandlers);
 }
 var tocobj=null;
 const addContent=function(content,name,opts){
@@ -29,11 +29,6 @@ const addContent=function(content,name,opts){
 	var corpus=this;
 	corpus.content=content;
 	
-	if (opts.article && !this.openhandlers[opts.article]) {
-		this.openhandlers[opts.article]=format.article;
-		this.closehandlers[opts.article]=format.article;
-	}
-
 	const addLines=function(s){
 		if( s=="\n" && this._pbline==0) return;//ignore crlf after <pb>
 		var kpos;
@@ -41,12 +36,12 @@ const addContent=function(content,name,opts){
 		for (var i=0;i<lines.length;i++) {
 			kpos=this.makeKPos(this.bookCount,this._pb-1,this._pbline+i,0);
 			if (kpos==-1) {
-				console.log("error kpos",this.bookCount,this._pb-1,this._pbline+i);
+				log("error","error kpos",this.bookCount,this._pb-1,this._pbline+i);
 			}
 			try{
 				this.newLine(kpos, this.tPos);
 			} catch(e) {
-				console.log(e)
+				log("error",e);
 			}
 			this.putLine(lines[i]);
 		}
@@ -74,7 +69,7 @@ const addContent=function(content,name,opts){
 		var capturing=false,subtree=0;
 		tagstack.push({tag:tag,kpos:corpus.kPos,tpos:corpus.tPos});
 		const handler=corpus.openhandlers[tag.name];
-		
+
 		const headtag=tag.name.match(/^H\d+/);
 		if (headtag) {
 			const depth=parseInt(tag.name.substr(1),10);
@@ -167,16 +162,21 @@ const addFile=function(fn,opts){
 const line=function(){
 	return parser.line;
 }
-const initialize=function(opts){
-	opts.footnotes&&note.setFootnotes(opts.footnotes)
+const loadExternals=function(corpus,externals){
+	externals.footnotes&&note.setFootnotes(externals.footnotes);
 }
-const finalize=function(opts){
+const initialize=function(corpus,opts){
+
+}
+const finalize=function(corpus,opts){
 	const footnotes=note.getFootnotes(opts.footnotes);
 	const keys=Object.keys(footnotes);
 	if (keys.length) {
-		console.error("unconsumed footnotes",keys);
+		corpus.log("warn","unconsumed footnotes",keys.join(" ").substring(0,500));
 	}
 }
-
+const setLog=function(_log){
+	log=_log;
+}
 module.exports={addFile:addFile,addContent:addContent,setHandlers:setHandlers,line:line
-,initialize:initialize,finalize:finalize};
+,initialize:initialize,loadExternals:loadExternals,finalize:finalize,setLog:setLog};

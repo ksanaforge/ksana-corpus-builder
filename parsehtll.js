@@ -1,4 +1,5 @@
 const fs=require("fs");
+var log=console.log;
 var setHandlers=function(openhandlers,closehandlers,otherhandlers){
 	this.openhandlers=openhandlers||{};	
 	this.closehandlers=closehandlers||{};
@@ -66,4 +67,8 @@ var addContent=function(content,name,opts){
 const line=function(){
 	return linetext;
 }
-module.exports={addFile:addFile,addContent:addContent,setHandlers:setHandlers,line:line};
+const setLog=function(_log){
+	log=_log;
+}
+module.exports={addFile:addFile,addContent:addContent,setHandlers:setHandlers,line:line,
+setLog:setLog};

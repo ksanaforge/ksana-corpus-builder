@@ -7,30 +7,26 @@ const format=require("./accelon3handler/format");
 const note=require("./accelon3handler/note");
 const a3Tree=require("./accelon3handler/tree");
 const encodeSubtreeItem=require("./subtree").encodeSubtreeItem;
-var parser;
+var parser,log=console.log;
 
 var defaultopenhandlers={"段":format.p,p:format.p,
 	"頁":format.pb,"註":note.ptr,"釋":note.def};
 const defaultclosehandlers={"釋":note.def};
-const setHandlers=function(openhandlers,closehandlers,otherhandlers){
-
-	this.openhandlers=Object.assign(openhandlers||{},defaultopenhandlers);	
-	this.closehandlers=Object.assign(closehandlers||{},defaultclosehandlers);	
-	this.otherhandlers=otherhandlers||{};
+const setHandlers=function(corpus,openhandlers,closehandlers,otherhandlers){
+	corpus.openhandlers=Object.assign(corpus.openhandlers,openhandlers,defaultopenhandlers);
+	corpus.closehandlers=Object.assign(corpus.closehandlers,closehandlers,defaultclosehandlers);	
+	corpus.otherhandlers=Object.assign(corpus.otherhandlers,otherhandlers);
 }
 var tocobj=null;
+
 const addContent=function(content,name,opts){
+	const corpus=this;
 	opts=opts||{};
 	const Sax=require("sax");
 	parser = Sax.parser(true);
 	var tagstack=[];
 	var subtreeitems=[], subtreekpos=0;
-	var corpus=this;
 	corpus.content=content;
-	if (opts.article && !this.openhandlers[opts.article]) {
-		this.openhandlers[opts.article]=format.article;
-		this.closehandlers[opts.article]=format.article;
-	}
 
 	const addLines=function(s){
 
@@ -40,12 +36,12 @@ const addContent=function(content,name,opts){
 		for (var i=0;i<lines.length;i++) {
 			kpos=this.makeKPos(this.bookCount,this._pb-1,this._pbline+i,0);
 			if (kpos==-1) {
-				console.log("error kpos",this.bookCount,this._pb-1,this._pbline+i);
+				log("error","error kpos "+this.bookCount+" "+this._pb-1+" "+this._pbline+i);
 			}
 			try{
 				this.newLine(kpos, this.tPos);
 			} catch(e) {
-				console.log(e)
+				log("error",e)
 			}
 			this.putLine(lines[i]);
 		}
@@ -75,7 +71,7 @@ const addContent=function(content,name,opts){
 		tagstack.push({tag:tag,kpos:corpus.kPos,tpos:corpus.tPos});
 		const handler=corpus.openhandlers[tag.name];
 		const treetag=a3Tree.call(corpus,tag,parser);
-	
+		
 		const depth=treetag.indexOf(tag.name);
 
 		if (depth>-1) {
@@ -118,7 +114,7 @@ const addContent=function(content,name,opts){
 				if (subtreeitems.length){
 					corpus.putField("subtoc",subtreeitems,subtreekpos);
 					corpus.putField("subtoc_range",corpus.kPos,subtreekpos);
-					subtreeitems=[];	
+					subtreeitems=[];
 				}
 				subtreekpos=tocobj.kpos;
 			}
@@ -142,14 +138,36 @@ const addContent=function(content,name,opts){
 	parser.write(content);
 	finalize();
 }
+const setLog=function(_log){
+	log=_log;
+}
 const addFile=function(fn,opts){
-	//remove bom
+	const corpus=this;
 	const encoding=opts.encoding||"utf8";
 	var content=fs.readFileSync(fn,encoding).replace(/\r?\n/g,"\n").trim();
-	this.filename=fn;
+	corpus.filename=fn;
 	addContent.call(this,content,fn,opts);
 }
 const line=function(){
 	return parser.line;
 }
-module.exports={addFile:addFile,addContent:addContent,setHandlers:setHandlers,line:line};
+const initialize=function(corpus,opts){
+	if (!opts.schema)return;
+	const schema=opts.schema;
+	if(schema.article) {
+		corpus.openhandlers[schema.article]=format.article;
+		corpus.closehandlers[schema.article]=format.article;
+	}
+	if(schema.category) {
+		corpus.openhandlers[schema.category]=format.category;
+		corpus.closehandlers[schema.category]=format.category;
+	}
+	if(schema.group) {
+		corpus.openhandlers[schema.group]=format.group;
+		corpus.closehandlers[schema.group]=format.group;
+	}
+}
+
+module.exports={addFile:addFile,addContent:addContent,
+	setLog:setLog,initialize:initialize,
+	setHandlers:setHandlers,line:line};

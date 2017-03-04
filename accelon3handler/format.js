@@ -12,8 +12,7 @@ const pb=function(tag,closing){
 	if (page===1) {
 		this.addBook();
 	} else if (page!==prevpage+1) {//newpage
-
-		console.error("wrong page number "+page+", prev:"+prevpage);
+		this.log("error","wrong page number "+page+", prev:"+prevpage);
 	}
 	this._pb=page;
 	this._pbline=0;
@@ -46,4 +45,18 @@ const origin=function(tag){
 		console.error("origin missing from attribute");
 	}
 }
-module.exports={p:p,pb:pb,article:article,maxArticle:function(){return maxarticlelen}};
+const group=function(tag,closing,kpos,tpos){
+	if (closing) {
+		const name=this.popText();
+		this.putGroup(name,kpos,tpos);	
+	} else{
+		return true;
+	}
+}
+const category=function(tag,closing,kpos,tpos){
+
+}
+
+module.exports={p:p,pb:pb,article:article,
+group:group,category:category,
+	maxArticle:function(){return maxarticlelen}};

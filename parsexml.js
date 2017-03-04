@@ -1,6 +1,6 @@
 const Sax=require("sax");
 const fs=require("fs");
-var parser;
+var parser,log=console.log;
 const setHandlers=function(openhandlers,closehandlers,otherhandlers){
 	this.openhandlers=openhandlers||{};	
 	this.closehandlers=closehandlers||{};
@@ -59,4 +59,8 @@ const addFile=function(fn,opts){
 const line=function(){
 	return parser.line;
 }
-module.exports={addFile:addFile,addContent:addContent,setHandlers:setHandlers,line:line};
+const setLog=function(_log){
+	log=_log;
+}
+module.exports={addFile:addFile,addContent:addContent,setHandlers:setHandlers,setLog:setLog,
+	line:line};

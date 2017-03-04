@@ -40,77 +40,39 @@ const createCorpus=function(opts){
 	var finalized=false;
 	opts.maxTextStackDepth=opts.maxTextStackDepth||2;
 	
-	var onBookStart,onBookEnd,onToken, onFileStart, onFileEnd, onFinalize;
+	//var onBookStart,onBookEnd,onToken, onFileStart, onFileEnd, onFinalize;
 
 	var disorderPages=[];
 	var longLines=[];
 
 	var prevArticlePos=0;
 
-	const addBrowserFiles=function(filelist,cb){
-		if (typeof opts=="function") {
-			cb=opts;
-			opts={};
-		}
-		if (finalized) {
-			throw "cannot add file "+fn+" after finalized";
-		}
-		var remain=0;
-		const addContent=function(content,fn,opts){
-			onFileStart&&onFileStart.call(this,fn,filecount);
-			this.parser.addContent.call(this,content,name,opts);
-			this.putLine(this.popBaseText());
-			onFileEnd&&onFileEnd.call(this,fn,filecount);
-			filecount++;
-			remain--;
-		}
-		for (var i=0, f ; f=filelist[i];i++){
-			if (!f.type.match('text')){
-				continue;
-			}
-			remain++;
-			var reader=new FileReader();
-			var name=this.filename=f.name;
-			const me=this;
-			reader.onload=(function(thefile,fn,options){
-				return function(e){
-					addContent.call(me,e.target.result,fn,options);
-				}
-			})(f,name,opts);
-			reader.readAsText(f,opts.encoding||"UTF-8");
-			setTimeout(function(){
-				if (!remain) {
-					console.log("done");
-					cb&&cb();
-				}
-			}.bind(this),100);
-		}
-	}
+
 	const addFile=function(fn){
 		if (finalized) {
 			throw "cannot add file "+fn+" after finalized";
 		}
 		if (!require("fs").existsSync(fn)) {
-			if (fn.indexOf("#")==-1) console.log("file not found",fn);
+			if (fn.indexOf("#")==-1) log("error","file not found",fn);
 			return;
 		}
-		onFileStart&&onFileStart.call(this,fn,filecount);
+		this.onFileStart&&this.onFileStart.call(this,fn,filecount);
 		this.parser.addFile.call(this,fn,opts);
 		this.putLine(this.popBaseText());
 
-		onFileEnd&&onFileEnd.call(this,fn,filecount);
+		this.onFileEnd&&this.onFileEnd.call(this,fn,filecount);
 		filecount++;
 	}
 
 	const setHandlers=function(openhandlers,closehandlers,otherhandlers){
 		otherhandlers=otherhandlers||{};
-		this.parser.setHandlers.call(this,openhandlers,closehandlers,otherhandlers);
-		onBookStart=otherhandlers.bookStart;
-		onBookEnd=otherhandlers.bookEnd;
-		onFileStart=otherhandlers.fileStart;
-		onFileEnd=otherhandlers.fileEnd;
-		onToken=otherhandlers.onToken;
-		onFinalize=otherhandlers.finalize;
+		this.parser.setHandlers(this,openhandlers,closehandlers,otherhandlers);
+		this.onBookStart=otherhandlers.bookStart;
+		this.onBookEnd=otherhandlers.bookEnd;
+		this.onFileStart=otherhandlers.fileStart;
+		this.onFileEnd=otherhandlers.fileEnd;
+		this.onToken=otherhandlers.onToken;
+		this.onFinalize=otherhandlers.finalize;
 	}
 
 	const putField=function(name,value,kpos){
@@ -194,12 +156,12 @@ const createCorpus=function(opts){
 			var s=this.popBaseText();
 			if (s[s.length-1]=="\n") s=s.substr(0,s.length-1);//dirty
 			if (s) this.putLine(s);
-			onBookEnd &&onBookEnd.call(this,bookcount);
+			this.onBookEnd &&this.onBookEnd.call(this,bookcount);
 		}
 
 		inverted&&inverted.putBookPos.call(this,bookcount);
 		bookcount++;
-		onBookStart&&onBookStart.call(this,bookcount);
+		this.onBookStart&&this.onBookStart.call(this,bookcount);
 	}
 	const makeKPos=function(book,page,line,character,pat){
 		pat=pat||addressPattern;
@@ -233,7 +195,7 @@ const createCorpus=function(opts){
 			if (opts.randomPage) {
 				disorderPages.push([kpos,human,prevlinekpos,prevh]);
 			} else {
-				console.error("line",this.parser.line());
+				this.log("error",this.parser.line());
 				throw "line kpos must be larger the previous one. kpos:"+
 				human+"prev "+prevh;
 			}
@@ -273,7 +235,7 @@ const createCorpus=function(opts){
 
 	const stop=function(){
 		started=false;
-		bookcount&&onBookEnd&&onBookEnd.call(this);
+		this.bookcount&&this.onBookEnd&&this.onBookEnd.call(this);
 	}
 
 	const buildMeta=function(){
@@ -299,8 +261,8 @@ const createCorpus=function(opts){
 
 	const writeKDB=function(fn,cb){
 		started&&stop();
-		onFinalize&&onFinalize.call(this);
-		instance.parser.finalize&&	instance.parser.finalize(opts);
+		this.onFinalize&&this.onFinalize.call(this);
+		instance.parser.finalize&&	instance.parser.finalize(instance,opts);
 
 		finalized=true;
 		//var okdb="./outputkdb";
@@ -308,7 +270,8 @@ const createCorpus=function(opts){
 		const rom=romable.buildROM(meta,inverted);
 
 		if (typeof window!=="undefined") console.log(rom);
-		opts.extrasize&&console.log("extra size",opts.extrasize)
+
+		//opts.extrasize&&console.log("extra size",opts.extrasize)
 		var size=totalTextSize*5 + (opts.extrasize||0) ;
 		if (size<1000000) size=1000000;
 		if (!fn && typeof Window!=="undefined") {
@@ -324,6 +287,15 @@ const createCorpus=function(opts){
 		return Textutil.parseRange(s,addressPattern);
 	}
 	const handlers=require("./handlers");
+	var log=function(msg){
+		console.log(msg);
+	}
+	const setLog=function(_log){
+		this.log=_log;
+		this.parser.setLog&&this.parser.setLog(_log);
+		Ksanapos.setLog&&		Ksanapos.setLog(_log);
+	}
+
 	const instance={textstack:textstack,popText:popText,
 		peekText:peekText,popBaseText:popBaseText,setHandlers:setHandlers, nextLine:nextLine,
 		addFile:addFile, addText:addText,addBook:addBook, 
@@ -333,9 +305,11 @@ const createCorpus=function(opts){
 		putGroup:putGroup,parseRange:parseRange,
 		putBookField:putBookField,putEmptyBookField:putEmptyBookField,handlers:handlers,
 		setPos:setPos, newLine:newLine, putLine:putLine, nextLineStart:nextLineStart, stringify:stringify,
-		findArticle:romable.findArticle,
+		findArticle:romable.findArticle,log:log,setLog:setLog,
 		importExternalMarkup:importExternalMarkup,
-		makeKPos:makeKPos, makeRange:makeRange,	start:start, romable:romable, stop:stop, writeKDB:writeKDB};
+		makeKPos:makeKPos, makeRange:makeRange,	start:start, 
+		romable:romable, stop:stop, writeKDB:writeKDB,
+		openhandlers:{},closehandlers:{},otherhandlers:{}};
 
 	Object.defineProperty(instance,"kPos",{ get:function(){return LineKStart+LineKCount}});
 	Object.defineProperty(instance,"kPosH",{ get:function(){return Ksanapos.stringify(LineKStart+LineKCount,addressPattern)}});
@@ -347,15 +321,20 @@ const createCorpus=function(opts){
 	Object.defineProperty(instance,"disorderPages",{ get:function(){return disorderPages}});
 	Object.defineProperty(instance,"longLines",{ get:function(){return longLines}});
 	Object.defineProperty(instance,"id",{ get:function(){return opts.name}});
+	Object.defineProperty(instance,"opts",{ get:function(){return opts}});
+
+
 	inverted&&Object.defineProperty(instance,"tPos",{ get:inverted.tPos});
 	inverted&&Object.defineProperty(instance,"totalPosting",{ get:inverted.totalPosting});
+
 
 	instance.parser=parsers[opts.inputFormat];
 	if (!instance.parser) {
 		throw "unsupported input format "+opts.inputFormat;
 	}
 
-	instance.parser.initialize&&	instance.parser.initialize(opts);
+	instance.parser.initialize&&instance.parser.initialize(instance,opts);
+
 
 	instance.kcount=Ksanacount.getCounter(opts.language);
 
@@ -364,14 +343,32 @@ const createCorpus=function(opts){
 	} else {
 		started=true; //default start 
 	}
-	
-	return instance;
 
+	return instance;
 }
 
+const addBrowserFiles=require("./browserfile").addBrowserFiles;
+const prepareHTMLFile=require("./browserfile").prepareHTMLFile;
+
+const createWebCorpus=function(osfiles,log,cb){
+	prepareHTMLFile(osfiles,function(err,files,json){
+		if (err) {
+			cb(err);
+			return;
+		}
+		const corpus=createCorpus(json);
+		log&&corpus.setLog(log);
+		corpus.setHandlers();
+		addBrowserFiles.call(corpus,files,cb);
+	});
+}
 const makeKPos=function(book,page,line,character,pat){
 	if (typeof pat==="string") pat=knownPatterns[pat];
 	return Ksanapos.makeKPos([book,page,line,character],pat);
 }
-
-module.exports={createCorpus:createCorpus,makeKPos:makeKPos,genBigram:genBigram};
+const createCorpusFromFolder=function(folder,logger,cb){
+	// for Node.js
+	// build a folder with xxx-corpus.json 
+}
+module.exports={createCorpus:createCorpus, createWebCorpus:createWebCorpus,
+	makeKPos:makeKPos,genBigram:genBigram};

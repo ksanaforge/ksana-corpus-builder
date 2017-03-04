@@ -5,7 +5,7 @@ const footnote=function(tag,closing){
 	if (closing)return;
 	const n=tag.attributes.n;
 	if (!footnotes[n]) {
-		console.error("footnote ",n,"note found");
+		this.log("error","footnote ",n,"note found");
 	} else {
 		const ndef=footnotes[n];
 		this.putArticleField("footnote",n+"\t"+ndef);
@@ -35,7 +35,7 @@ const def=function(tag,closing,kpos){
 		const s=this.popText();
 		const n=tag.attributes.n;
 		if (!n) {
-			console.warn("釋 without n",this.stringify(this.kPos));
+			this.log("warn","釋 without n",this.stringify(this.kPos));
 			return;
 		}
 		const defrange=this.makeRange(kpos,this.kPos);
