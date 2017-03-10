@@ -120,8 +120,7 @@ const addContent=function(content,name,opts){
 
 		if (opts.subtoc==tagname) {
 			//create a new subtree
-
-			corpus.putGroup( tocobj.text, kpos)
+			//corpus.putGroup( tocobj.text, kpos);
 			if (subtreeitems.length){
 				corpus.putField("subtoc",subtreeitems,subtreekpos);
 				corpus.putField("subtoc_range",corpus.kPos,subtreekpos);
@@ -166,7 +165,7 @@ const loadExternals=function(corpus,externals){
 	externals.footnotes&&note.setFootnotes(externals.footnotes);
 }
 const initialize=function(corpus,opts){
-
+	if (opts.footnotes) note.setFootnotes(opts.footnotes);
 }
 const finalize=function(corpus,opts){
 	const footnotes=note.getFootnotes(opts.footnotes);

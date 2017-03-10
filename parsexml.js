@@ -1,10 +1,10 @@
 const Sax=require("sax");
 const fs=require("fs");
 var parser,log=console.log;
-const setHandlers=function(openhandlers,closehandlers,otherhandlers){
-	this.openhandlers=openhandlers||{};	
-	this.closehandlers=closehandlers||{};
-	this.otherhandlers=otherhandlers||{};
+const setHandlers=function(corpus,openhandlers,closehandlers,otherhandlers){
+	corpus.openhandlers=Object.assign(corpus.openhandlers,openhandlers);
+	corpus.closehandlers=Object.assign(corpus.closehandlers,closehandlers);	
+	corpus.otherhandlers=Object.assign(corpus.otherhandlers,otherhandlers);
 }
 const addContent=function(content,name,opts){
 	parser = Sax.parser(true);

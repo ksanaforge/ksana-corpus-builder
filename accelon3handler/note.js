@@ -5,7 +5,7 @@ const footnote=function(tag,closing){
 	if (closing)return;
 	const n=tag.attributes.n;
 	if (!footnotes[n]) {
-		this.log("error","footnote ",n,"note found");
+		this.log("error","footnote "+n+" notfound");
 	} else {
 		const ndef=footnotes[n];
 		this.putArticleField("footnote",n+"\t"+ndef);

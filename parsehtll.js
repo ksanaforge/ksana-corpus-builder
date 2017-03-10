@@ -1,9 +1,9 @@
 const fs=require("fs");
 var log=console.log;
-var setHandlers=function(openhandlers,closehandlers,otherhandlers){
-	this.openhandlers=openhandlers||{};	
-	this.closehandlers=closehandlers||{};
-	this.otherhandlers=otherhandlers||{};
+var setHandlers=function(corpus,openhandlers,closehandlers,otherhandlers){
+	corpus.openhandlers=openhandlers||{};	
+	corpus.closehandlers=closehandlers||{};
+	corpus.otherhandlers=otherhandlers||{};
 }
 
 var addFile=function(fn,opts){

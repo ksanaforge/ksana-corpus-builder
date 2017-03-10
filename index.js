@@ -287,9 +287,18 @@ const createCorpus=function(opts){
 		return Textutil.parseRange(s,addressPattern);
 	}
 	const handlers=require("./handlers");
-	var log=function(msg){
-		console.log(msg);
+	var log=function(){
+		var args = Array.prototype.slice.call(arguments);
+		if (args[0]=="error") {
+			args.shift();
+			console.error.apply(null,args);
+		} else if (args[0]=="warn") {
+			console.warn.apply(null,args);
+		} else {
+			console.log.apply(null,args);
+		}
 	}
+
 	const setLog=function(_log){
 		this.log=_log;
 		this.parser.setLog&&this.parser.setLog(_log);

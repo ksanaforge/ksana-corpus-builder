@@ -26,6 +26,9 @@ const article=function(tag,closing,kpos,tpos){
 		const caption=this.popText();
 		this.addText(caption);
 		this.putArticle(caption,kpos,tpos);
+		if (this.opts.articleAsGroup) {
+			this.putGroup(caption,kpos,tpos);
+		}
 	} else {
 		const tree=tag.attributes.t;
 		if (this.tPos-prevtpos>maxarticlelen) maxarticlelen=this.tPos-prevtpos;
