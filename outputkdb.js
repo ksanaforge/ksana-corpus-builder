@@ -15,9 +15,6 @@ const write=function(fn,rom,size,finishcb){
 	kdbw.save(rom,null);//,{autodelete:true}
 
 	kdbw.writeFile(fn,function(total,written) {
-		var progress=written/total;
-
-		console.log(progress);
 		if (finishcb && total==written) finishcb(total);
 	});
 }

@@ -17,7 +17,7 @@ const parsers={
 
 const createCorpus=function(opts){
 	opts=opts||{};
-
+	opts.bits=opts.bits||[7,10,5,8];//default bits
 	const bigrams=opts.bigrams||null;
 	const addressPattern=opts.bitPat?knownPatterns[opts.bitPat]:
 			Ksanapos.buildAddressPattern(opts.bits,opts.column);
@@ -38,7 +38,7 @@ const createCorpus=function(opts){
 			,bigrams:bigrams,removePunc:opts.removePunc});
 
 	var finalized=false;
-	opts.maxTextStackDepth=opts.maxTextStackDepth||2;
+	opts.maxTextStackDepth=opts.maxTextStackDepth||3;
 	
 	//var onBookStart,onBookEnd,onToken, onFileStart, onFileEnd, onFinalize;
 
@@ -46,7 +46,6 @@ const createCorpus=function(opts){
 	var longLines=[];
 
 	var prevArticlePos=0;
-
 
 	const addFile=function(fn){
 		if (finalized) {
@@ -336,7 +335,7 @@ const createCorpus=function(opts){
 	inverted&&Object.defineProperty(instance,"tPos",{ get:inverted.tPos});
 	inverted&&Object.defineProperty(instance,"totalPosting",{ get:inverted.totalPosting});
 
-
+	opts.inputFormat=opts.inputFormat||"xhtml";
 	instance.parser=parsers[opts.inputFormat];
 	if (!instance.parser) {
 		throw "unsupported input format "+opts.inputFormat;
@@ -371,13 +370,50 @@ const createWebCorpus=function(osfiles,log,cb){
 		addBrowserFiles.call(corpus,files,cb);
 	});
 }
+const createCorpusFromJSON=function(jsonfn,cb){
+	const fs=require("fs");
+	if (!fs.existsSync|(jsonfn)) {
+		cb(jsonfn+" not found");
+		return;
+	}
+	const content=fs.readFileSync(jsonfn);
+	var json=null;
+	try{
+		json=JSON.parse(content);	
+	} catch(e){
+		cb(e.message||e);
+		return;
+	}
+	const m=jsonfn.match(/([^/\\ ]+)-corpus\.json/);
+	if (!m) {
+		cb("invalid corpus json name:",jsonfn);
+		return;
+	}
+	corpusid=m[1];
+	const path=require('path').dirname(jsonfn)+'/';
+	const corpus=createCorpus(json);
+	if (!json.id)json.id=corpusid;
+	var files=[];
+	if (json.files) {
+		files=json.files;
+	} else {
+		files=fs.readdirSync(pathname);
+		files=files.filter(function(fn){return fn.substr(fn.length-4)==".xml"});
+	}
+	
+	files.forEach(function(fn){corpus.addFile(path+fn)});
+
+	corpus.writeKDB(corpusid+".cor",function(byteswritten){
+		cb(0,byteswritten+" bytes written");
+	});
+
+}
 const makeKPos=function(book,page,line,character,pat){
 	if (typeof pat==="string") pat=knownPatterns[pat];
 	return Ksanapos.makeKPos([book,page,line,character],pat);
 }
-const createCorpusFromFolder=function(folder,logger,cb){
-	// for Node.js
-	// build a folder with xxx-corpus.json 
-}
-module.exports={createCorpus:createCorpus, createWebCorpus:createWebCorpus,
+
+module.exports={createCorpus:createCorpus, 
+	createCorpusFromJSON:createCorpusFromJSON,
+	createWebCorpus:createWebCorpus,
 	makeKPos:makeKPos,genBigram:genBigram};

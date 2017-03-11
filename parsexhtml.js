@@ -11,12 +11,12 @@ const encodeSubtreeItem=require("./subtree").encodeSubtreeItem;
 var parser;
 
 var defaultopenhandlers={p:format.p,article:format.article,origin:format.origin,
-	a:anchor.a,anchor:anchor.a,
+	a:anchor.a,anchor:anchor.a,group:format.group,
 	pb:format.pb,ptr:note.ptr,def:note.def, footnote:note.footnote, fn:note.footnote};
-const defaultclosehandlers={def:note.def,article:format.article};
+const defaultclosehandlers={def:note.def,article:format.article,group:format.group};
 const setHandlers=function(corpus,openhandlers,closehandlers,otherhandlers){
-	corpus.openhandlers=Object.assign(corpus.openhandlers,openhandlers,defaultopenhandlers);
-	corpus.closehandlers=Object.assign(corpus.closehandlers,closehandlers,defaultclosehandlers);	
+	corpus.openhandlers=Object.assign(corpus.openhandlers,openhandlers);
+	corpus.closehandlers=Object.assign(corpus.closehandlers,closehandlers);	
 	corpus.otherhandlers=Object.assign(corpus.otherhandlers,otherhandlers);
 }
 var tocobj=null;
@@ -70,7 +70,7 @@ const addContent=function(content,name,opts){
 		tagstack.push({tag:tag,kpos:corpus.kPos,tpos:corpus.tPos});
 		const handler=corpus.openhandlers[tag.name];
 
-		const headtag=tag.name.match(/^H\d+/);
+		const headtag=tag.name.match(/^[Hh]\d+/);
 		if (headtag) {
 			const depth=parseInt(tag.name.substr(1),10);
 			tocobj={tag:tag.name,kpos:corpus.kPos,text:"",depth:depth};
@@ -117,17 +117,14 @@ const addContent=function(content,name,opts){
 		} else if (corpus.otherhandlers.onclosetag) {
 			corpus.otherhandlers.onclosetag.call(corpus,tag,true,kpos,tpos);
 		}
-
 		if (opts.subtoc==tagname) {
-			//create a new subtree
-			//corpus.putGroup( tocobj.text, kpos);
 			if (subtreeitems.length){
 				corpus.putField("subtoc",subtreeitems,subtreekpos);
 				corpus.putField("subtoc_range",corpus.kPos,subtreekpos);
 				subtreeitems=[];	
-			}			
+			}
+			subtreekpos=corpus.kPos;
 		}
-
 		if (tocobj && tagname==tocobj.tag){ //closing the toc node
 			var headvalue=tocobj.depth;
 			const len=corpus.kcount(tocobj.text);
@@ -166,6 +163,12 @@ const loadExternals=function(corpus,externals){
 }
 const initialize=function(corpus,opts){
 	if (opts.footnotes) note.setFootnotes(opts.footnotes);
+	if (!opts.subtoc) opts.subtoc="article";
+	if (!opts.articleFields) {
+		opts.articleFields=["rend","head","p"];
+	}
+	corpus.openhandlers=defaultopenhandlers;
+	corpus.closehandlers=defaultclosehandlers;
 }
 const finalize=function(corpus,opts){
 	const footnotes=note.getFootnotes(opts.footnotes);

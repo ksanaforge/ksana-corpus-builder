@@ -96,10 +96,10 @@ const createInverted=function(opts){
 		var tokens=arr.map(function(item){return item[0]});
 		var postings=arr.map(function(item){return item[1]});
 		token_postings={};
-
-		return {tokens:tokens,postings:postings,article2tpos:article2tpos,
-			group2tpos:group2tpos,
-			line2tpos:line2tpos,book2tpos:book2tpos,posting_length:posting_length};
+		const r={tokens:tokens,postings:postings,article2tpos:article2tpos,
+			line2tpos:line2tpos,book2tpos:book2tpos,posting_length:posting_length}
+		if (group2tpos.length) r.group2tpos=group2tpos;
+		return r;
 	}
 
 	const tokenizer=createTokenizer(opts.tokenizerVersion);
