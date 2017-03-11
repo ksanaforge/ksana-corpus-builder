@@ -5,7 +5,6 @@ const pb=function(tag,closing){
 		return;
 	}
 
-
 	var pbn=n.split(/[\.p]/);
 	var page=parseInt(pbn.length==2?pbn[1]:pbn[0],10);
 
@@ -43,7 +42,7 @@ const p=function(tag,closing){
 const origin=function(tag){
 	const from=tag.attributes.from;
 	if (from) {
-		this.putAritcleField("origin",from);
+		this.putArticleField("origin",from);
 	} else {
 		console.error("origin missing from attribute");
 	}
@@ -61,5 +60,5 @@ const category=function(tag,closing,kpos,tpos){
 }
 
 module.exports={p:p,pb:pb,article:article,
-group:group,category:category,
+group:group,category:category,origin:origin,
 	maxArticle:function(){return maxarticlelen}};
