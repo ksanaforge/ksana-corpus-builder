@@ -22,12 +22,14 @@ const pb=function(tag,closing){
 var maxarticlelen=0,prevtpos=0;
 const article=function(tag,closing,kpos,tpos){
 	if (closing) {
+
 		const caption=this.popText();
 		this.addText(caption);
 		this.putArticle(caption,kpos,tpos);
-		if (this.opts.articleAsGroup) {
-			this.putGroup(caption,kpos,tpos);
-		}
+
+		const range=this.makeRange(kpos,this.kPos);
+		this.putArticleField("rend","article",range);
+
 	} else {
 		const tree=tag.attributes.t;
 		if (this.tPos-prevtpos>maxarticlelen) maxarticlelen=this.tPos-prevtpos;
@@ -55,10 +57,17 @@ const group=function(tag,closing,kpos,tpos){
 		return true;
 	}
 }
+const tag=function(tag,closing,kpos,tpos){
+	if (closing) {
+
+		const range=this.makeRange(kpos,this.kPos);
+		this.putArticleField("rend","tag",range);
+	}
+}
 const category=function(tag,closing,kpos,tpos){
 
 }
 
 module.exports={p:p,pb:pb,article:article,
-group:group,category:category,origin:origin,
+group:group,category:category,origin:origin,tag:tag,
 	maxArticle:function(){return maxarticlelen}};

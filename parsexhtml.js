@@ -11,9 +11,10 @@ const encodeSubtreeItem=require("./subtree").encodeSubtreeItem;
 var parser;
 
 var defaultopenhandlers={p:format.p,article:format.article,origin:format.origin,
-	a:anchor.a,anchor:anchor.a,group:format.group,
+	tag:format.tag,a:anchor.a,anchor:anchor.a,group:format.group,
 	pb:format.pb,ptr:note.ptr,def:note.def, footnote:note.footnote, fn:note.footnote};
-const defaultclosehandlers={def:note.def,article:format.article,group:format.group};
+const defaultclosehandlers={def:note.def,article:format.article,
+	group:format.group,tag:format.tag};
 const setHandlers=function(corpus,openhandlers,closehandlers,otherhandlers){
 	corpus.openhandlers=Object.assign(corpus.openhandlers,openhandlers);
 	corpus.closehandlers=Object.assign(corpus.closehandlers,closehandlers);	
@@ -59,8 +60,10 @@ const addContent=function(content,name,opts){
 			corpus.addText(t);	
 		} else {
 			var text=corpus.popBaseText();
-			text+=t;
+			const at=t.lastIndexOf("\n");
+			text+=t.substr(0,at+1);
 			addLines.call(corpus,text);
+			corpus.addText(t.substr(at+1));
 		}
 		
 		if (tocobj) tocobj.text+=t;
