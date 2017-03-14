@@ -4,7 +4,7 @@ var ignoretags={頁:true,段:true,註:true,
 	釋:true,RM:true,RN:true,P:true,PB:true,圖:true,IMAGE:true,IMG:true,
 	圖文字:true,
 };
-const prolog=function(tag,parser){
+const prolog=function(tag){
 	if (ignoretags[tag.name])return treetag;
 	var t=tag.attributes.t,l=tag.attributes.l;
 	var stoping=false;
@@ -33,7 +33,7 @@ const prolog=function(tag,parser){
 
 	const depth=treetag.indexOf(tag.name);
 	if (depth==-1 &&!knowntag[tag.name]) {
-		console.warn("unknown tag",tag.name,"at line",parser.line);
+		//console.warn("unknown tag",tag.name,"at line");
 	}
 	return treetag;
 }

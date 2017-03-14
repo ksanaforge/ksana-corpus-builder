@@ -1,5 +1,19 @@
-var prevpage=0,prevline=0;
-const lb_page_line=function(tag){
+const article=function(tag,closing,kpos,tpos,start,end){
+	if (closing) {
+		const name=this.substring(start,end).replace(/<.+?>/g,"");
+		this.putArticle(name,kpos,tpos);
+		const range=this.makeRange(kpos,this.kPos);
+		this.putArticleField("rend","article",range);		
+	}
+}
+const articlegroup=function(tag,closing,kpos,tpos,start,end){
+	if (closing){
+		const name=this.substring(start,end).replace(/<.+?>/g,"");
+		this.putGroup(name,kpos);		
+	}
+}
+
+const lb=function(tag){
 	const n=tag.attributes.n;
 	if (!n || n.indexOf(".")==-1){
 		//a lb without n in y01 a19.11
@@ -16,14 +30,14 @@ const lb_page_line=function(tag){
 		throw "negative page number";
 		return;
 	}
-	var s=this.popBaseText();
-	this.putLine(s);
 
-	if (prevpage!==str_page && page===1) {
+	this.emitLine();
+
+	if (this._pb!==str_page && page===1) {
 		this.addBook();
 	} else {
-		if (line!=1 && line-prevline>1) {
-			console.log("Gap at page ",page,"line ",line,",previous line",prevline);
+		if (line!=1 && line-this._pbline>1) {
+			console.log("Gap at page ",page,"line ",line,",previous line",this._pbline);
 		}
 	}
 
@@ -37,37 +51,45 @@ const lb_page_line=function(tag){
 		}
 		this.newLine(kpos);
 	}
-	prevpage=str_page;
-	prevline=line;
-}
-var subtreeitems=[];
-var subtreekpos;
-const head_subtree_finalize=function(){
-	this.putField("subtoc",subtreeitems,subtreekpos);
-	this.putField("subtoc_range",this.kPos,subtreekpos);
+	this._pb=str_page;
+	this._pbline=line;	
 }
 
-const encodeSubtreeItem=require("./subtree").encodeSubtreeItem;
-
-const head_subtree=function(tag,closing,depth,removetext){
-	if (closing){
-		const text=this.popText();
-
-		if (depth==1) { //new subtoc
-			if (subtreeitems.length) {
-				this.putField("subtoc",subtreeitems,subtreekpos);
-				this.putField("subtoc_range",this.kPos,subtreekpos);
-				subtreeitems=[];
-			}
-			subtreekpos=this.kPos;
-		}
-		const tocobj={depth:depth,text:text,kpos:this.kPos};
-		subtreeitems.push(encodeSubtreeItem(tocobj));
-
-		if (!removetext) this.addText(text);
+var treeitems=[];
+var treekpos;
+const head_finalize=function(){
+	this.putField("toc",treeitems,treekpos);
+	this.putField("tocrange",this.kPos,treekpos);
+}
+const div=function(tag,closing,kpos,tpos,start,end){
+	if (closing) {
+		this._divdepth--;
 	} else {
-		return true;
+		this._divdepth++;
 	}
 }
-module.exports={lb_page_line:lb_page_line,head_subtree:head_subtree,
-	head_subtree_finalize:head_subtree_finalize};
+const head=function(tag,closing,kpos,tpos,start,end){
+	if (closing){
+		const depth=this._divdepth;
+		if (depth==1) { //new subtoc
+			if (treeitems.length) {
+				this.putField("toc",treeitems,treekpos);
+				this.putField("tocrange",this.kPos,treekpos);
+				treeitems=[];
+			}
+			treekpos=this.kPos;
+			if (this.opts.topDIVAsArticle){
+				article.call(this,tag,closing,kpos,tpos,start,end);
+			}
+		}
+		const text=this.substring(start,end).replace(/<.+?>/g,"");
+		//console.log(depth,text);
+		const tocobj={depth:depth,text:text,kpos:this.kPos};
+		treeitems.push(encodeTreeItem(tocobj));
+	}
+}
+const encodeTreeItem=require("./tree").encodeTreeItem;
+
+module.exports={lb:lb,article:article,
+	articlegroup:articlegroup,
+	div:div,head:head,head_finalize:head_finalize};

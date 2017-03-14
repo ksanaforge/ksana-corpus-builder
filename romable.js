@@ -114,7 +114,24 @@ const Romable=function(opts){
 			putField(name+"_end", value[value.length-1],pos[pos.length-1]);
 		}
 	}
-
+	const finalizeTexts=function(){
+		for (var i=0;i<texts.length;i++) {
+			const booktexts=texts[i];
+			if (!booktexts) {
+				debugger;
+				throw "empty book"+(i+1);
+				continue;
+			}
+			for (var j=0;j<booktexts.length;j++) {
+				const pagetexts=booktexts[j];
+				while (pagetexts.length>1 && 
+					pagetexts[pagetexts.length-1].trim()=="") {
+					pagetexts.pop();
+				}
+			}
+		}
+		return texts;
+	}
 	const finalizeAFields=function(){
 		for (article in afields) {
 			const afield=afields[article];
@@ -178,10 +195,10 @@ const Romable=function(opts){
 		return fields;
 	}
 
-
 	const buildROM=function(meta,inverted){
 		const afields=finalizeAFields();
 		const fields=finalizeFields();
+		const texts=finalizeTexts();
 		const r={meta:meta,texts:texts};
 
 		if (inverted){

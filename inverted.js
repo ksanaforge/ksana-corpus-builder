@@ -1,4 +1,3 @@
-const createTokenizer=require("ksana-corpus/tokenizer").createTokenizer;
 
 const createInverted=function(opts){
 	const putBookPos=function(booknum){
@@ -64,7 +63,9 @@ const createInverted=function(opts){
 		pTk=tk;
 	}
 	const putLine=function(s){
-		const tokenized=tokenizer.tokenize(s);
+		throw "obsolete"
+	}
+	const putTokens=function(tokenized){
 		for (i=0;i<tokenized.length;i++) {
 			const type=tokenized[i][3];
 			putToken(tokenized[i][0],type);
@@ -102,21 +103,21 @@ const createInverted=function(opts){
 		return r;
 	}
 
-	const tokenizer=createTokenizer(opts.tokenizerVersion);
-	const TT=tokenizer.TokenTypes;
+	const TT=opts.tokenizer.TokenTypes;
 	var instance={},bigrams,removePunc;
 	var token_postings={},line2tpos={},book2tpos=[],article2tpos=[];
 	var group2tpos=[];
 	var	pTk=null,tPos=1 ,totalPosting=0;
 
-	instance.putLine=putLine;
+	//instance.putLine=putLine;
 	bigrams=opts.bigrams;
 	addressPattern=opts.addressPattern;
-	instance.tokenizer=tokenizer;
+	instance.tokenizer=opts.tokenizer;
 	instance.tPos=function(){return tPos};
 	instance.totalPosting=function(){return totalPosting};
 	instance.putBookPos=putBookPos;
 	instance.putToken=putToken;
+	instance.putTokens=putTokens;
 	instance.putArticle=putArticle;
 	instance.putGroup=putGroup;
 	instance.finalize=finalize;

@@ -8,11 +8,14 @@ const genBigram=require("./genbigram");
 const builderVersion=20161121;
 const createInverted=require("./inverted").createInverted;
 const importExternalMarkup=require("./externalmarkup").importExternalMarkup;
+const createTokenizer=Tokenizer.createTokenizer;
+
+
 const parsers={
 	xml:require("./parsexml"),
 	htll:require("./parsehtll"),
 	accelon3:require("./parseaccelon3"),
-	xhtml:require("./parsexhtml")
+	pre:require("./parsepre")
 }
 
 const createCorpus=function(opts){
@@ -22,28 +25,35 @@ const createCorpus=function(opts){
 	const addressPattern=opts.bitPat?knownPatterns[opts.bitPat]:
 			Ksanapos.buildAddressPattern(opts.bits,opts.column);
 
-			//start from vol=1, to make range always bigger than pos
-	var LineKStart=Ksanapos.makeKPos([1,0,0,0],addressPattern), 
-	LineKCount=0, //character count of line line 
-	started=false; //text will be processed when true
+	//start from vol=1, to make range always bigger than pos
+	var LineKStart=Ksanapos.makeKPos([1,0,0,0],addressPattern);
+
+	var LineKCount=0; //character count of current line 
+	var started=false; //text will be processed when true
 	var totalTextSize= 0;
 	var prevlinekpos=-1;
 	var filecount=0, bookcount=0;
-	var textstack=[""];
-	const tokenizerVersion=opts.tokenizerVersion||1;
+	//var textstack=[""];
+	var linetokens=[];
+	const tokenizerVersion=opts.tokenizerVersion||2;
+	const tokenizer=createTokenizer(opts.tokenizerVersion);
+
+	var concreteToken=Tokenizer.concreteToken;
 
 	var romable=Romable({invertAField:opts.invertAField});
 	const inverted=opts.textOnly?null:
-		createInverted({tokenizerVersion:tokenizerVersion,addressPattern:addressPattern
+		createInverted({tokenizer:tokenizer, tokenizerVersion:tokenizerVersion
+			,addressPattern:addressPattern
 			,bigrams:bigrams,removePunc:opts.removePunc});
 
 	var finalized=false;
-	opts.maxTextStackDepth=opts.maxTextStackDepth||3;
+	//opts.maxTextStackDepth=opts.maxTextStackDepth||3;
 	
 	//var onBookStart,onBookEnd,onToken, onFileStart, onFileEnd, onFinalize;
 
 	var disorderPages=[];
 	var longLines=[];
+
 
 	var prevArticlePos=0;
 
@@ -57,7 +67,7 @@ const createCorpus=function(opts){
 		}
 		this.onFileStart&&this.onFileStart.call(this,fn,filecount);
 		this.parser.addFile.call(this,fn,opts);
-		this.putLine(this.popBaseText());
+		this.emitLine();
 
 		this.onFileEnd&&this.onFileEnd.call(this,fn,filecount);
 		filecount++;
@@ -122,39 +132,30 @@ const createCorpus=function(opts){
 		romable.putField("group",groupname,kpos);
 		inverted&&inverted.putGroup(tpos);	
 	}
-	const addText=function(t){
-		if (!t)return;
 
-		if (textstack.length==1 && started) {
-			LineKCount+=this.kcount(t);
-			if (LineKCount>addressPattern.maxchar) {
-				var human=Ksanapos.stringify(this.kPos,addressPattern);
-				longLines.push([this.kPos,human,t]);
-				lineKCount=addressPattern.maxchar;
-			}
+	const addToken=function(token){
+		if (concreteToken[token[2]]) {
+			LineKCount++;
 		}
-		textstack[textstack.length-1]+=t;
+		linetokens.push(token);		
 	}
 
-	const popBaseText=function(){
-		const s=textstack.shift();
-		textstack.unshift("");
-		return s;
+	const addTokens=function(tokens){
+		if (!tokens || !tokens.length ||!started)return;
+
+		for (var i=0;i<tokens.length;i++) {
+			if (concreteToken[tokens[i][2]]) LineKCount++;
+			linetokens.push(tokens[i]);
+		}
 	}
-	const popText=function(){
-		const s=textstack.pop();
-		if (textstack.length==0) textstack.push("");//make sure text stack has at least one entry
-		return s;
+	const addText=function(t){
+		const tokens=tokenizer.tokenize(t);
+		this.addTokens(tokens);
 	}
-	const peekText=function(){
-		return textstack[textstack.length-1]||"";
-	}
+
 	const addBook=function(){
 		if (bookcount){
-			//store last line
-			var s=this.popBaseText();
-			if (s[s.length-1]=="\n") s=s.substr(0,s.length-1);//dirty
-			if (s) this.putLine(s);
+			this.emitLine();
 			this.onBookEnd &&this.onBookEnd.call(this,bookcount);
 		}
 
@@ -184,7 +185,27 @@ const createCorpus=function(opts){
 		LineKCount=0;
 		prevlinekpos=kpos;		
 	}
+	const makeLine=function(tokens){
+		var s=tokens.map(function(item){return item[0]}).join("");
+		while (s[0]=="\n") s=s.substr(1);
+		while (s[s.length-1]=="\n") s=s.substr(0,s.length-1);
+		return s;
+	}
+	const emitLine=function(){
+		if (!linetokens.length)return;
+		const str=makeLine(linetokens);
+		
+		if (LineKCount>addressPattern.maxchar) {
+			var human=Ksanapos.stringify(this.kPos,addressPattern);
+			longLines.push([this.kPos,human,str]);
+			lineKCount=addressPattern.maxchar;
+		}
 
+		romable.putLine.call(this,str,LineKStart);
+		totalTextSize+=str.length;
+		inverted&&inverted.putTokens(linetokens);
+		linetokens=[];
+	}
 	//call newLine on begining of <lb>
 	const newLine=function(kpos){ //reset Line to a new kpos
 		if (isNaN(kpos)||kpos<1) return;
@@ -198,8 +219,10 @@ const createCorpus=function(opts){
 				throw "line kpos must be larger the previous one. kpos:"+
 				human+"prev "+prevh;
 			}
+		}else {
+			this.emitLine();
+			inverted&&inverted.putLinePos.call(this,kpos);
 		}
-		inverted&&inverted.putLinePos.call(this,kpos);
 		setPos(kpos);
 	}
 	const nextLineStart=function(kpos) {//return kpos of beginning of next line
@@ -209,30 +232,12 @@ const createCorpus=function(opts){
 		return Ksanapos.makeKPos(arr,this.addressPattern);
 	}
 
-	//call putLine on end of </lb>
-	const putLine=function(s){
-		if (LineKStart<1) return;//first call to putLine has no effect
-		//trim tailing crlf
-		while (s.length && s[s.length-1]==="\n"||s[s.length-1]==="\r") {
-			s=s.substr(0,s.length-1);
-		}
-		while (s[0]==="\n"||s[0]==="\r") {
-			s=s.substr(1);
-		}
-		s=s.replace(/\r?\n/g," ");//replace internal crlf with space
-
-		romable.putLine.call(this,s,LineKStart);
-		totalTextSize+=s.length;
-		var token=null,i;
-		inverted&&inverted.putLine(s);
-	}
-
 	const start=function(){
 		started=true;
-		return this.popText();
 	}
 
 	const stop=function(){
+		this.emitLine();
 		started=false;
 		this.bookcount&&this.onBookEnd&&this.onBookEnd.call(this);
 	}
@@ -241,7 +246,7 @@ const createCorpus=function(opts){
 		var meta={date:(new Date()).toString()};
 		meta.versions={tokenizer:tokenizerVersion,builder:builderVersion};
 		meta.bits=addressPattern.bits;
-		meta.name=opts.name;
+		meta.name=opts.name||"unknown";
 		if (opts.article) meta.article=opts.article;
 		if (addressPattern.column) meta.column=addressPattern.column;
 		if (opts.language) meta.language=opts.language;
@@ -259,14 +264,20 @@ const createCorpus=function(opts){
 	}
 
 	const writeKDB=function(fn,cb){
-		started&&stop();
+		started&&stop.call(this);
 		this.onFinalize&&this.onFinalize.call(this);
 		instance.parser.finalize&&	instance.parser.finalize(instance,opts);
 
 		finalized=true;
 		//var okdb="./outputkdb";
 		const meta=buildMeta();
-		const rom=romable.buildROM(meta,inverted);
+		var rom=null;
+		try {
+			rom=romable.buildROM(meta,inverted);	
+		} catch(e) {
+			this.log("ERROR",e);
+		}
+		
 
 		if (typeof window!=="undefined") console.log(rom);
 
@@ -274,9 +285,10 @@ const createCorpus=function(opts){
 		var size=totalTextSize*5 + (opts.extrasize||0) ;
 		if (size<1000000) size=1000000;
 		if (!fn && typeof Window!=="undefined") {
-			return require("./outputkdb").writeToBlob(rom,size,cb);
+			return {rom:rom,url:require("./outputkdb").writeToBlob(rom,size,cb)};
 		} else {
 			require("./outputkdb").write(fn,rom,size,cb);
+			return {rom:rom, filename:fn};
 		}
 	}
 	const stringify=function(kpos) {
@@ -304,15 +316,23 @@ const createCorpus=function(opts){
 		Ksanapos.setLog&&		Ksanapos.setLog(_log);
 	}
 
-	const instance={textstack:textstack,popText:popText,
-		peekText:peekText,popBaseText:popBaseText,setHandlers:setHandlers, nextLine:nextLine,
-		addFile:addFile, addText:addText,addBook:addBook, 
+	const substring=function(s,e){
+		return this.content.substring(s,e);
+	}
+
+	const instance={
+		//textstack:textstack,popText:popText,
+		//peekText:peekText,popBaseText:popBaseText,
+		tokenizer:tokenizer,substring:substring,emitLine:emitLine,
+		setHandlers:setHandlers, nextLine:nextLine,
+		addFile:addFile, 
+		addText:addText,addToken:addToken,addTokens:addTokens,addBook:addBook, 
 		addBrowserFiles:addBrowserFiles,
 		putField:putField, putEmptyField:putEmptyField,
 		putArticle:putArticle,putArticleField:putArticleField,putEmptyArticleField:putEmptyArticleField,
 		putGroup:putGroup,parseRange:parseRange,
 		putBookField:putBookField,putEmptyBookField:putEmptyBookField,handlers:handlers,
-		setPos:setPos, newLine:newLine, putLine:putLine, nextLineStart:nextLineStart, stringify:stringify,
+		setPos:setPos, newLine:newLine,  nextLineStart:nextLineStart, stringify:stringify,
 		findArticle:romable.findArticle,log:log,setLog:setLog,
 		importExternalMarkup:importExternalMarkup,
 		makeKPos:makeKPos, makeRange:makeRange,	start:start, 
@@ -320,6 +340,7 @@ const createCorpus=function(opts){
 		openhandlers:{},closehandlers:{},otherhandlers:{}};
 
 	Object.defineProperty(instance,"kPos",{ get:function(){return LineKStart+LineKCount}});
+	Object.defineProperty(instance,"lineTokenCount",{ get:function(){return LineKCount}});
 	Object.defineProperty(instance,"kPosH",{ get:function(){return Ksanapos.stringify(LineKStart+LineKCount,addressPattern)}});
 	Object.defineProperty(instance,"articleCount",{ get:function(){return romable.articleCount()}});
 	Object.defineProperty(instance,"fileCount",{ get:function(){return filecount}});
@@ -335,16 +356,18 @@ const createCorpus=function(opts){
 	inverted&&Object.defineProperty(instance,"tPos",{ get:inverted.tPos});
 	inverted&&Object.defineProperty(instance,"totalPosting",{ get:inverted.totalPosting});
 
-	opts.inputFormat=opts.inputFormat||"xhtml";
+	opts.inputFormat=opts.inputFormat||"pre";
 	instance.parser=parsers[opts.inputFormat];
+
 	if (!instance.parser) {
 		throw "unsupported input format "+opts.inputFormat;
 	}
 
 	instance.parser.initialize&&instance.parser.initialize(instance,opts);
 
-
-	instance.kcount=Ksanacount.getCounter(opts.language);
+	instance._pb=0;
+	instance._pbline=0;
+	//instance.kcount=Ksanacount.getCounter(opts.language);
 
 	if (typeof opts.autoStart!=="undefined") {
 		started=opts.autoStart;

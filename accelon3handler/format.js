@@ -20,21 +20,12 @@ const pb=function(tag,closing){
 	prevpage=page;
 }
 var maxarticlelen=0,prevtpos=0;
-const article=function(tag,closing,kpos,tpos){
+const article=function(tag,closing,kpos,tpos, start,end){
 	if (closing) {
-
-		const caption=this.popText();
-		this.addText(caption);
+		const caption=this.content.substring(start,end);
 		this.putArticle(caption,kpos,tpos);
-
 		const range=this.makeRange(kpos,this.kPos);
 		this.putArticleField("rend","article",range);
-
-	} else {
-		const tree=tag.attributes.t;
-		if (this.tPos-prevtpos>maxarticlelen) maxarticlelen=this.tPos-prevtpos;
-		prevtpos=this.tPos;
-		return true;
 	}
 }
 const p=function(tag,closing){
@@ -49,12 +40,11 @@ const origin=function(tag){
 		console.error("origin missing from attribute");
 	}
 }
-const group=function(tag,closing,kpos,tpos){
+const group=function(tag,closing,kpos,tpos,start,end){
 	if (closing) {
 		const name=this.popText();
+		groupname=this.content.substring(start,end);
 		this.putGroup(name,kpos,tpos);	
-	} else{
-		return true;
 	}
 }
 const tag=function(tag,closing,kpos,tpos){

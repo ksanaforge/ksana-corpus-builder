@@ -30,9 +30,9 @@ const ptr=function(tag,closing){
 
 var noteid={};
 
-const def=function(tag,closing,kpos){
+const def=function(tag,closing,kpos,tpos,start,end){
 	if (closing) {
-		const s=this.popText();
+		const s=this.substring(start,end);
 		const n=tag.attributes.n;
 		if (!n) {
 			this.log("warn","釋 without n",this.stringify(this.kPos));
@@ -43,12 +43,8 @@ const def=function(tag,closing,kpos){
 		if (!ptrpos) {
 			throw "no such ptr "+n;
 		}
-		this.addText(s);
 		this.putField("note",defrange, ptrpos);
-	} else {
-		return true;
 	}
-	
 }
 
 

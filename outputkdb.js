@@ -10,10 +10,7 @@ const writeToBlob=function(rom,size,finishcb){
 }
 const write=function(fn,rom,size,finishcb){
 	var kdbw=Kdbw({size:size});
-		
-	//TODO remove kdbw dependency in corpus
 	kdbw.save(rom,null);//,{autodelete:true}
-
 	kdbw.writeFile(fn,function(total,written) {
 		if (finishcb && total==written) finishcb(total);
 	});
