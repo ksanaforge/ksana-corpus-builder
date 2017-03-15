@@ -1,8 +1,8 @@
-const Ksanacount=require("ksana-corpus/ksanacount");
 const Ksanapos=require("ksana-corpus/ksanapos");
 const Textutil=require("ksana-corpus/textutil");
 const Romable=require("./romable");
 const Tokenizer=require("ksana-corpus/tokenizer");
+
 const knownPatterns=require("ksana-corpus").knownPatterns;
 const genBigram=require("./genbigram");
 const builderVersion=20161121;
@@ -37,6 +37,7 @@ const createCorpus=function(opts){
 	var linetokens=[];
 	const tokenizerVersion=opts.tokenizerVersion||2;
 	const tokenizer=createTokenizer(opts.tokenizerVersion);
+	const PUNC=tokenizer.TokenTypes.PUNC;
 
 	var concreteToken=Tokenizer.concreteToken;
 
@@ -134,19 +135,13 @@ const createCorpus=function(opts){
 	}
 
 	const addToken=function(token){
-		if (concreteToken[token[2]]) {
-			LineKCount++;
-		}
+		if (concreteToken[token[2]]) LineKCount++;
 		linetokens.push(token);		
 	}
 
 	const addTokens=function(tokens){
 		if (!tokens || !tokens.length ||!started)return;
-
-		for (var i=0;i<tokens.length;i++) {
-			if (concreteToken[tokens[i][2]]) LineKCount++;
-			linetokens.push(tokens[i]);
-		}
+		for (var i=0;i<tokens.length;i++) addToken(tokens[i]);
 	}
 	const addText=function(t){
 		const tokens=tokenizer.tokenize(t);
@@ -203,6 +198,7 @@ const createCorpus=function(opts){
 
 		romable.putLine.call(this,str,LineKStart);
 		totalTextSize+=str.length;
+
 		inverted&&inverted.putTokens(linetokens);
 		linetokens=[];
 	}
@@ -367,7 +363,6 @@ const createCorpus=function(opts){
 
 	instance._pb=0;
 	instance._pbline=0;
-	//instance.kcount=Ksanacount.getCounter(opts.language);
 
 	if (typeof opts.autoStart!=="undefined") {
 		started=opts.autoStart;

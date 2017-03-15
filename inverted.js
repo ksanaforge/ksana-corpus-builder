@@ -67,7 +67,7 @@ const createInverted=function(opts){
 	}
 	const putTokens=function(tokenized){
 		for (i=0;i<tokenized.length;i++) {
-			const type=tokenized[i][3];
+			const type=tokenized[i][2];
 			putToken(tokenized[i][0],type);
 		};
 	}

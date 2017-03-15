@@ -137,7 +137,7 @@ const addContent=function(content,name,opts){
 				const n=tag.attributes.n;
 				if (n) headvalue+='\t'+n;
 
-				const range=corpus.makeRange(tocobj.kpos,kpos);
+				const range=corpus.makeRange(tocobj.kpos,corpus.kPos);
 				corpus.putArticleField("head",headvalue,range);
 				treeitems.push(encodeTreeItem(tocobj));
 				tocobj=null;
