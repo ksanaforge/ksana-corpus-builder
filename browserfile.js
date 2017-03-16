@@ -90,7 +90,6 @@ const addBrowserFiles=function(filelist,cb){
 		this.onFileStart&&this.onFileStart.call(this,fn,filecount);
 		this.log(fn);
 		this.parser.addContent.call(this,content,fn,opts);
-		this.putLine(this.popBaseText());
 		this.onFileEnd&&this.onFileEnd.call(this,fn,filecount);
 		filecount++;
 	}
@@ -127,8 +126,10 @@ const addBrowserFiles=function(filelist,cb){
 							totalfilesize+=e.target.result.length;
 							addContent.call(me,e.target.result,fn,options);							
 						} else if (type=="json"){
-							hasjson=true;
-							setExternal.call(me,options.externals,fn,e.target.result);
+							if (options.externals){
+								hasjson=true;
+								setExternal.call(me,options.externals,fn,e.target.result);
+							}
 						}
 						taskqueue.shift()();
 					}
