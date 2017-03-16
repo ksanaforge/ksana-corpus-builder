@@ -74,17 +74,25 @@ const head=function(tag,closing,kpos,tpos,start,end){
 		if (depth==1) { //new subtoc
 			if (treeitems.length) {
 				this.putField("toc",treeitems,treekpos);
-				this.putField("tocrange",this.kPos,treekpos);
+				this.putField("tocrange",kpos,treekpos);
 				treeitems=[];
 			}
-			treekpos=this.kPos;
+			treekpos=kpos;
 			if (this.opts.topDIVAsArticle){
 				article.call(this,tag,closing,kpos,tpos,start,end);
 			}
 		}
-		const text=this.substring(start,end).replace(/<.+?>/g,"");
-		//console.log(depth,text);
-		const tocobj={depth:depth,text:text,kpos:this.kPos};
+		//dirty hack for yinshun, remove sic and orig in head
+
+		var text=this.substring(start,end);
+		text=text.replace(/<orig>.*?<\/orig>/g,"").replace(/<sic>.*?<\/sic>/g,"");
+		text=text.replace(/<.+?>/g,"");
+		const range=this.makeRange(kpos,this.kPos);
+		var headvalue=depth;
+		if (tag.attributes.n) headvalue+="\n"+tag.attributes.n;
+		this.putArticleField("head",headvalue,range);
+
+		const tocobj={depth:depth,text:text,kpos:kpos};
 		treeitems.push(encodeTreeItem(tocobj));
 	}
 }

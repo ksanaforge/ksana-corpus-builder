@@ -137,7 +137,7 @@ const createCorpus=function(opts){
 
 	const addToken=function(token){
 		if (concreteToken[token[2]]) LineKCount++;
-		linetokens.push(token);		
+		linetokens.push(token);
 	}
 
 	const addTokens=function(tokens){
