@@ -22,13 +22,14 @@ const setHandlers=function(corpus,openhandlers,closehandlers,otherhandlers){
 }
 var tocobj=null;
 var lasterrorfilename=null;
+var treekpos=0;
+var treeitems=[];
 
 const addContent=function(content,name,opts){
 	opts=opts||{};
 	const Sax=require("sax");
 	parser = Sax.parser(true);
 	var tagstack=[], textbuf="", linebuf="";
-	var treeitems=[], treekpos=0;
 	var captured=0;
 	var corpus=this;
 	corpus.content=content;
@@ -147,14 +148,7 @@ const addContent=function(content,name,opts){
 		}
 
 	}	
-	const finalize=function(){
-		if(treeitems.length) {
-			corpus.putField("toc",treeitems,treekpos);
-			corpus.putField("tocrange",corpus.kPos,treekpos);
-		}
-	}
 	parser.write(content);
-	finalize();
 }
 const addFile=function(fn,opts){
 	//remove bom
@@ -171,7 +165,18 @@ const loadExternals=function(corpus,externals){
 	externals.footnotes&&note.setFootnotes(externals.footnotes);
 }
 const initialize=function(corpus,opts){
-	if (opts.footnotes) note.setFootnotes(opts.footnotes);
+
+	if (opts.externals&&opts.externals.footnotes) {
+		if (typeof opts.externals.footnotes=="string") {
+			try {
+				const jsonfn=opts.path+opts.externals.footnotes;
+				opts.externals.footnotes=JSON.parse(fs.readFileSync(jsonfn));
+			} catch(e) {
+				log(e);
+			}
+		}
+		note.setFootnotes(opts.externals.footnotes);
+	}
 	if (!opts.toc) opts.toc="article";
 	if (!opts.articleFields) {
 		opts.articleFields=["rend","head","p"];
@@ -182,11 +187,19 @@ const initialize=function(corpus,opts){
 	corpus._pb=0;
 }
 const finalize=function(corpus,opts){
-	const footnotes=note.getFootnotes(opts.footnotes);
-	const keys=Object.keys(footnotes);
-	if (keys.length) {
-		corpus.log("warn","unconsumed footnotes",keys.join(" ").substring(0,500));
+	console.log("finalized")
+	if (opts.externals&&opts.externals.footnotes){
+		const footnotes=note.getFootnotes(opts.externals.footnotes);
+		const keys=Object.keys(footnotes);
+		if (keys.length) {
+			corpus.log("warn","unconsumed footnotes",keys.join(" ").substring(0,500));
+		}		
 	}
+
+	if(treeitems.length) {
+		corpus.putField("toc",treeitems,treekpos);
+		corpus.putField("tocrange",corpus.kPos,treekpos);
+	}	
 }
 const setLog=function(_log){
 	log=_log;

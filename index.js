@@ -5,7 +5,8 @@ const Tokenizer=require("ksana-corpus/tokenizer");
 
 const knownPatterns=require("ksana-corpus").knownPatterns;
 const genBigram=require("./genbigram");
-const builderVersion=20161121;
+//const builderVersion=20161121;
+const builderVersion=20170316; //remove textstack, rename subtoc to toc
 const createInverted=require("./inverted").createInverted;
 const importExternalMarkup=require("./externalmarkup").importExternalMarkup;
 const createTokenizer=Tokenizer.createTokenizer;
@@ -35,8 +36,8 @@ const createCorpus=function(opts){
 	var filecount=0, bookcount=0;
 	//var textstack=[""];
 	var linetokens=[];
-	const tokenizerVersion=opts.tokenizerVersion||2;
-	const tokenizer=createTokenizer(opts.tokenizerVersion);
+	var tokenizerVersion=opts.tokenizerVersion||2;
+	var tokenizer=createTokenizer(opts.tokenizerVersion);
 	const PUNC=tokenizer.TokenTypes.PUNC;
 
 	var concreteToken=Tokenizer.concreteToken;
@@ -395,6 +396,7 @@ const createCorpusFromJSON=function(jsonfn,cb){
 		return;
 	}
 	const content=fs.readFileSync(jsonfn);
+
 	var json=null;
 	try{
 		json=JSON.parse(content);	
@@ -408,8 +410,10 @@ const createCorpusFromJSON=function(jsonfn,cb){
 		return;
 	}
 	corpusid=m[1];
-	const path=require('path').dirname(jsonfn)+'/';
+	const jsonpath=require('path').dirname(jsonfn)+'/';
+	json.path=jsonpath;
 	const corpus=createCorpus(json);
+
 	if (!json.id)json.id=corpusid;
 	var files=[];
 	if (json.files) {
@@ -419,7 +423,7 @@ const createCorpusFromJSON=function(jsonfn,cb){
 		files=files.filter(function(fn){return fn.substr(fn.length-4)==".xml"});
 	}
 	
-	files.forEach(function(fn){corpus.addFile(path+fn)});
+	files.forEach(function(fn){corpus.addFile(jsonpath+fn)});
 
 	corpus.writeKDB(corpusid+".cor",function(byteswritten){
 		cb(0,byteswritten+" bytes written");
