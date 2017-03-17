@@ -68,13 +68,16 @@ const div=function(tag,closing,kpos,tpos,start,end){
 		this._divdepth++;
 	}
 }
+var tocobj;//previously added toc item
 const head=function(tag,closing,kpos,tpos,start,end){
 	if (closing){
 		const depth=this._divdepth;
 		if (depth==1) { //new subtoc
+			//when closing a previous toc tree
+			//use kpos of last tree items as  endof tree
 			if (treeitems.length) {
 				this.putField("toc",treeitems,treekpos);
-				this.putField("tocrange",kpos,treekpos);
+				this.putField("tocrange",tocobj.kpos,treekpos);
 				treeitems=[];
 			}
 			treekpos=kpos;
@@ -92,7 +95,7 @@ const head=function(tag,closing,kpos,tpos,start,end){
 		if (tag.attributes.n) headvalue+="\n"+tag.attributes.n;
 		this.putArticleField("head",headvalue,range);
 
-		const tocobj={depth:depth,text:text,kpos:kpos};
+		tocobj={depth:depth,text:text,kpos:kpos};
 		treeitems.push(encodeTreeItem(tocobj));
 	}
 }

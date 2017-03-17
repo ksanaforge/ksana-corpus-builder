@@ -199,7 +199,6 @@ const createCorpus=function(opts){
 
 		romable.putLine.call(this,str,LineKStart);
 		totalTextSize+=str.length;
-
 		inverted&&inverted.putTokens(linetokens);
 		linetokens=[];
 	}
@@ -370,6 +369,8 @@ const createCorpus=function(opts){
 	} else {
 		started=true; //default start 
 	}
+
+	instance.newLine(LineKStart)
 
 	return instance;
 }

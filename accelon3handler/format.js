@@ -22,7 +22,7 @@ const pb=function(tag,closing){
 var maxarticlelen=0,prevtpos=0;
 const article=function(tag,closing,kpos,tpos, start,end){
 	if (closing) {
-		const caption=this.content.substring(start,end);
+		const caption=this.substring(start,end);
 		this.putArticle(caption,kpos,tpos);
 		const range=this.makeRange(kpos,this.kPos);
 		this.putArticleField("rend","article",range);

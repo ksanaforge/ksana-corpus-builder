@@ -127,7 +127,7 @@ const addContent=function(content,name,opts){
 			if (opts.toc==tagname) {
 				if (treeitems.length){
 					corpus.putField("toc",treeitems,treekpos);
-					corpus.putField("tocrange",corpus.kPos,treekpos);
+					corpus.putField("tocrange",tocobj.kpos,treekpos);
 					treeitems=[];	
 				}
 				treekpos=corpus.kPos;
