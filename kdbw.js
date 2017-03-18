@@ -1,4 +1,4 @@
-/*
+/*i
   convert any json into a binary buffer
   the buffer can be saved with a single line of fs.writeFile
 */
@@ -38,8 +38,8 @@ var pack_int = function (ar, savedelta) { // pack ar into
 		delta -= prev;
 	}
 	if (delta < 0) {
-		debugger;
-		console.log(ar);
+	  debugger;
+	  console.log(ar);
 	  console.trace('negative value at',i,'prev:',prev,'now:',ar[i],'key:',key_writing)
 	  throw 'negetive';
 	  break;
@@ -63,7 +63,7 @@ var Kfs=function(opts) {
 	var handle=null;
 	opts=opts||{};
 	opts.size=opts.size||65536*2048; 
-	console.log('kdb estimate size:',opts.size);
+	//console.log('kdb estimate size:',opts.size);
 	var dbuf=new Buffer(opts.size);
 	var cur=0;//dbuf cursor
 	
@@ -84,7 +84,7 @@ var Kfs=function(opts) {
 		if (encoding==='utf8')dbuf.write(DT.utf8,pos,1,'utf8');
 		else if (encoding==='ucs2')dbuf.write(DT.ucs2,pos,1,'utf8');
 		else throw 'unsupported encoding '+encoding;
-			
+
 		var len=Buffer.byteLength(value, encoding);
 		dbuf.write(value,pos+1,len,encoding);
 		

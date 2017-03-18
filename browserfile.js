@@ -123,8 +123,9 @@ const addBrowserFiles=function(filelist,cb){
 								}
 								hasjson=false;
 							}
-							totalfilesize+=e.target.result.length;
-							addContent.call(me,e.target.result,fn,options);							
+							content=e.target.result.replace(/\r?\n/g,"\n").trim();
+							totalfilesize+=content.length;
+							addContent.call(me,content,fn,options);	
 						} else if (type=="json"){
 							if (options.externals){
 								hasjson=true;

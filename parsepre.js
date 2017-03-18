@@ -186,7 +186,6 @@ const initialize=function(corpus,opts){
 	corpus._pb=0;
 }
 const finalize=function(corpus,opts){
-	console.log("finalized")
 	if (opts.externals&&opts.externals.footnotes){
 		const footnotes=note.getFootnotes(opts.externals.footnotes);
 		const keys=Object.keys(footnotes);

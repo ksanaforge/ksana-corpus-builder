@@ -3,7 +3,8 @@ const Kdbw=require("./kdbw");
 const writeToBlob=function(rom,size,finishcb){
 	var kdbw=Kdbw({size:size});
 	const u8arr=kdbw.save(rom);
-	const blob = new Blob([u8arr],{type:"application/octet-stream"});
+	const realarr=u8arr.slice(0,kdbw.currentsize());
+	const blob = new Blob([realarr],{type:"application/octet-stream"});
 	const objurl=URL.createObjectURL(blob);
 	finishcb&&finishcb(objurl,blob.size);
 	return objurl;
