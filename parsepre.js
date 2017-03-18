@@ -11,7 +11,7 @@ const encodeTreeItem=require("./tree").encodeTreeItem;
 var parser;
 
 var defaultopenhandlers={p:format.p,article:format.article,origin:format.origin,
-	tag:format.tag,a:anchor.a,anchor:anchor.a,group:format.group,
+	tag:format.tag,a:anchor.a,anchor:anchor.a,group:format.group,rubynote:note.rubynote,
 	pb:format.pb,ptr:note.ptr,def:note.def, footnote:note.footnote, fn:note.footnote};
 const defaultclosehandlers={def:note.def,article:format.article,
 	group:format.group,tag:format.tag};
@@ -178,7 +178,7 @@ const initialize=function(corpus,opts){
 	}
 	if (!opts.toc) opts.toc="article";
 	if (!opts.articleFields) {
-		opts.articleFields=["rend","head","p"];
+		opts.articleFields=["rend","head","p","rubynote"];
 	}
 	corpus.openhandlers=defaultopenhandlers;
 	corpus.closehandlers=defaultclosehandlers;

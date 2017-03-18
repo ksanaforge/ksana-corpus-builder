@@ -47,5 +47,13 @@ const def=function(tag,closing,kpos,tpos,start,end){
 	}
 }
 
-
-module.exports={ptr:ptr,def:def,footnote:footnote,setFootnotes:setFootnotes,getFootnotes:getFootnotes};
+const rubynote=function(tag,closing,kpos,tpos,start,end){
+	if (closing)return;
+	if (!tag.attributes.t){
+		this.log("warning","missing attribute t at"+this.stringify(kpos));
+		return;
+	}
+	this.putArticleField("rubynote",tag.attributes.t,kpos);
+}
+module.exports={ptr:ptr,def:def,footnote:footnote,setFootnotes:setFootnotes,
+	getFootnotes:getFootnotes,rubynote:rubynote};
