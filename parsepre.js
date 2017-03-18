@@ -141,7 +141,6 @@ const addContent=function(content,name,opts){
 				const range=corpus.makeRange(tocobj.kpos,corpus.kPos);
 				corpus.putArticleField("head",headvalue,range);
 				treeitems.push(encodeTreeItem(tocobj));
-				tocobj=null;
 			}
 
 
