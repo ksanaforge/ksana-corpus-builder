@@ -100,7 +100,18 @@ const head=function(tag,closing,kpos,tpos,start,end){
 	}
 }
 const encodeTreeItem=require("./tree").encodeTreeItem;
+const link=function(tag,closing,kpos,tpos,start,end){
+	if (closing) {
+		var target=tag.attributes.target||tag.attributes.to;
+		if (!target) {
+			target=this.substring(start,end);
+		}
+		if (!target || target.indexOf("@")>0) return;
+
+		this.putArticleField("link",target,this.makeRange(kpos,this.kPos));
+	}
+}
 
 module.exports={lb:lb,article:article,
-	articlegroup:articlegroup,
+	articlegroup:articlegroup,link:link,
 	div:div,head:head,head_finalize:head_finalize};

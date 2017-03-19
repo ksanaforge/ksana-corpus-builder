@@ -6,6 +6,8 @@ const fs=require("fs");
 const format=require("./accelon3handler/format");
 const note=require("./accelon3handler/note");
 const anchor=require("./accelon3handler/anchor");
+const ReverseLink=require("./reverselink");
+const link=require("./handlers").link;
 const onerror=require("./onerror");
 var log=console.log;
 const encodeTreeItem=require("./tree").encodeTreeItem;
@@ -13,9 +15,10 @@ var parser;
 
 var defaultopenhandlers={p:format.p,article:format.article,origin:format.origin,
 	tag:format.tag,a:anchor.a,anchor:anchor.a,group:format.group,rubynote:note.rubynote,
-	pb:format.pb,ptr:note.ptr,def:note.def, fn:note.footnote,footnote:note.footnote, fn:note.footnote};
+	pb:format.pb,ptr:note.ptr,def:note.def, fn:note.footnote,footnote:note.footnote, fn:note.footnote,
+	link:link};
 const defaultclosehandlers={def:note.def,article:format.article,
-	group:format.group,tag:format.tag};
+	group:format.group,tag:format.tag,link:link};
 const setHandlers=function(corpus,openhandlers,closehandlers,otherhandlers){
 	corpus.openhandlers=Object.assign(corpus.openhandlers,openhandlers);
 	corpus.closehandlers=Object.assign(corpus.closehandlers,closehandlers);	
@@ -94,14 +97,9 @@ const addContent=function(content,name,opts){
 		const endposition=this.position-tagname.length-3;//assuming no space 
 		const handler=corpus.closehandlers[tagname];
 		//point to anchor
-		if (corpus.kPos>kpos && t.tag.attributes.to) { //has range
-			const to=t.tag.attributes.to;
-			var targetcorpus=corpus.id;
-			if (to.match(/.+@/)){
-				targetcorpus=to.match(/(.+)@/)[1];
-				to=to.match(/@(.+)/)[1];
-			}
-			corpus.putArticleField("a@"+targetcorpus,to,corpus.makeRange(kpos,corpus.kPos));
+
+		if (corpus.kPos>kpos && t.tag.attributes.to) { //has range			
+			ReverseLink.add(corpus,kpos,t.tag,"a");
 		}
 		//corpus.kPos;
 		if (opts.rendClass) {
@@ -192,9 +190,6 @@ const initialize=function(corpus,opts){
 		}
 	}
 	if (!opts.toc) opts.toc="article";
-	if (!opts.articleFields) {
-		opts.articleFields=["rend","head","p","rubynote"];
-	}
 	corpus.openhandlers=defaultopenhandlers;
 	corpus.closehandlers=defaultclosehandlers;
 	corpus._pbline=0;

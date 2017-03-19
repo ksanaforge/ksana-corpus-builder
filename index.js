@@ -11,7 +11,7 @@ const builderVersion=20170319;// move bigrams footnotes in external
 const createInverted=require("./inverted").createInverted;
 const importExternalMarkup=require("./externalmarkup").importExternalMarkup;
 const createTokenizer=Tokenizer.createTokenizer;
-
+const importLinks=require("./reverselink").importLinks;
 
 const parsers={
 	xml:require("./parsexml"),
@@ -46,6 +46,7 @@ const createCorpus=function(opts){
 
 	var inverted=null;
 	var finalized=false;
+	var linkTo={};//  containing article having a bilink field
 	//opts.maxTextStackDepth=opts.maxTextStackDepth||3;
 	
 	//var onBookStart,onBookEnd,onToken, onFileStart, onFileEnd, onFinalize;
@@ -130,6 +131,13 @@ const createCorpus=function(opts){
 		tpos=tpos||this.tPos;
 		romable.putField("group",groupname,kpos);
 		inverted&&inverted.putGroup(tpos);	
+	}
+
+	const markBilink=function(fieldname){
+		if (!linkTo[fieldname]) {
+			linkTo[fieldname]={};
+		}
+		linkTo[fieldname][this.articleCount-1]=true;
 	}
 
 	const addToken=function(token){
@@ -234,6 +242,13 @@ const createCorpus=function(opts){
 		started=false;
 		this.bookcount&&this.onBookEnd&&this.onBookEnd.call(this);
 	}
+	const finalizeLinkTo=function(){
+		for (var field in linkTo) {
+			linkTo[field]=Object.keys(linkTo[field]).map(
+				function(item){return parseInt(item,10)
+			});
+		}
+	}
 
 	const buildMeta=function(){
 		var meta={date:(new Date()).toString()};
@@ -250,21 +265,28 @@ const createCorpus=function(opts){
 		if (opts.groupPrefix) meta.groupPrefix=opts.groupPrefix;
 		if (opts.groupColumn) meta.groupColumn=opts.groupColumn;
 		if (opts.displayOptions) meta.displayOptions=opts.displayOptions;
-		if (opts.linkTo) meta.linkTo=opts.linkTo;
+		finalizeLinkTo();
+		if (opts.linkTo) {
+			meta.linkTo=Object.assign({},linkTo,opts.linkTo);
+		} else {
+			if (Object.keys(linkTo).length) {
+				meta.linkTo=linkTo;
+			}
+		}
 		meta.endpos=LineKStart+LineKCount;
 		if (inverted) meta.endtpos=inverted.tPos();
 		return meta;
 	}
+
 	const writeKDB=function(fn,cb){
 		started&&stop.call(this);
 		this.onFinalize&&this.onFinalize.call(this);
-
 
 		instance.parser.finalize&&	instance.parser.finalize(instance,opts);
 
 		finalized=true;
 		//var okdb="./outputkdb";
-		const meta=buildMeta();
+		const meta=buildMeta.call(this);
 		var rom=null;
 		try {
 			rom=romable.buildROM(meta,inverted);	
@@ -289,8 +311,16 @@ const createCorpus=function(opts){
 	const stringify=function(kpos) {
 		return Ksanapos.stringify(kpos,addressPattern);
 	}
-	const parseRange=function(s){
-		return Textutil.parseRange(s,addressPattern);
+	const parseRange=function(s,corpus){
+		var pat=addressPattern;
+		if (corpus) {
+			pat=knownPatterns[corpus];
+		}
+		if(!pat) {
+			this.log("ERROR","unknown corpus "+corpus);
+			return 0;
+		}
+		return Textutil.parseRange(s,pat);
 	}
 	const handlers=require("./handlers");
 	var log=function(){
@@ -320,6 +350,8 @@ const createCorpus=function(opts){
 		//peekText:peekText,popBaseText:popBaseText,
 		tokenizer:tokenizer,substring:substring,emitLine:emitLine,
 		setHandlers:setHandlers, nextLine:nextLine,
+		importLinks:importLinks,
+		markBilink:markBilink,
 		addFile:addFile, 
 		addText:addText,addToken:addToken,addTokens:addTokens,addBook:addBook, 
 		addBrowserFiles:addBrowserFiles,
