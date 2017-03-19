@@ -6,7 +6,8 @@ const Tokenizer=require("ksana-corpus/tokenizer");
 const knownPatterns=require("ksana-corpus").knownPatterns;
 const genBigram=require("./genbigram");
 //const builderVersion=20161121;
-const builderVersion=20170316; //remove textstack, rename subtoc to toc
+//const builderVersion=20170316; //remove textstack, rename subtoc to toc
+const builderVersion=20170319;// move bigrams footnotes in external
 const createInverted=require("./inverted").createInverted;
 const importExternalMarkup=require("./externalmarkup").importExternalMarkup;
 const createTokenizer=Tokenizer.createTokenizer;
@@ -22,7 +23,6 @@ const parsers={
 const createCorpus=function(opts){
 	opts=opts||{};
 	opts.bits=opts.bits||[7,10,5,8];//default bits
-	const bigrams=opts.bigrams||null;
 	const addressPattern=opts.bitPat?knownPatterns[opts.bitPat]:
 			Ksanapos.buildAddressPattern(opts.bits,opts.column);
 
@@ -43,11 +43,8 @@ const createCorpus=function(opts){
 	var concreteToken=Tokenizer.concreteToken;
 
 	var romable=Romable({invertAField:opts.invertAField});
-	const inverted=opts.textOnly?null:
-		createInverted({tokenizer:tokenizer, tokenizerVersion:tokenizerVersion
-			,addressPattern:addressPattern
-			,bigrams:bigrams,removePunc:opts.removePunc});
 
+	var inverted=null;
 	var finalized=false;
 	//opts.maxTextStackDepth=opts.maxTextStackDepth||3;
 	
@@ -258,10 +255,11 @@ const createCorpus=function(opts){
 		if (inverted) meta.endtpos=inverted.tPos();
 		return meta;
 	}
-
 	const writeKDB=function(fn,cb){
 		started&&stop.call(this);
 		this.onFinalize&&this.onFinalize.call(this);
+
+
 		instance.parser.finalize&&	instance.parser.finalize(instance,opts);
 
 		finalized=true;
@@ -272,6 +270,7 @@ const createCorpus=function(opts){
 			rom=romable.buildROM(meta,inverted);	
 		} catch(e) {
 			this.log("ERROR",e);
+			return;
 		}
 		
 
@@ -364,6 +363,15 @@ const createCorpus=function(opts){
 	instance._pb=0;
 	instance._pbline=0;
 
+	const bigrams=(opts.external&&typeof opts.external.bigrams=="object")?
+	opts.external.bigrams:null;
+
+	inverted=opts.textOnly?null:
+		createInverted({tokenizer:tokenizer, tokenizerVersion:tokenizerVersion
+			,addressPattern:addressPattern
+			,bigrams:bigrams,removePunc:opts.removePunc});
+
+
 	if (typeof opts.autoStart!=="undefined") {
 		started=opts.autoStart;
 	} else {
@@ -426,8 +434,8 @@ const createCorpusFromJSON=function(jsonfn,cb){
 	
 	files.forEach(function(fn){corpus.addFile(jsonpath+fn)});
 
-	corpus.writeKDB(corpusid+".cor",function(byteswritten){
-		cb(0,byteswritten+" bytes written");
+	corpus.writeKDB(corpusid+".cor",function(byteswritten,fn){
+		cb(0,byteswritten,fn);
 	});
 
 }

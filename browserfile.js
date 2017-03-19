@@ -88,7 +88,6 @@ const addBrowserFiles=function(filelist,cb){
 
 	const addContent=function(content,fn,opts){
 		this.onFileStart&&this.onFileStart.call(this,fn,filecount);
-		this.log(fn);
 		this.parser.addContent.call(this,content,fn,opts);
 		this.onFileEnd&&this.onFileEnd.call(this,fn,filecount);
 		filecount++;
@@ -117,9 +116,9 @@ const addBrowserFiles=function(filelist,cb){
 				reader.onload=(function(thefile,fn,options,type){
 					return function(e){
 						if (type=="text") {
-							if (hasjson && options.externals) {
+							if (hasjson && options.external) {
 								if(me.parser.loadExternals){
-									me.parser.loadExternals(me,options.externals);
+									me.parser.loadExternals(me,options.external);
 								}
 								hasjson=false;
 							}
@@ -127,9 +126,9 @@ const addBrowserFiles=function(filelist,cb){
 							totalfilesize+=content.length;
 							addContent.call(me,content,fn,options);	
 						} else if (type=="json"){
-							if (options.externals){
+							if (options.external){
 								hasjson=true;
-								setExternal.call(me,options.externals,fn,e.target.result);
+								setExternal.call(me,options.external,fn,e.target.result);
 							}
 						}
 						taskqueue.shift()();

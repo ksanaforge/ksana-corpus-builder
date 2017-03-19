@@ -206,6 +206,14 @@ const Romable=function(opts){
 		}
 		if (Object.keys(fields).length) r.fields=fields;
 		if (Object.keys(afields).length) r.afields=afields;
+
+		if (!fields.article) {
+			throw "missing article"
+		}
+		if (inverted && !r.inverted.book2tpos) {
+			throw "missing pb"	
+		}
+		
 		return r;
 	}
 

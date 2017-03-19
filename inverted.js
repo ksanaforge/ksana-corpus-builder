@@ -110,7 +110,8 @@ const createInverted=function(opts){
 	var	pTk=null,tPos=1 ,totalPosting=0;
 
 	//instance.putLine=putLine;
-	bigrams=opts.bigrams;
+	bigrams=opts.bigrams||null;
+
 	addressPattern=opts.addressPattern;
 	instance.tokenizer=opts.tokenizer;
 	instance.tPos=function(){return tPos};

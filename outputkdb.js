@@ -13,7 +13,7 @@ const write=function(fn,rom,size,finishcb){
 	var kdbw=Kdbw({size:size});
 	kdbw.save(rom,null);//,{autodelete:true}
 	kdbw.writeFile(fn,function(total,written) {
-		if (finishcb && total==written) finishcb(total);
+		if (finishcb && total==written) finishcb(total,fn);
 	});
 }
 

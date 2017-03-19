@@ -6,13 +6,14 @@ const fs=require("fs");
 const format=require("./accelon3handler/format");
 const note=require("./accelon3handler/note");
 const anchor=require("./accelon3handler/anchor");
+const onerror=require("./onerror");
 var log=console.log;
 const encodeTreeItem=require("./tree").encodeTreeItem;
 var parser;
 
 var defaultopenhandlers={p:format.p,article:format.article,origin:format.origin,
 	tag:format.tag,a:anchor.a,anchor:anchor.a,group:format.group,rubynote:note.rubynote,
-	pb:format.pb,ptr:note.ptr,def:note.def, footnote:note.footnote, fn:note.footnote};
+	pb:format.pb,ptr:note.ptr,def:note.def, fn:note.footnote,footnote:note.footnote, fn:note.footnote};
 const defaultclosehandlers={def:note.def,article:format.article,
 	group:format.group,tag:format.tag};
 const setHandlers=function(corpus,openhandlers,closehandlers,otherhandlers){
@@ -21,7 +22,6 @@ const setHandlers=function(corpus,openhandlers,closehandlers,otherhandlers){
 	corpus.otherhandlers=Object.assign(corpus.otherhandlers,otherhandlers);
 }
 var tocobj=null;
-var lasterrorfilename=null;
 var treekpos=0;
 var treeitems=[];
 
@@ -29,10 +29,13 @@ const addContent=function(content,name,opts){
 	opts=opts||{};
 	const Sax=require("sax");
 	parser = Sax.parser(true);
-	var tagstack=[], textbuf="", linebuf="";
+	parser.tagstack=[];
+	parser.log=log;
+	var textbuf="", linebuf="";
 	var captured=0;
 	var corpus=this;
 	corpus.content=content;
+	parser.filename=corpus.filename;
 	
 	const emittext=function(){
 		if (!textbuf)return;
@@ -60,8 +63,9 @@ const addContent=function(content,name,opts){
 	parser.onopentag=function(tag){
 		emittext.call(corpus);
 		var capturing=false;
-		const T={tag:tag,kpos:corpus.kPos,tpos:corpus.tPos,position:this.position}
-		tagstack.push(T);
+		const T={tag:tag,kpos:corpus.kPos,tpos:corpus.tPos,
+			position:this.position,line:this.line}
+		this.tagstack.push(T);
 		const handler=corpus.openhandlers[tag.name];
 
 		if (opts.customHead) {
@@ -81,17 +85,9 @@ const addContent=function(content,name,opts){
 			T.capturing=true;
 		}
 	}
-	parser.onerror=function(){
-		var message="";
-		if (corpus.filename!==lasterrorfilename) {
-			message=corpus.filename;
-		}
-		log("ERROR",message+"\n"+parser.error.message)
-		lasterrorfilename=corpus.filename;
-	}
 	parser.onclosetag=function(tagname){
 		emittext.call(corpus);
-		const t=tagstack.pop();
+		const t=this.tagstack.pop();
 	
 		const tag=t.tag, kpos=t.kpos,tpos=t.tpos,position=t.position;
 
@@ -142,11 +138,12 @@ const addContent=function(content,name,opts){
 				corpus.putArticleField("head",headvalue,range);
 				treeitems.push(encodeTreeItem(tocobj));
 			}
-
-
 		}
-
-	}	
+	}
+	parser.onprocessinginstruction=function(tag){
+		anchor.addAnchor.call(corpus,tag.name);
+	}
+	parser.onerror=onerror;
 	parser.write(content);
 }
 const addFile=function(fn,opts){
@@ -164,17 +161,35 @@ const loadExternals=function(corpus,externals){
 	externals.footnotes&&note.setFootnotes(externals.footnotes);
 }
 const initialize=function(corpus,opts){
-
-	if (opts.externals&&opts.externals.footnotes) {
-		if (typeof opts.externals.footnotes=="string") {
-			try {
-				const jsonfn=opts.path+opts.externals.footnotes;
-				opts.externals.footnotes=JSON.parse(fs.readFileSync(jsonfn));
-			} catch(e) {
-				log(e);
+	if (opts.external) {
+		if (opts.external.footnotes){
+			const footnotes=opts.external.footnotes
+			if (typeof footnotes=="string") {
+				try {
+					const jsonfn=opts.path+footnotes;
+					opts.external.footnotes=JSON.parse(fs.readFileSync(jsonfn,"utf8"));
+				} catch(e) {
+					log(e);
+				}
+			}
+			note.setFootnotes(opts.external.footnotes);
+		}
+		if (opts.external.bigrams) {
+			const bigrams=opts.external.bigrams
+			if (typeof bigrams=="string") {
+				try {
+					const jsonfn=opts.path+bigrams;
+					opts.external.bigrams=JSON.parse(fs.readFileSync(jsonfn,"utf8"));
+					if (typeof opts.external.bigrams=="string") { //string format, expand it
+						const bi={};
+						opts.external.bigrams.split(" ").forEach((b)=>bi[b]=true);
+						opts.external.bigrams=bi;
+					}
+				} catch(e) {
+					log(e);
+				}
 			}
 		}
-		note.setFootnotes(opts.externals.footnotes);
 	}
 	if (!opts.toc) opts.toc="article";
 	if (!opts.articleFields) {
@@ -186,11 +201,11 @@ const initialize=function(corpus,opts){
 	corpus._pb=0;
 }
 const finalize=function(corpus,opts){
-	if (opts.externals&&opts.externals.footnotes){
-		const footnotes=note.getFootnotes(opts.externals.footnotes);
+	if (opts.external&&opts.external.footnotes){
+		const footnotes=note.getFootnotes(opts.external.footnotes);
 		const keys=Object.keys(footnotes);
 		if (keys.length) {
-			corpus.log("warn","unconsumed footnotes",keys.join(" ").substring(0,500));
+			corpus.log("warn","unconsumed footnotes:",keys.join(",").substring(0,500));
 		}		
 	}
 

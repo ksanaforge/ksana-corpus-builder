@@ -1,14 +1,13 @@
 const Sax=require("sax");
 const fs=require("fs");
 var parser,log=console.log;
-var lasterrorfilename =null;
 const X=require("./handlers");
 
 const format=require("./accelon3handler/format");
 var defaultopenhandlers={article:X.article,articlegroup:X.articlegroup,
 	p:format.p,lb:X.lb,head:X.head,div:X.div};
 const defaultclosehandlers={div:X.div,head:X.head,article:X.article,articlegroup:X.articlegroup};
-
+const onerror=require("./onerror");
 const setHandlers=function(corpus,openhandlers,closehandlers,otherhandlers){
 	corpus.openhandlers=Object.assign(corpus.openhandlers,openhandlers);
 	corpus.closehandlers=Object.assign(corpus.closehandlers,closehandlers);	
@@ -16,10 +15,12 @@ const setHandlers=function(corpus,openhandlers,closehandlers,otherhandlers){
 }
 const addContent=function(content,name,opts){
 	parser = Sax.parser(true);
-	var tagstack=[];
+	parser.tagstack=[];
 	var textbuf="";
 	var captured=0;
 	var corpus=this;
+	parser.filename=corpus.filename;
+	parser.log=log;//assuming after setLog
 	corpus.content=content;
 	const emitText=function(){
 		const tokenized=corpus.tokenizer.tokenize(textbuf);
@@ -33,7 +34,7 @@ const addContent=function(content,name,opts){
 		emitText.call(this);
 		var T={tag:tag,kpos:corpus.kPos,tpos:corpus.tPos,
 			position:this.position};
-		tagstack.push(T);
+		this.tagstack.push(T);
 		const handler=corpus.openhandlers[tag.name];
 		corpus.position=this.position;
 
@@ -44,7 +45,7 @@ const addContent=function(content,name,opts){
 	}
 
 	parser.onclosetag=function(tagname){
-		const t=tagstack.pop();
+		const t=this.tagstack.pop();
 		const tag=t.tag, kpos=t.kpos,tpos=t.tpos,start=t.position;
 		const handler=corpus.closehandlers[tagname];
 		const endposition=this.position-tagname.length-3;//assuming no space 
@@ -66,15 +67,7 @@ const addContent=function(content,name,opts){
 			captured--;
 		}
 	}	
-	parser.onerror=function(){
-		var message="";
-		if (corpus.filename!==lasterrorfilename) {
-			message=corpus.filename;
-		}
-		log("ERROR",message+"\n"+parser.error.message);
-		log("ERROR",tagstack.map(function(t){return t.tag.name}).join("/"))
-		lasterrorfilename=corpus.filename;
-	}	
+	parser.onerror=onerror;
 	parser.write(content);
 }
 const addFile=function(fn,opts){

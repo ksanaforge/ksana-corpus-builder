@@ -1,5 +1,10 @@
-const anchor=function(tag,closing){
-	const name=tag.attributes.name||tag.attributes.n;
-	this.putField("a",name);
+const addAnchor=function(name){
+	this.putField("anchor",name);
 }
-module.exports={a:anchor};
+
+const a=function(tag,closing){
+	const name=tag.attributes.name||tag.attributes.n;
+	addAnchor.call(this,name);
+	
+}
+module.exports={a:a,addAnchor:addAnchor};
