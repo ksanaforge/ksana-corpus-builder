@@ -45,7 +45,7 @@ const importLinks=function(fieldname,bilinks){
 		this.putArticleField(fieldname,value,krange,article);
 	}
 	//return array of Article containing bilinks
-	return Object.keys(articles).map(i=>parseInt(i,10)).sort((a,b)=>a-b);
+	return Object.keys(articles).map(function(i){ return parseInt(i,10)}).sort(function(a,b){return a-b});
 }
 
 module.exports={add:add,importLinks:importLinks};

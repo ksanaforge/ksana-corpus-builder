@@ -180,7 +180,7 @@ const initialize=function(corpus,opts){
 					opts.external.bigrams=JSON.parse(fs.readFileSync(jsonfn,"utf8"));
 					if (typeof opts.external.bigrams=="string") { //string format, expand it
 						const bi={};
-						opts.external.bigrams.split(" ").forEach((b)=>bi[b]=true);
+						opts.external.bigrams.split(" ").forEach(function(b){bi[b]=true});
 						opts.external.bigrams=bi;
 					}
 				} catch(e) {
