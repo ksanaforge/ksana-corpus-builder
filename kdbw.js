@@ -332,7 +332,14 @@ var Create=function(opts) {
 		//quick check , last value should be more than length
 		//for indexing partial taisho juan
 		if (arr.length>arr[arr.length-1])return false;
+		if (arr.length==1) return true;
 
+		//check first 50 items
+		var headpart=arr.length;
+		if (arr.length>50) headpart=50;
+		for (var i=1;i<headpart;i++) {
+			if (arr[i]<arr[i-1])return false;
+		}
 		while (f<arr.length ) {
 			f = a+b;
 			if (arr[a]>arr[b]) return false;

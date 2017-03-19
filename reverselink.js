@@ -30,7 +30,7 @@ const transclude=function(tag,closing,kpos,tpos,start,end){
 	}
 }
 */
-const importLinks=function(fieldname,bilinks){
+const importLinks=function(fieldname,bilinks,targetcorpus){
 	var articles={};
 	for (var i=0;i<bilinks.length;i++) {
 		const bilink=bilinks[i].split("\t");
@@ -41,8 +41,16 @@ const importLinks=function(fieldname,bilinks){
 			continue;
 		}
 		articles[article]=true;
-		const value=parseInt(bilink[1],10);
-		this.putArticleField(fieldname,value,krange,article);
+		var to=bilink[1];
+		if (parseInt(to,10).toString(10)==to) {
+			to=parseInt(to,10);
+		}
+		const r=this.parseRange(to,targetcorpus);
+		if (r && r.range) {
+			to=r.range; //convert to number form for faster reverse link
+		}
+
+		this.putArticleField(fieldname,to,krange,article);
 	}
 	//return array of Article containing bilinks
 	return Object.keys(articles).map(function(i){ return parseInt(i,10)}).sort(function(a,b){return a-b});
