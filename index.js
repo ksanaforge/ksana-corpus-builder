@@ -3,7 +3,7 @@ const Textutil=require("ksana-corpus/textutil");
 const Romable=require("./romable");
 const Tokenizer=require("ksana-corpus/tokenizer");
 
-const knownPatterns=require("ksana-corpus").knownPatterns;
+const regcor=require("ksana-corpus").regcor;
 const genBigram=require("./genbigram");
 //const builderVersion=20161121;
 //const builderVersion=20170316; //remove textstack, rename subtoc to toc
@@ -22,8 +22,8 @@ const parsers={
 
 const createCorpus=function(opts){
 	opts=opts||{};
-	opts.bits=opts.bits||[7,10,5,8];//default bits
-	const addressPattern=opts.bitPat?knownPatterns[opts.bitPat]:
+	opts.bits=opts.bits||regcor.default;//default bits
+	const addressPattern=opts.bitPat?regcor[opts.bitPat]:
 			Ksanapos.buildAddressPattern(opts.bits,opts.column);
 
 	//start from vol=1, to make range always bigger than pos
@@ -314,7 +314,7 @@ const createCorpus=function(opts){
 	const parseRange=function(s,corpus){
 		var pat=addressPattern;
 		if (corpus) {
-			pat=knownPatterns[corpus];
+			pat=regcor[corpus];
 		}
 		if(!pat) {
 			this.log("ERROR","unknown corpus "+corpus);
@@ -472,7 +472,7 @@ const createCorpusFromJSON=function(jsonfn,cb){
 
 }
 const makeKPos=function(book,page,line,character,pat){
-	if (typeof pat==="string") pat=knownPatterns[pat];
+	if (typeof pat==="string") pat=regcor[pat];
 	return Ksanapos.makeKPos([book,page,line,character],pat);
 }
 
