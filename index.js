@@ -22,9 +22,8 @@ const parsers={
 
 const createCorpus=function(opts){
 	opts=opts||{};
-	opts.bits=opts.bits||regcor.default;//default bits
-	const addressPattern=opts.bitPat?regcor[opts.bitPat]:
-			Ksanapos.buildAddressPattern(opts.bits,opts.column);
+	const addressPattern=opts.bits?Ksanapos.buildAddressPattern(opts.bits,opts.column)
+	:regcor.default;
 
 	//start from vol=1, to make range always bigger than pos
 	var LineKStart=Ksanapos.makeKPos([1,0,0,0],addressPattern);
@@ -460,7 +459,7 @@ const createCorpusFromJSON=function(jsonfn,cb){
 	if (json.files) {
 		files=json.files;
 	} else {
-		files=fs.readdirSync(pathname);
+		files=fs.readdirSync(jsonpath);
 		files=files.filter(function(fn){return fn.substr(fn.length-4)==".xml"});
 	}
 	
