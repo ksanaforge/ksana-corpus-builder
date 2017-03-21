@@ -2,7 +2,7 @@ var Ksanapos=require("ksana-corpus/ksanapos");
 var bsearch=require("ksana-corpus/bsearch");
 const Romable=function(opts){
 	opts=opts||{};
-	var fields={},afields={},texts=[];
+	var gfields={},fields={},afields={},texts=[];
 	var token_postings={};
 	var articlecount=0;
 
@@ -19,10 +19,15 @@ const Romable=function(opts){
 			fields[name].push([kpos,value]);
 		}
 	}
+	const putGField=function(name,value,kpos){
+		if (!gfields[name]) gfields[name]=[];
+		gfields[name].push([kpos,value]);
+	}
+
 	const putArticle=function(value,kpos){
 		articlecount++;
 		articlepos=null;//invalidate build time articlepos
-		putField("article",value,kpos);
+		putGField("article",value,kpos);
 	}
 
 	var articlepos=null,articlename=null;
@@ -36,7 +41,7 @@ const Romable=function(opts){
 		const r=Ksanapos.breakRange(range,pat);
 		if (!articlepos) {
 			articlepos=[],articlename=[];
-			fields.article.forEach(function(a){
+			gfields.article.forEach(function(a){
 				articlepos.push(a[0]);
 				articlename.push(a[1]);
 			});
@@ -64,6 +69,9 @@ const Romable=function(opts){
 		} else {
 			return fields[name];	
 		}
+	}
+	const getGField=function(name){
+		return fields[name];	
 	}
 
 	const getAField=function(article,name){
@@ -161,10 +169,10 @@ const Romable=function(opts){
 //optimize for jsonrom
 //convert to column base single item array
 //kpos use vint and make use of stringarray
-	const finalizeFields=function(){
+	const finalizeFields=function(_fields){
 		var i,j,k,f,hasvalue;
-		for (i in fields) {
-			var pos=[], value=[], field=fields[i];
+		for (i in _fields) {
+			var pos=[], value=[], field=_fields[i];
 
 			if (field instanceof Array) { 
 				hasvalue=field[0][1]!==null;
@@ -173,8 +181,8 @@ const Romable=function(opts){
 					pos.push(field[j][0]);
 					if (hasvalue) value.push(field[j][1]);
 				}
-				fields[i]={pos:pos};
-				if (value.length) fields[i].value=value;
+				_fields[i]={pos:pos};
+				if (value.length) _fields[i].value=value;
 			} else {
 				for (k in field) {// per book field
 					f=field[k]; pos=[],value=[];
@@ -192,22 +200,24 @@ const Romable=function(opts){
 				}
 			}
 		}
-		return fields;
+		return _fields;
 	}
 
 	const buildROM=function(meta,inverted){
 		const afields=finalizeAFields();
-		const fields=finalizeFields();
+		const _fields=finalizeFields(fields);
+		const _gfields=finalizeFields(gfields);
 		const texts=finalizeTexts();
 		const r={meta:meta,texts:texts};
 
 		if (inverted){
 			r.inverted=inverted.finalize();
 		}
-		if (Object.keys(fields).length) r.fields=fields;
+		if (Object.keys(_fields).length) r.fields=_fields;
+		r.gfields=_gfields;
 		if (Object.keys(afields).length) r.afields=afields;
 
-		if (!fields.article) {
+		if (!gfields.article) {
 			throw "missing article"
 		}
 		if (inverted && !r.inverted.book2tpos) {
@@ -220,7 +230,9 @@ const Romable=function(opts){
 		putArticle:putArticle,
 		articleCount:function(){return articlecount},
 		putField:putField,putAField:putAField,
+		putGField:putGField,
 		getAField:getAField,getAFields:getAFields,
-		getField:getField,buildROM:buildROM,findArticle:findArticle};
+		getField:getField,getGField:getGField,
+		buildROM:buildROM,findArticle:findArticle};
 }
 module.exports=Romable;

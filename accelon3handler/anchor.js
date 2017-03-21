@@ -1,5 +1,5 @@
 const addAnchor=function(name){
-	this.putField("anchor",name);
+	this.putGField("anchor",name);
 }
 
 const a=function(tag,closing){

@@ -7,7 +7,8 @@ const regcor=require("ksana-corpus").regcor;
 const genBigram=require("./genbigram");
 //const builderVersion=20161121;
 //const builderVersion=20170316; //remove textstack, rename subtoc to toc
-const builderVersion=20170319;// move bigrams footnotes in external
+//const builderVersion=20170319;// move bigrams footnotes in external
+const builderVersion=20170321;// move tocrange, group,article and bilinks to gfields
 const createInverted=require("./inverted").createInverted;
 const importExternalMarkup=require("./externalmarkup").importExternalMarkup;
 const createTokenizer=Tokenizer.createTokenizer;
@@ -22,8 +23,14 @@ const parsers={
 
 const createCorpus=function(opts){
 	opts=opts||{};
-	const addressPattern=opts.bits?Ksanapos.buildAddressPattern(opts.bits,opts.column)
-	:regcor.default;
+	opts.id=opts.id||opts.name||"";
+	if (!opts.id) {
+		throw "missing corpus id";
+		return;
+	}
+
+	var addressPattern=opts.bits?Ksanapos.buildAddressPattern(opts.bits,opts.column)
+	:(regcor[opts.id]?regcor[opts.id]:regcor.default);
 
 	//start from vol=1, to make range always bigger than pos
 	var LineKStart=Ksanapos.makeKPos([1,0,0,0],addressPattern);
@@ -88,6 +95,10 @@ const createCorpus=function(opts){
 		if (name=="article") throw "use putArticle";
 		romable.putField(name,value,kpos);
 	}
+	const putGField=function(name,value,kpos){
+		kpos=kpos||this.kPos;
+		romable.putGField(name,value,kpos);
+	}	
 	const putBookField=function(name,value,kpos){
 		kpos=kpos||this.kPos;
 		const p=Ksanapos.unpack(kpos,this.addressPattern);
@@ -128,7 +139,7 @@ const createCorpus=function(opts){
 	const putGroup=function(groupname,kpos,tpos){
 		kpos=kpos||this.kPos;
 		tpos=tpos||this.tPos;
-		romable.putField("group",groupname,kpos);
+		romable.putGField("group",groupname,kpos);
 		inverted&&inverted.putGroup(tpos);	
 	}
 
@@ -253,7 +264,7 @@ const createCorpus=function(opts){
 		var meta={date:(new Date()).toString()};
 		meta.versions={tokenizer:tokenizerVersion,builder:builderVersion};
 		meta.bits=addressPattern.bits;
-		meta.name=opts.name||"unknown";
+		meta.id=opts.id||"unknown";
 		if (opts.article) meta.article=opts.article;
 		if (addressPattern.column) meta.column=addressPattern.column;
 		if (opts.language) meta.language=opts.language;
@@ -354,7 +365,7 @@ const createCorpus=function(opts){
 		addFile:addFile, 
 		addText:addText,addToken:addToken,addTokens:addTokens,addBook:addBook, 
 		addBrowserFiles:addBrowserFiles,
-		putField:putField, putEmptyField:putEmptyField,
+		putField:putField, putGField:putGField,putEmptyField:putEmptyField,
 		putArticle:putArticle,putArticleField:putArticleField,putEmptyArticleField:putEmptyArticleField,
 		putGroup:putGroup,parseRange:parseRange,
 		putBookField:putBookField,putEmptyBookField:putEmptyBookField,handlers:handlers,
@@ -375,7 +386,7 @@ const createCorpus=function(opts){
 	Object.defineProperty(instance,"started",{ get:function(){return started}});
 	Object.defineProperty(instance,"disorderPages",{ get:function(){return disorderPages}});
 	Object.defineProperty(instance,"longLines",{ get:function(){return longLines}});
-	Object.defineProperty(instance,"id",{ get:function(){return opts.name}});
+	Object.defineProperty(instance,"id",{ get:function(){return opts.id}});
 	Object.defineProperty(instance,"opts",{ get:function(){return opts}});
 
 
