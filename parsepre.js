@@ -6,6 +6,7 @@ const fs=require("fs");
 const format=require("./accelon3handler/format");
 const note=require("./accelon3handler/note");
 const anchor=require("./accelon3handler/anchor");
+const img=require("./accelon3handler/img");
 const ReverseLink=require("./reverselink");
 const link=require("./handlers").link;
 const onerror=require("./onerror");
@@ -16,9 +17,9 @@ var parser;
 var defaultopenhandlers={p:format.p,article:format.article,origin:format.origin,
 	tag:format.tag,a:anchor.a,anchor:anchor.a,group:format.group,rubynote:note.rubynote,
 	pb:format.pb,ptr:note.ptr,def:note.def, fn:note.footnote,footnote:note.footnote, fn:note.footnote,
-	link:link};
+	link:link,img:img};
 const defaultclosehandlers={def:note.def,article:format.article,
-	group:format.group,tag:format.tag,link:link};
+	group:format.group,tag:format.tag,link:link,img:img};
 const setHandlers=function(corpus,openhandlers,closehandlers,otherhandlers){
 	corpus.openhandlers=Object.assign(corpus.openhandlers,openhandlers);
 	corpus.closehandlers=Object.assign(corpus.closehandlers,closehandlers);	
@@ -62,6 +63,10 @@ const addContent=function(content,name,opts){
 	parser.ontext=function(t){
 		if (t[0]=="<") return; //extranous tag
 		textbuf+=t;
+	}
+	parser.oncdata=function(text){
+		emittext.call(corpus);
+		corpus.putArticleField("cdata",text);
 	}
 	parser.onopentag=function(tag){
 		emittext.call(corpus);
@@ -159,34 +164,38 @@ const loadExternals=function(corpus,externals){
 	externals.footnotes&&note.setFootnotes(externals.footnotes);
 }
 const initialize=function(corpus,opts){
-	if (opts.external) {
-		if (opts.external.footnotes){
-			const footnotes=opts.external.footnotes
-			if (typeof footnotes=="string") {
-				try {
-					const jsonfn=opts.path+footnotes;
-					opts.external.footnotes=JSON.parse(fs.readFileSync(jsonfn,"utf8"));
-				} catch(e) {
-					log(e);
-				}
+	var images={};
+		
+	if (opts.images &&fs&&fs.existsSync) {
+		for (var i=0;i<opts.images.length;i++) {
+			const fn=opts.path+opts.images[i];
+			if (fs.existsSync(fn)){
+				images[opts.images[i]]=fs.readFileSync(fn);
 			}
+		}
+		opts.images=images;
+	}
+
+	if (opts.external&&fs&&fs.existsSync) {
+		try{
+		for (var key in opts.external){
+			const fn=opts.path+opts.external[key];
+			if (fs.existsSync(fn)){
+				opts.external[key]=JSON.parse(fs.readFileSync(fn,'utf8'));
+			}
+		}
+		if (opts.external.footnotes){
 			note.setFootnotes(opts.external.footnotes);
 		}
 		if (opts.external.bigrams) {
-			const bigrams=opts.external.bigrams
-			if (typeof bigrams=="string") {
-				try {
-					const jsonfn=opts.path+bigrams;
-					opts.external.bigrams=JSON.parse(fs.readFileSync(jsonfn,"utf8"));
-					if (typeof opts.external.bigrams=="string") { //string format, expand it
-						const bi={};
-						opts.external.bigrams.split(" ").forEach(function(b){bi[b]=true});
-						opts.external.bigrams=bi;
-					}
-				} catch(e) {
-					log(e);
-				}
+			if (typeof opts.external.bigrams=="string") { //string format, expand it
+				const bi={};
+				opts.external.bigrams.split(" ").forEach(function(b){bi[b]=true});
+				opts.external.bigrams=bi;
 			}
+		} 
+		}catch(e){
+			this.log(e);
 		}
 	}
 	if (!opts.toc) opts.toc="article";

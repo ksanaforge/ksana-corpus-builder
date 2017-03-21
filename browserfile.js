@@ -5,7 +5,7 @@ const getConfigJSON=function(filelist,cb){
 			var name=this.filename=f.name;
 			reader.onload=function(e){
 				try {
-					const json=JSON.parse(e.target.result)
+					const json=JSON.parse(e.target.result);
 					cb(0,json);
 				} catch(e){
 					cb(f.name+" "+e.message);
@@ -18,7 +18,11 @@ const getConfigJSON=function(filelist,cb){
 	cb&&cb("Missing corpus configuration json.",null);
 }
 const isDataJSON=function(name){
-	return name.match(/.json$/) && !name.match(/-corpus.json$/);
+	return name.match(/\.json$/) && !name.match(/-corpus.json$/);
+}
+const isImageFile=function(name){
+	return name.match(/\.jpg/) || name.match(/\.png/)
+	||name.match(/\.jepg/);
 }
 
 const prepareHTMLFile=function(files,cb){
@@ -53,10 +57,10 @@ const prepareHTMLFile=function(files,cb){
 			//add data json
 			
 			for (var i=0;i<filenames.length;i++) {
-				const jsonfn=filenames[i];
-				if (isDataJSON(jsonfn)) {
-					if (xmlfiles.indexOf(jsonfn)==-1) {
-						const at=filenames.indexOf(jsonfn);
+				const fn=filenames[i];
+				if (isDataJSON(fn) || isImageFile(fn)) {
+					if (xmlfiles.indexOf(fn)==-1) {
+						const at=filenames.indexOf(fn);
 						out.unshift(files[fileat[at]]);
 					}
 				}
@@ -81,6 +85,31 @@ const setExternal=function(externals,name,jsonstr){
 		this.log("error",e.message);
 	}
 }
+const setImage=function(images,name,str){
+	if (!images) {
+		this.log("error","images fields not specified in -corpus json");
+		return;
+	}
+
+	if (images instanceof Array) {
+		var img={};
+		for (var i in images) {
+			img[images[i]]=true;
+		}
+		images=img;
+	}
+	try {
+		for (var i in images ) {
+			if (i==name) {
+				images[name]=str;
+			}
+		}
+	} catch(e) {
+		this.log("error",e.message);
+	}
+	return images;
+}
+
 const addBrowserFiles=function(filelist,cb){
 	var remain=0;
 	var filecount=0,totalfilesize=0;
@@ -100,11 +129,14 @@ const addBrowserFiles=function(filelist,cb){
 			filetype="text";
 		} else if (isDataJSON(f.name)){
 			filetype="json";
-		} else {
+		} else if (f.name.indexOf(".png">0)||f.name.indexOf(".png">0)) {
+			filetype='img';
+		} else{
 			continue;
 		}
 		remain++;
-		var hasjson=false;
+		var hasexternal=false;
+
 		taskqueue.push((function(file,ft){
 			return function(){
 				if (file.empty) {
@@ -116,26 +148,33 @@ const addBrowserFiles=function(filelist,cb){
 				reader.onload=(function(thefile,fn,options,type){
 					return function(e){
 						if (type=="text") {
-							if (hasjson && options.external) {
+							if (hasexternal && options.external) {
 								if(me.parser.loadExternals){
 									me.parser.loadExternals(me,options.external);
 								}
-								hasjson=false;
+								hasexternal=false;
 							}
 							content=e.target.result.replace(/\r?\n/g,"\n").trim();
 							totalfilesize+=content.length;
-							addContent.call(me,content,fn,options);	
+							addContent.call(me,content,fn,options);
 						} else if (type=="json"){
 							if (options.external){
-								hasjson=true;
+								hasexternal=true;
 								setExternal.call(me,options.external,fn,e.target.result);
 							}
+						} else if (type=='img'){
+							hasexternal=true;
+							options.images=setImage.call(me,options.images,fn,e.target.result);
 						}
 						taskqueue.shift()();
 					}
 				})(file,name,me.opts,ft);
 
-				reader.readAsText(file,me.opts.encoding||"UTF-8");				
+				if (ft=="img") {
+					reader.readAsDataURL(file);
+				} else {
+					reader.readAsText(file,me.opts.encoding||"UTF-8");				
+				}
 			}
 		})(f,filetype));
 	}

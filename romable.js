@@ -213,7 +213,6 @@ const Romable=function(opts){
 		if (inverted && !r.inverted.book2tpos) {
 			throw "missing pb"	
 		}
-		
 		return r;
 	}
 
