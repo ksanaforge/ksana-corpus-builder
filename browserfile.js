@@ -94,7 +94,10 @@ const setImage=function(images,name,str){
 	if (images instanceof Array) {
 		var img={};
 		for (var i in images) {
-			img[images[i]]=true;
+			var fn=images[i];//remove folder name
+			var at=fn.lastIndexOf("/");
+			if (at>-1) fn=fn.substr(at+1);
+			img[fn]=false;
 		}
 		images=img;
 	}

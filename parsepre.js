@@ -170,7 +170,10 @@ const initialize=function(corpus,opts){
 		for (var i=0;i<opts.images.length;i++) {
 			const fn=opts.path+opts.images[i];
 			if (fs.existsSync(fn)){
-				images[opts.images[i]]=fs.readFileSync(fn);
+				var at=opts.images[i].lastIndexOf("/");
+				var fnonly=fn;
+				if (at>1) fnonly=opts.images[i].substr(at+1);
+				images[fnonly]=fs.readFileSync(fn);
 			}
 		}
 		opts.images=images;

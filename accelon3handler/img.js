@@ -1,10 +1,12 @@
 const acceptType={'jpeg':true,'png':true};
 
 const img=function(tag,closing,kpos,tpos,start,end){
-	const n=tag.attributes.n;
+	var n=tag.attributes.n;
 	var base64="";
-	const at=n.lastIndexOf(".");
+	var at=n.lastIndexOf(".");
 	var imagetype=n.substr(at+1);
+	at=n.lastIndexOf("/");
+	if (at>-1) n=n.substr(at+1);
 
 	if (imagetype=="jpg") imagetype="jpeg";
 	if (!acceptType[imagetype]) {
@@ -20,8 +22,10 @@ const img=function(tag,closing,kpos,tpos,start,end){
 		} else {
 			base64=base64.substr(m[0].length);
 		}
+	} else {
+		if (closing) this.log("warn","cannot find imagefile "+n);
+		return
 	}
-	if (!base64)return;
 
 	if (tag.isSelfClosing &&closing) {
 		this.putArticleField(imagetype,base64);
