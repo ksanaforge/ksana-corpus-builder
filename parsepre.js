@@ -166,7 +166,7 @@ const loadExternals=function(corpus,externals){
 const initialize=function(corpus,opts){
 	var images={};
 		
-	if (opts.images &&fs&&fs.existsSync) {
+	if (opts.images&&fs&&fs.existsSync) {
 		for (var i=0;i<opts.images.length;i++) {
 			const fn=opts.path+opts.images[i];
 			if (fs.existsSync(fn)){

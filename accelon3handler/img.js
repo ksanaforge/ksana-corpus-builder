@@ -1,7 +1,9 @@
 const acceptType={'jpeg':true,'png':true};
 
 const img=function(tag,closing,kpos,tpos,start,end){
-	var n=tag.attributes.n;
+	if (!closing)return;
+	var fullname=(this.opts.path||"")+(tag.attributes.n || tag.attributes.f);
+	var n=tag.attributes.n || tag.attributes.f;
 	var base64="";
 	var at=n.lastIndexOf(".");
 	var imagetype=n.substr(at+1);
@@ -22,21 +24,23 @@ const img=function(tag,closing,kpos,tpos,start,end){
 		} else {
 			base64=base64.substr(m[0].length);
 		}
-	} else {
-		if (closing) this.log("warn","cannot find imagefile "+n);
+	} 
+
+	if(!base64) {
+		const fs=require("fs");
+		if (fs&&fs.existsSync&&fs.existsSync(fullname)) {
+			const f=fs.readFileSync(fullname);
+			base64=new Buffer(f).toString('base64');
+		}
+	}
+
+	if (!base64) {
+		this.log("warn","cannot find imagefile "+fullname);
 		return
 	}
-
-	if (tag.isSelfClosing &&closing) {
-		this.putArticleField(imagetype,base64);
-		return;
-	}
-
-
-	if (closing) {
-		const krange=this.makeRange(kpos,this.kPos);
-		this.putArticleField(imagetype,base64,krange);
-	}
+	var krange=this.makeRange(kpos-1,this.kPos);
+	if (kpos==this.kPos) krange=kpos;
+	this.putArticleField(imagetype,base64,krange);
 }
 
 module.exports=img;

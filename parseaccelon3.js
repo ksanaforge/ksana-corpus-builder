@@ -4,13 +4,14 @@
 const format=require("./accelon3handler/format");
 const note=require("./accelon3handler/note");
 const a3Tree=require("./accelon3handler/tree");
+const img=require("./accelon3handler/img");
 const encodeTreeItem=require("./tree").encodeTreeItem;
 const fs=require("fs");
 const parsepre=require("./parsepre");
 
 var defaultopenhandlers={"段":format.p,p:format.p,
-	"頁":format.pb,"註":note.ptr,"釋":note.def};
-const defaultclosehandlers={"釋":note.def};
+	"頁":format.pb,"註":note.ptr,"釋":note.def,"圖":img};
+const defaultclosehandlers={"釋":note.def,"圖":img};
 var tocobj=null;
 var subtree=0,treeitems=[],treekpos=0;
 const addContent=function(content,name,opts){
@@ -20,22 +21,23 @@ const addContent=function(content,name,opts){
 		const depth=treetag.indexOf(tag.name);
 		if (depth>-1) {
 			if(tocobj)throw "nested Toc "+tag.name+" line:"+parser.line;
-			if (opts.subtoc) {
-				const treerootdepth=treetag.indexOf(opts.subtoc);
+			if (opts.toc) {
+				const treerootdepth=treetag.indexOf(opts.toc);
 				subtree=depth>treerootdepth?treerootdepth:0;
 			}
-			tocobj={tag:tag.name,kpos:corpus.kPos,text:"",depth:depth,subtree:subtree};
+			tocobj={tag:tag.name,kpos:corpus.kPos,depth:depth,subtree:subtree};
 		} 
 	}
 	onclosetag=function(T){
 		if (tocobj && T.tag.name==tocobj.tag){
+			const endposition=this.position-T.tag.name.length-3;
+			tocobj.text=corpus.substring(T.position,endposition);
 			if (tocobj.subtree){ //is a subtree
 				const d=tocobj.depth-(tocobj.subtree||0);
-				corpus.putArticleField("head",d,corpus.makeRange(kpos,corpus.kpos));
-				corpus.putEmptyArticleField("p",kpos);
+				corpus.putArticleField("head",d,corpus.makeRange(T.kpos,corpus.kPos));
+				corpus.putEmptyArticleField("p",T.kpos);
 				treeitems.push(encodeTreeItem(tocobj));
 			} else {
-				corpus.putField("toc",tocobj.depth+"\t"+tocobj.text,tocobj.kpos);
 				if (treeitems.length){
 					corpus.putField("toc",treeitems,treekpos);
 					corpus.putField("tocrange",corpus.kPos,treekpos);
@@ -58,17 +60,18 @@ const initialize=function(corpus,opts){
 	parsepre.initialize(corpus,opts);
 	corpus.openhandlers=defaultopenhandlers;
 	corpus.closehandlers=defaultclosehandlers;
-	if(opts.article) {
-		corpus.openhandlers[opts.article]=format.article;
-		corpus.closehandlers[opts.article]=format.article;
+	const schema=opts.schema||{};
+	if(schema.article) {
+		corpus.openhandlers[schema.article]=format.article;
+		corpus.closehandlers[schema.article]=format.article;
 	}
-	if(opts.category) {
-		corpus.openhandlers[opts.category]=format.category;
-		corpus.closehandlers[opts.category]=format.category;
+	if(schema.category) {
+		corpus.openhandlers[schema.category]=format.category;
+		corpus.closehandlers[schema.category]=format.category;
 	}
-	if(opts.group) {
-		corpus.openhandlers[opts.group]=format.group;
-		corpus.closehandlers[opts.group]=format.group;
+	if(schema.group) {
+		corpus.openhandlers[schema.group]=format.group;
+		corpus.closehandlers[schema.group]=format.group;
 	}
 }
 const addFile=function(fn,opts){

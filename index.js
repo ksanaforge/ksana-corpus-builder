@@ -31,7 +31,6 @@ const createCorpus=function(opts){
 
 	var addressPattern=opts.bits?Ksanapos.buildAddressPattern(opts.bits,opts.column)
 	:(regcor[opts.id]?regcor[opts.id]:regcor.default);
-
 	//start from vol=1, to make range always bigger than pos
 	var LineKStart=Ksanapos.makeKPos([1,0,0,0],addressPattern);
 
@@ -479,7 +478,6 @@ const createCorpusFromJSON=function(jsonfn,cb){
 	corpus.writeKDB(corpusid+".cor",function(byteswritten,fn){
 		cb(0,byteswritten,fn);
 	});
-
 }
 const makeKPos=function(book,page,line,character,pat){
 	if (typeof pat==="string") pat=regcor[pat];

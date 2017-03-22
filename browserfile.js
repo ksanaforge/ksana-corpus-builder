@@ -86,11 +86,6 @@ const setExternal=function(externals,name,jsonstr){
 	}
 }
 const setImage=function(images,name,str){
-	if (!images) {
-		this.log("error","images fields not specified in -corpus json");
-		return;
-	}
-
 	if (images instanceof Array) {
 		var img={};
 		for (var i in images) {
@@ -101,15 +96,9 @@ const setImage=function(images,name,str){
 		}
 		images=img;
 	}
-	try {
-		for (var i in images ) {
-			if (i==name) {
-				images[name]=str;
-			}
-		}
-	} catch(e) {
-		this.log("error",e.message);
-	}
+
+	images[name]=str;
+
 	return images;
 }
 
@@ -125,6 +114,7 @@ const addBrowserFiles=function(filelist,cb){
 		filecount++;
 	}
 	const me=this;
+	if (!me.opts.images) me.opts.images={};
 	for (var i=0, f ; f=filelist[i];i++){
 		var filetype=null;
 

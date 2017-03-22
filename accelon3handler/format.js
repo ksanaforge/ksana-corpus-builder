@@ -42,8 +42,7 @@ const origin=function(tag){
 }
 const group=function(tag,closing,kpos,tpos,start,end){
 	if (closing) {
-		const name=this.popText();
-		groupname=this.content.substring(start,end);
+		const name=this.content.substring(start,end);
 		this.putGroup(name,kpos,tpos);	
 	}
 }
