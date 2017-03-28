@@ -8,7 +8,8 @@ const genBigram=require("./genbigram");
 //const builderVersion=20161121;
 //const builderVersion=20170316; //remove textstack, rename subtoc to toc
 //const builderVersion=20170319;// move bigrams footnotes in external
-const builderVersion=20170321;// move tocrange, group,article and bilinks to gfields
+//const builderVersion=20170321;// move tocrange, group,article and bilinks to gfields
+const builderVersion=20170328;// removed putBookField, add HTLL support
 const createInverted=require("./inverted").createInverted;
 const importExternalMarkup=require("./externalmarkup").importExternalMarkup;
 const createTokenizer=Tokenizer.createTokenizer;
@@ -98,21 +99,23 @@ const createCorpus=function(opts){
 		kpos=kpos||this.kPos;
 		romable.putGField(name,value,kpos);
 	}	
+	/*
 	const putBookField=function(name,value,kpos){
 		kpos=kpos||this.kPos;
 		const p=Ksanapos.unpack(kpos,this.addressPattern);
 		romable.putField(name,value,kpos,p[0]);
-	}
-
-	const putEmptyField=function(name,kpos){
-		kpos=kpos||this.kPos;
-		romable.putField(name,null,kpos);	
 	}
 	const putEmptyBookField=function(name,kpos){
 		kpos=kpos||this.kPos;
 		const p=Ksanapos.unpack(kpos,this.addressPattern);
 		romable.putField(name,null,kpos,p[0]);	
 	}
+	*/
+	const putEmptyField=function(name,kpos){
+		kpos=kpos||this.kPos;
+		romable.putField(name,null,kpos);	
+	}
+
 
 	const putArticleField=function(name,value,kpos,article){
 		kpos=kpos||this.kPos;
@@ -367,7 +370,8 @@ const createCorpus=function(opts){
 		putField:putField, putGField:putGField,putEmptyField:putEmptyField,
 		putArticle:putArticle,putArticleField:putArticleField,putEmptyArticleField:putEmptyArticleField,
 		putGroup:putGroup,parseRange:parseRange,
-		putBookField:putBookField,putEmptyBookField:putEmptyBookField,handlers:handlers,
+		//putBookField:putBookField,putEmptyBookField:putEmptyBookField,
+		handlers:handlers,
 		setPos:setPos, newLine:newLine,  nextLineStart:nextLineStart, stringify:stringify,
 		findArticle:romable.findArticle,log:log,setLog:setLog,
 		importExternalMarkup:importExternalMarkup,

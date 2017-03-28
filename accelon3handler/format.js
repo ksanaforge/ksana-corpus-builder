@@ -11,7 +11,7 @@ const pb=function(tag,closing){
 	if (page===1) {
 		this.addBook();
 	} else if (page!==prevpage+1) {//newpage
-		this.log("error","wrong page number "+page+", prev:"+prevpage);
+		this.log("error","wrong page number "+page+", prev:"+prevpage+",line:"+(this.parser.line()+1));
 	}
 	this._pb=page;
 	this._pbline=0;
