@@ -4,7 +4,6 @@ var log=console.log;
 const handlers=require("./htll/handlers");
 const tags=require("./htll/tags")
 const tagType=tags.tagType;
-const ARTICLE_START=tags.ARTICLE_START;
 
 var addFile=function(fn,opts){
 	console.log(fn)
@@ -42,38 +41,33 @@ var addContent=function(content,name,opts){
 	while (i<content.length) {
 		c=content[i];
 		tag="";
+		tt=tagType(c)
+		if (!tt) {
+			textbuf+=c;
+			i++;
+			continue;
+		}
+		
+		emittext();
 
-		if (tt=tagType(c)) {
-			emittext();
-			text="";
-			tag+=c;
-			c=content[++i];
-			while (i<content.length && ((c>="0" && c<="9")||(c==".")||(c=="_")
-				||(c=="-")||(c>="a"&&c<="z")||(c>='A'&&c<="Z"))
-				) {
-				tag+=c;
-				c=content[++i];
-			}
-			if (tt==tags.TT_PB && c=="\n") i++;// crlf after pb is ignore
-			handlers.addTag.call(this,tag);
-		} else if (c===ARTICLE_START) {
-			emittext();
-			c=content[++i];
-			var group=false;
-			if (c==ARTICLE_START){
-				group=true;
-				c=content[++i];
-			}
+		if (tags.isLineTag(tt)) {
 			while (i<content.length && c!=="\n") {
 				tag+=c;
 				c=content[++i];
 			}
 			if (c=="\n") i++;
-			group?handlers.addGroup.call(this,tag):
-				handlers.addArticle.call(this,tag);				
+			handlers.addLineTag.call(this,tag);
 		} else {
-			textbuf+=c;
-			i++;
+			tag+=c;
+			c=content[++i];
+			while (i<content.length && ((c>="0" && c<="9")||(c==".")||(c=="_")
+					||(c=="-")||(c>="a"&&c<="z")||(c>='A'&&c<="Z"))
+					) {
+					tag+=c;
+					c=content[++i];
+			}
+			const removecrlf=handlers.addTag.call(this,tag);
+			if (removecrlf && c=="\n") i++;// crlf after pb is ignore
 		}
 	}
 	emittext();
@@ -84,5 +78,8 @@ const line=function(){
 const setLog=function(_log){
 	log=_log;
 }
+const finalize=function(corpus,opts){
+	handlers.finalize.call(corpus);
+}
 module.exports={addFile:addFile,addContent:addContent,
-line:line,setLog:setLog};
+line:line,setLog:setLog,finalize:finalize};
