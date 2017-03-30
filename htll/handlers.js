@@ -76,5 +76,6 @@ const addGroup=function(group){
 const finalize=function(){
 	closeTree.call(this);
 }
-module.exports={addTag:addTag,addLineTag,addArticle:addArticle,addGroup:addGroup,
+module.exports={addTag:addTag,addLineTag:addLineTag,
+	addArticle:addArticle,addGroup:addGroup,
 closeTree:closeTree,finalize:finalize};

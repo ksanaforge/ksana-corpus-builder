@@ -122,7 +122,9 @@ const addBrowserFiles=function(filelist,cb){
 			filetype="text";
 		} else if (isDataJSON(f.name)){
 			filetype="json";
-		} else if (f.name.indexOf(".png">0)||f.name.indexOf(".png">0)) {
+		} else if (f.name.indexOf(".png">0)
+			||f.name.indexOf(".png">0)
+			||f.name.indexOf(".svg">0)) {
 			filetype='img';
 		} else{
 			continue;

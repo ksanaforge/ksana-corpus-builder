@@ -1,4 +1,3 @@
-const fs=require("fs");
 var log=console.log;
 
 const handlers=require("./htll/handlers");
@@ -6,6 +5,7 @@ const tags=require("./htll/tags")
 const tagType=tags.tagType;
 
 var addFile=function(fn,opts){
+	const fs=require("fs");
 	console.log(fn)
 	const encoding=opts.encoding||"utf8";
 	var content=fs.readFileSync(fn,"utf8").replace(/\r?\n/g,"\n");

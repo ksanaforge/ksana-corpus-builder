@@ -6,7 +6,6 @@ const note=require("./accelon3handler/note");
 const a3Tree=require("./accelon3handler/tree");
 const img=require("./accelon3handler/img");
 const encodeTreeItem=require("./tree").encodeTreeItem;
-const fs=require("fs");
 const parsepre=require("./parsepre");
 
 var defaultopenhandlers={"段":format.p,p:format.p,
@@ -76,6 +75,8 @@ const initialize=function(corpus,opts){
 }
 const addFile=function(fn,opts){
 	//remove bom
+	const fs=require("fs");
+	
 	const encoding=opts.encoding||"utf8";
 	var content=fs.readFileSync(fn,encoding);
 	content=content.replace(/\r?\n/g,"\n").trim();

@@ -1,5 +1,4 @@
 const Sax=require("sax");
-const fs=require("fs");
 var parser,log=console.log;
 const X=require("./handlers");
 
@@ -72,6 +71,7 @@ const addContent=function(content,name,opts){
 }
 const addFile=function(fn,opts){
 	//remove bom
+	const fs=require("fs");
 	const encoding=opts.encoding||"utf8";
 	var content=fs.readFileSync(fn,encoding).replace(/\r?\n/g,"\n").trim();
 	this.filename=fn;

@@ -2,11 +2,11 @@
 	xhtml for MPPS lecture
 */
 const sax="sax";
-const fs=require("fs");
 const format=require("./accelon3handler/format");
 const note=require("./accelon3handler/note");
 const anchor=require("./accelon3handler/anchor");
 const img=require("./accelon3handler/img");
+const svg=require("./accelon3handler/svg");
 const ReverseLink=require("./reverselink");
 const link=require("./handlers").link;
 const onerror=require("./onerror");
@@ -17,9 +17,9 @@ var parser;
 var defaultopenhandlers={p:format.p,article:format.article,origin:format.origin,
 	tag:format.tag,a:anchor.a,anchor:anchor.a,group:format.group,rubynote:note.rubynote,
 	pb:format.pb,ptr:note.ptr,def:note.def, fn:note.footnote,footnote:note.footnote, fn:note.footnote,
-	link:link,img:img};
+	link:link,img:img,svg:svg};
 const defaultclosehandlers={def:note.def,article:format.article,
-	group:format.group,tag:format.tag,link:link,img:img};
+	group:format.group,tag:format.tag,link:link,img:img,svg:svg};
 const setHandlers=function(corpus,openhandlers,closehandlers,otherhandlers){
 	corpus.openhandlers=Object.assign(corpus.openhandlers,openhandlers);
 	corpus.closehandlers=Object.assign(corpus.closehandlers,closehandlers);	
@@ -151,6 +151,7 @@ const addContent=function(content,name,opts){
 }
 const addFile=function(fn,opts){
 	//remove bom
+	const fs=require("fs");
 	const encoding=opts.encoding||"utf8";
 	var content=fs.readFileSync(fn,encoding);
 	content=content.replace(/\r?\n/g,"\n").trim();
@@ -165,7 +166,13 @@ const loadExternals=function(corpus,externals){
 }
 const initialize=function(corpus,opts){
 	var images={};
+	var fs=null
+	try  {
+		const fs=require("fs");
+	} catch(e){
 		
+	}
+
 	if (opts.images&&fs&&fs.existsSync) {
 		for (var i=0;i<opts.images.length;i++) {
 			const fn=opts.path+opts.images[i];
