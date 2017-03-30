@@ -110,7 +110,11 @@ const addContent=function(content,name,opts){
 		if (opts.rendClass) {
 			const isrendclass=(opts.rendClass instanceof Array)?
 			opts.rendClass.indexOf(tagname)>-1:(opts.rendClass(tagname));
-			isrendclass&&corpus.putArticleField( "rend", tagname, corpus.makeRange(kpos,corpus.kPos));
+			var value=tagname;
+			if (isrendclass&&t.tag.attributes && Object.keys(t.tag.attributes).length) {
+				value+="|"+JSON.stringify(t.tag.attributes);
+			}
+			isrendclass&&corpus.putArticleField( "rend", value, corpus.makeRange(kpos,corpus.kPos));
 		}
 		if (handler) {
 			handler.call(corpus,tag,true,kpos,tpos,position,endposition);
@@ -168,9 +172,9 @@ const initialize=function(corpus,opts){
 	var images={};
 	var fs=null
 	try  {
-		const fs=require("fs");
+		fs=require("fs");
 	} catch(e){
-		
+
 	}
 
 	if (opts.images&&fs&&fs.existsSync) {

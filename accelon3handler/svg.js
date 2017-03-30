@@ -1,6 +1,6 @@
 const svg=function(tag,isclosing,kpos){
 	const url=tag.attributes.url||tag.attributes.src||tag.attributes.n;
-	const fn="svg/"+url.substr(0,3)+'/'+url;
+	const fn="svg/"+url;
 	const inline=tag.attributes.inline;
 	var svgcontent;
 	if (this.opts.images && this.opts.images[n]) {
@@ -11,9 +11,14 @@ const svg=function(tag,isclosing,kpos){
 		} else {
 			svgcontent=svgcontent.substr(m[0].length);
 		}
-	} 
+	} else {
+		const fs=require("fs");
+		if (fs.existsSync(fn)){
+			svgcontent=fs.readFileSync(fn,"utf8");
+		}
+	}
 	if (svgcontent){
-		this.putArticleField("inlinesvg", svgcontent , this.makeRange(kpos,this.kPos));		
+		this.putArticleField("svg", svgcontent , this.makeRange(kpos,this.kPos));		
 	}
 }
 
