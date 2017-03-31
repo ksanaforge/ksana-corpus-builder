@@ -1,4 +1,5 @@
 const svg=function(tag,isclosing,kpos){
+	if (!isclosing)return
 	const url=tag.attributes.url||tag.attributes.src||tag.attributes.n;
 	const fn="svg/"+url;
 	const inline=tag.attributes.inline;
