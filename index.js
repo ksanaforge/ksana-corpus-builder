@@ -153,7 +153,13 @@ const createCorpus=function(opts){
 	}
 
 	const addToken=function(token){
-		if (concreteToken[token[2]]) LineKCount++;
+		if (concreteToken[token[2]]) {
+			if (LineKCount==this.addressPattern.maxchar) {
+					this.log("error","exceed max char "
+						+this.filename+" line:"+this.parser.line());					
+			}
+			LineKCount++;
+		}
 		linetokens.push(token);
 	}
 
