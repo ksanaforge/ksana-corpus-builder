@@ -59,6 +59,7 @@ var pack_int = function (ar, savedelta) { // pack ar into
   } while (i < ar.length);
   return r;
 }
+const Buffer=require("buffer/").Buffer;
 var Kfs=function(opts) {
 	var handle=null;
 	opts=opts||{};

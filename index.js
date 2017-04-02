@@ -156,7 +156,7 @@ const createCorpus=function(opts){
 		if (concreteToken[token[2]]) {
 			if (LineKCount==this.addressPattern.maxchar) {
 					this.log("error","exceed max char "
-						+this.filename+" line:"+this.parser.line());					
+						+this.filename+" line:"+this.parser.line());
 			}
 			LineKCount++;
 		}
@@ -165,7 +165,7 @@ const createCorpus=function(opts){
 
 	const addTokens=function(tokens){
 		if (!tokens || !tokens.length ||!started)return;
-		for (var i=0;i<tokens.length;i++) addToken(tokens[i]);
+		for (var i=0;i<tokens.length;i++) addToken.call(this,tokens[i]);
 	}
 	const addText=function(t){
 		const tokens=tokenizer.tokenize(t);
