@@ -143,7 +143,7 @@ var Kfs=function(opts) {
 		}
 		for (var i = 0; i < value.length ; i++) {
 			try {
-				func.apply(dbuf,[value[i],i*unitsize+pos])	
+				func.apply(dbuf,[value[i],i*unitsize+pos])
 			} catch(e) {
 				throw e;
 			}

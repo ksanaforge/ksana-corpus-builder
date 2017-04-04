@@ -1,4 +1,4 @@
-
+const loadsvg=require("./loadsvg");
 /*external note*/
 var footnotes={};
 const footnote=function(tag,closing){
@@ -9,6 +9,14 @@ const footnote=function(tag,closing){
 	} else {
 		const ndef=footnotes[n];
 		this.putArticleField("footnote",n+"\t"+ndef);
+		ndef.replace(/\{svg\|(.+?),([\s\S]+?)\|svg\}/g,function(m,fn,t){
+			const svgcontent=loadsvg.call(this,fn+".svg");
+			if (svgcontent) {
+				this.putArticleField("footnotesvg", svgcontent);
+			} else {
+				this.log("error","cannot load "+fn);
+			}
+		}.bind(this))
 		delete footnotes[n];
 	}
 }
