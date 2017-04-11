@@ -137,7 +137,9 @@ const addContent=function(content,name,opts){
 			}
 			if (tocobj && tagname==tocobj.tag){ //closing the toc node
 				var headvalue=tocobj.depth;
-				tocobj.text=corpus.content.substring(tocobj.position,endposition);
+				tocobj.text=corpus.content.substring(tocobj.position,endposition)
+				.replace(/<.+?>/g,"");
+
 				const n=tag.attributes.n;
 				if (n) headvalue+='\t'+n;
 

@@ -4,7 +4,6 @@ const addAnchor=function(name){
 
 const a=function(tag,closing){
 	const name=tag.attributes.name||tag.attributes.n;
-	addAnchor.call(this,name);
-	
+	if (name) addAnchor.call(this,name);
 }
 module.exports={a:a,addAnchor:addAnchor};

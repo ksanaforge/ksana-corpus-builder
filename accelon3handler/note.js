@@ -9,6 +9,7 @@ const footnote=function(tag,closing){
 	} else {
 		const ndef=footnotes[n];
 		this.putArticleField("footnote",n+"\t"+ndef);
+
 		ndef.replace(/\{svg\|(.+?),([\s\S]+?)\|svg\}/g,function(m,fn,t){
 			const svgcontent=loadsvg.call(this,fn+".svg");
 			if (svgcontent) {
