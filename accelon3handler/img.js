@@ -1,7 +1,7 @@
-const acceptType={'jpeg':true,'png':true};
-
+const acceptType={'jpeg':true,'png':true,'svg':true};
 const img=function(tag,closing,kpos,tpos,start,end){
 	if (!closing)return;
+
 	var fullname=(this.opts.path||"")+(tag.attributes.n || tag.attributes.f);
 	var n=tag.attributes.n || tag.attributes.f;
 	var base64="";
@@ -17,10 +17,15 @@ const img=function(tag,closing,kpos,tpos,start,end){
 	}
 
 	if (this.opts.images && this.opts.images[n]) {
+		const Buffer=require("buffer/").Buffer;
 		var base64=this.opts.images[n];
 		const m=base64.match&&base64.match(/data.+?base64,/);
 		if (!m) {
-			base64=new Buffer(base64).toString('base64');
+			if (imagetype=='svg') {
+				base64=new Buffer(base64).toString('utf8');
+			} else {
+				base64=new Buffer(base64).toString('base64');
+			}
 		} else {
 			base64=base64.substr(m[0].length);
 		}

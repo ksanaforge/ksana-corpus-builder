@@ -22,7 +22,7 @@ const isDataJSON=function(name){
 }
 const isImageFile=function(name){
 	return name.match(/\.jpg/) || name.match(/\.png/)
-	||name.match(/\.jepg/);
+	||name.match(/\.jepg/)||name.match(/\.svg/);
 }
 
 const prepareHTMLFile=function(files,cb){
@@ -117,14 +117,14 @@ const addBrowserFiles=function(filelist,cb){
 	if (!me.opts.images) me.opts.images={};
 	for (var i=0, f ; f=filelist[i];i++){
 		var filetype=null;
-
+		const at=f.name.lastIndexOf(".");
+		const fileext=f.name.substr(at+1);
 		if (f.type.match('text/')){
 			filetype="text";
 		} else if (isDataJSON(f.name)){
 			filetype="json";
-		} else if (f.name.indexOf(".png">0)
-			||f.name.indexOf(".png">0)
-			||f.name.indexOf(".svg">0)) {
+		} else if (fileext=="jpg"||fileext=="jpeg"
+			||fileext=="png"||fileext=="svg") {
 			filetype='img';
 		} else{
 			continue;
@@ -165,7 +165,9 @@ const addBrowserFiles=function(filelist,cb){
 					}
 				})(file,name,me.opts,ft);
 
-				if (ft=="img") {
+				const at=name.lastIndexOf(".");
+				const fileext=name.substr(at+1);
+				if (ft=="img" && fileext!=="svg") {
 					reader.readAsDataURL(file);
 				} else {
 					reader.readAsText(file,me.opts.encoding||"UTF-8");				

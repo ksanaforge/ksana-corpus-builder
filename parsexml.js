@@ -1,11 +1,12 @@
 const Sax=require("sax");
 var parser,log=console.log;
 const X=require("./handlers");
-
+const img=require("./accelon3handler/img");
 const format=require("./accelon3handler/format");
 var defaultopenhandlers={article:X.article,articlegroup:X.articlegroup,
-	p:format.p,lb:X.lb,head:X.head,div:X.div};
-const defaultclosehandlers={div:X.div,head:X.head,article:X.article,articlegroup:X.articlegroup};
+	p:format.p,lb:X.lb,head:X.head,div:X.div,img:img};
+const defaultclosehandlers={div:X.div,head:X.head,article:X.article,articlegroup:X.articlegroup
+,img:img};
 const onerror=require("./onerror");
 const setHandlers=function(corpus,openhandlers,closehandlers,otherhandlers){
 	corpus.openhandlers=Object.assign(corpus.openhandlers,openhandlers);

@@ -34,6 +34,7 @@ const transclude=function(tag,closing,kpos,tpos,start,end){
 const importLinks=function(fieldname,bilinks,targetcorpus){
 	var articles={};
 	for (var i=0;i<bilinks.length;i++) {
+		if (typeof bilinks[i]!=="string") continue;
 		const bilink=bilinks[i].split("\t");
 		var krange=this.parseRange(bilink[0]).range;
 		var article=this.findArticle(krange);
@@ -51,10 +52,10 @@ const importLinks=function(fieldname,bilinks,targetcorpus){
 			to=r.range; //convert to number form for faster reverse link
 		}
 
-		this.putGField(fieldname,to,krange,article);
+		this.putGField(fieldname,to,krange);
 	}
 	//return array of Article containing bilinks
 	return Object.keys(articles).map(function(i){ return parseInt(i,10)}).sort(function(a,b){return a-b});
 }
 
-module.exports={add:add,importLinks:importLinks};
+module.exports={add:add,importLinks:importLinks,BILINKSEP:BILINKSEP};

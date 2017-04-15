@@ -174,7 +174,8 @@ const initialize=function(corpus,opts){
 	var images={};
 	var fs=null
 	try  {
-		fs=require("fs");
+		const FS="fs";
+		fs=require(FS);
 	} catch(e){
 
 	}
@@ -203,6 +204,7 @@ const initialize=function(corpus,opts){
 		if (opts.external.footnotes){
 			note.setFootnotes(opts.external.footnotes);
 		}
+
 		if (opts.external.bigrams) {
 			if (typeof opts.external.bigrams=="string") { //string format, expand it
 				const bi={};
@@ -211,7 +213,7 @@ const initialize=function(corpus,opts){
 			}
 		} 
 		}catch(e){
-			this.log(e);
+			log(e);
 		}
 	}
 	if (!opts.toc) opts.toc="article";
@@ -229,6 +231,15 @@ const finalize=function(corpus,opts){
 		}		
 	}
 
+	for (var key in opts.external) {
+		const at=key.indexOf(ReverseLink.BILINKSEP);
+		if (at>0) {
+			const targetcorpus=key.substr(at+1);
+			const links=opts.external[key];
+			if (!opts.linkTo)opts.linkTo={};
+			opts.linkTo[key]=ReverseLink.importLinks.call(corpus,key,links,targetcorpus);
+		}
+	}
 	if(treeitems.length) {
 		corpus.putField("toc",treeitems,treekpos);
 		corpus.putField("tocrange",corpus.kPos,treekpos);
