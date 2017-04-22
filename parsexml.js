@@ -30,6 +30,10 @@ const addContent=function(content,name,opts){
 	parser.ontext=function(t){
 		if (!captured) textbuf+=t;
 	}
+	parser.oncdata=function(text){
+		emitText.call(this);
+		corpus.putArticleField("cdata",text);
+	}	
 	parser.onopentag=function(tag){
 		emitText.call(this);
 		var T={tag:tag,kpos:corpus.kPos,tpos:corpus.tPos,
@@ -53,9 +57,8 @@ const addContent=function(content,name,opts){
 		if (!captured) {
 			emitText.call(this);
 		}
-
-		if (tag.attributes.rend && kpos<this.kPos) {
-			this.putArticleField("rend",tag.attributes.rend,this.makeRange(kpos,this.kPos));
+		if (tag.attributes.rend && kpos<corpus.kPos) {
+			corpus.putArticleField("rend",tag.attributes.rend,corpus.makeRange(kpos,corpus.kPos));
 		}
 
 		if (handler) {

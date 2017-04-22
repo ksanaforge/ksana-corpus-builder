@@ -41,6 +41,10 @@ const addContent=function(content,name,opts){
 					corpus.putField("toc",treeitems,treekpos);
 					corpus.putField("tocrange",corpus.kPos,treekpos);
 					treeitems=[];
+				} 
+				if (opts.toc==tocobj.tag) {
+					tocobj.depth=0;
+					treeitems.push(encodeTreeItem(tocobj));
 				}
 				treekpos=tocobj.kpos;
 			}
@@ -53,6 +57,18 @@ const addContent=function(content,name,opts){
 		onopentag:onopentag,onclosetag:onclosetag,
 	});
 	parsepre.addContent.call(this,content,name,newopts);
+
+	if (treeitems.length){
+		corpus.putField("toc",treeitems,treekpos);
+		corpus.putField("tocrange",corpus.kPos,treekpos);		
+	}	
+}
+
+const finalize=function(corpus,opts){
+	if (treeitems.length){
+		corpus.putField("toc",treeitems,treekpos);
+		corpus.putField("tocrange",corpus.kPos,treekpos);		
+	}
 }
 
 const initialize=function(corpus,opts){
@@ -86,4 +102,4 @@ const addFile=function(fn,opts){
 
 module.exports={addFile:addFile,addContent:addContent,
 	setLog:parsepre.setLog,initialize:initialize,
-	setHandlers:parsepre.setHandlers};
+	setHandlers:parsepre.setHandlers,finalize:finalize};
