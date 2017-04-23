@@ -1,3 +1,4 @@
+/* hypertext label language parser */
 var log=console.log;
 
 const handlers=require("./htll/handlers");

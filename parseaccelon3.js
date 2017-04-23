@@ -1,5 +1,5 @@
 /*
-	convert accelon3 format
+	parse accelon3 format
 */
 const format=require("./accelon3handler/format");
 const note=require("./accelon3handler/note");

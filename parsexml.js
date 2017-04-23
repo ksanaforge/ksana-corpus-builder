@@ -1,3 +1,4 @@
+/* standard XML parser for TEI */
 const Sax=require("sax");
 var parser,log=console.log;
 const X=require("./handlers");

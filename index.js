@@ -9,7 +9,8 @@ const genBigram=require("./genbigram");
 //const builderVersion=20170316; //remove textstack, rename subtoc to toc
 //const builderVersion=20170319;// move bigrams footnotes in external
 //const builderVersion=20170321;// move tocrange, group,article and bilinks to gfields
-const builderVersion=20170328;// removed putBookField, add HTLL support
+//const builderVersion=20170328;// removed putBookField, add HTLL support
+const builderVersion=20170423;// add keyfields
 const createInverted=require("./inverted").createInverted;
 const importExternalMarkup=require("./externalmarkup").importExternalMarkup;
 const createTokenizer=Tokenizer.createTokenizer;
@@ -95,7 +96,17 @@ const createCorpus=function(opts){
 		if (name=="article") throw "use putArticle";
 		romable.putField(name,value,kpos);
 	}
-	const putGField=function(name,value,kpos){
+	const putKeyField=function(name,key,value,kpos){
+		kpos=kpos||this.kPos;
+		if (typeof value=="undefined") value="";
+		romable.putKField(name,key,value,kpos);
+	}
+	const putEmptyKeyField=function(name,key,kpos){
+		kpos=kpos||this.kPos;
+		romable.putKField(name,key,"",kpos);
+	}
+
+	const putGlobalField=function(name,value,kpos){
 		kpos=kpos||this.kPos;
 		romable.putGField(name,value,kpos);
 	}	
@@ -373,7 +384,8 @@ const createCorpus=function(opts){
 		addFile:addFile, 
 		addText:addText,addToken:addToken,addTokens:addTokens,addBook:addBook, 
 		addBrowserFiles:addBrowserFiles,
-		putField:putField, putGField:putGField,putEmptyField:putEmptyField,
+		putField:putField, putGlobalField:putGlobalField,putEmptyField:putEmptyField,
+		putKeyField:putKeyField,putEmptyKeyField:putEmptyKeyField,
 		putArticle:putArticle,putArticleField:putArticleField,putEmptyArticleField:putEmptyArticleField,
 		putGroup:putGroup,parseRange:parseRange,
 		//putBookField:putBookField,putEmptyBookField:putEmptyBookField,

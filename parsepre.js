@@ -1,5 +1,5 @@
 /*
-	xhtml for MPPS lecture
+	preformatted XML, default accelon 2017 format
 */
 const sax="sax";
 const format=require("./accelon3handler/format");
@@ -108,18 +108,39 @@ const addContent=function(content,name,opts){
 		}
 		//corpus.kPos;
 		if (opts.rendClass) {
-			const isrendclass=(opts.rendClass instanceof Array)?
-			opts.rendClass.indexOf(tagname)>-1:(opts.rendClass(tagname));
+			var isrendclass=(opts.rendClass instanceof Array)?
+			opts.rendClass.indexOf(tagname)>-1:(opts.rendClass[tagname]);
 			var value=tagname;
-			if (isrendclass&&t.tag.attributes && Object.keys(t.tag.attributes).length) {
-				value+="|"+JSON.stringify(t.tag.attributes);
+			if (isrendclass) {
+				if (t.tag.attributes && Object.keys(t.tag.attributes).length) {
+					value+="|"+JSON.stringify(t.tag.attributes);
+				}
+				corpus.putArticleField( "rend", value, corpus.makeRange(kpos,corpus.kPos));
 			}
-			isrendclass&&corpus.putArticleField( "rend", value, corpus.makeRange(kpos,corpus.kPos));
 		}
 		if (handler) {
 			handler.call(corpus,tag,true,kpos,tpos,position,endposition);
 		} else if (corpus.otherhandlers.onclosetag) {
 			corpus.otherhandlers.onclosetag.call(corpus,tag,true,kpos,tpos,position,endposition);
+		}
+
+		if (opts.keyField) {
+			var isKey=false;
+			if (typeof opts.keyField=="string") {
+				isKey=opts.keyField==tag.name;
+			} else isKey=opts.keyField.indexOf(tag.name)>-1;
+
+			if (isKey) {
+				const keytext=corpus.content.substring(position,endposition)
+				var value="";
+				const attrs=Object.keys(tag.attributes);
+				if (attrs.length==1) {
+					value=tag.attributes[attrs[0]];
+				} else if (attrs.length>1) {
+					value=JSON.stringify(tag.attributes);
+				}
+				corpus.putKeyField(tag.name,keytext,value);
+			}
 		}
 
 		if (opts.customHead) {

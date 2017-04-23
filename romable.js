@@ -2,7 +2,7 @@ var Ksanapos=require("ksana-corpus/ksanapos");
 var bsearch=require("ksana-corpus/bsearch");
 const Romable=function(opts){
 	opts=opts||{};
-	var gfields={},fields={},afields={},texts=[];
+	var gfields={},fields={},afields={},texts=[],kfields={};
 	var token_postings={};
 	var articlecount=0;
 
@@ -23,11 +23,15 @@ const Romable=function(opts){
 		if (!gfields[name]) gfields[name]=[];
 		gfields[name].push([kpos,value]);
 	}
-
 	const putArticle=function(value,kpos){
 		articlecount++;
 		articlepos=null;//invalidate build time articlepos
 		putGField("article",value,kpos);
+	}
+
+	const putKField=function(name,key,value,kpos){
+		if (!kfields[name]) kfields[name]=[];
+		kfields[name].push([key,value,kpos]);
 	}
 
 	var articlepos=null,articlename=null;
@@ -140,6 +144,26 @@ const Romable=function(opts){
 		}
 		return texts;
 	}
+	const finalizeKFields=function(){
+		if (Object.keys(kfields).length==0) return null;
+		const out={};
+		for (var name in kfields) {
+			const kfield=kfields[name];
+			//sort by key
+			kfield.sort(function(a,b){return (a[0]==b[0])?0:((a[0]>b[0])?1:-1)});
+			var hasvalue=false;
+			const key=[],value=[],kpos=[];
+			for (var i=0;i<kfield.length;i++) {
+				key.push(kfield[i][0]);
+				if (kfield[i][1]) hasvalue=true;
+				value.push(kfield[i][1]);
+				kpos.push(kfield[i][2]);
+			}
+			out[name]={key:key,kpos:kpos};
+			if (hasvalue) out[name].value=value;
+		}
+		return out;
+	}
 	const finalizeAFields=function(){
 		for (article in afields) {
 			const afield=afields[article];
@@ -205,6 +229,7 @@ const Romable=function(opts){
 
 	const buildROM=function(meta,inverted){
 		const afields=finalizeAFields();
+		const _kfields=finalizeKFields();
 		const _fields=finalizeFields(fields);
 		const _gfields=finalizeFields(gfields);
 		const texts=finalizeTexts();
@@ -213,6 +238,7 @@ const Romable=function(opts){
 		if (inverted){
 			r.inverted=inverted.finalize();
 		}
+		if (_kfields&&Object.keys(kfields).length) r.kfields=_kfields;
 		if (Object.keys(_fields).length) r.fields=_fields;
 		r.gfields=_gfields;
 		if (Object.keys(afields).length) r.afields=afields;
@@ -231,6 +257,7 @@ const Romable=function(opts){
 		articleCount:function(){return articlecount},
 		putField:putField,putAField:putAField,
 		putGField:putGField,
+		putKField:putKField,
 		getAField:getAField,getAFields:getAFields,
 		getField:getField,getGField:getGField,
 		buildROM:buildROM,findArticle:findArticle};

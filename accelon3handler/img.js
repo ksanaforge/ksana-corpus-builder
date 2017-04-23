@@ -34,6 +34,7 @@ const img=function(tag,closing,kpos,tpos,start,end){
 	if(!base64) {
 		const fs=require("fs");
 		if (fs&&fs.existsSync&&fs.existsSync(fullname)) {
+			const Buffer=require("buffer").Buffer;
 			const f=fs.readFileSync(fullname);
 			base64=new Buffer(f).toString('base64');
 		}

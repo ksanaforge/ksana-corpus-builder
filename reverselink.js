@@ -10,7 +10,7 @@ const add=function(corpus,kpos,tag,tagname){
 	//if to is a range, build reverse link
 	const target=corpus.parseRange(to,targetcorpus!==corpus.id?targetcorpus:null);
 	const fieldname=tag.name+BILINKSEP+targetcorpus;
-	corpus.putGField(fieldname,target.range?target.range:to,
+	corpus.putGlobalField(fieldname,target.range?target.range:to,
 	corpus.makeRange(kpos,corpus.kPos));
 	if (targetcorpus!==corpus.id) corpus.markBilink(fieldname);
 }
@@ -52,7 +52,7 @@ const importLinks=function(fieldname,bilinks,targetcorpus){
 			to=r.range; //convert to number form for faster reverse link
 		}
 
-		this.putGField(fieldname,to,krange);
+		this.putGlobalField(fieldname,to,krange);
 	}
 	//return array of Article containing bilinks
 	return Object.keys(articles).map(function(i){ return parseInt(i,10)}).sort(function(a,b){return a-b});
