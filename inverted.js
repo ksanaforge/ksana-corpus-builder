@@ -41,7 +41,6 @@ const createInverted=function(opts){
 			tPos++;
 			return;
 		}
-
 		if (typeof tk==="string") {
 			if (bigrams&&bigrams[pTk+tk]) {
 				posting(pTk+tk,tPos-1);

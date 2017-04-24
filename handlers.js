@@ -106,7 +106,8 @@ const link=function(tag,closing,kpos,tpos,start,end){
 		if (!target) {
 			target=this.substring(start,end);
 		}
-		if (!target || target.indexOf("@")>0) return;
+		//|| target.indexOf("@")>0
+		if (!target ) return;
 
 		this.putArticleField("link",target,this.makeRange(kpos,this.kPos));
 	}

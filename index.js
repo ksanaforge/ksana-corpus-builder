@@ -22,15 +22,23 @@ const parsers={
 	accelon3:require("./parseaccelon3"),
 	pre:require("./parsepre")
 }
-
+const regex_corpusid=/^[a-z]+[\da-z_]*$/;
+const checkid=function(id) {
+	const m=id.match(regex_corpusid);
+	if (!m) {
+		console.log("corpus id regex:",regex_corpusid)
+		throw "invalid corpus id "+id;
+	}
+	return true;
+}
 const createCorpus=function(opts){
 	opts=opts||{};
-	opts.id=opts.id||opts.name||"";
+	opts.id=(opts.id||opts.name||"").trim();
 	if (!opts.id) {
 		throw "missing corpus id";
 		return;
 	}
-
+	checkid(opts.id);
 	var addressPattern=opts.bits?Ksanapos.buildAddressPattern(opts.bits,opts.column)
 	:(regcor[opts.id]?regcor[opts.id]:regcor.default);
 	//start from vol=1, to make range always bigger than pos
