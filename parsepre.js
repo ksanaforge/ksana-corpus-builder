@@ -9,6 +9,7 @@ const img=require("./accelon3handler/img");
 const svg=require("./accelon3handler/svg");
 const ReverseLink=require("./reverselink");
 const link=require("./handlers").link;
+const pu=require("./handlers").pu; //puncuation
 const onerror=require("./onerror");
 var log=console.log;
 const encodeTreeItem=require("./tree").encodeTreeItem;
@@ -17,7 +18,7 @@ var parser;
 var defaultopenhandlers={p:format.p,article:format.article,origin:format.origin,
 	tag:format.tag,a:anchor.a,anchor:anchor.a,group:format.group,rubynote:note.rubynote,
 	pb:format.pb,ptr:note.ptr,def:note.def, fn:note.footnote,footnote:note.footnote, fn:note.footnote,
-	link:link,img:img,svg:svg};
+	link:link,img:img,svg:svg,pu:pu};
 const defaultclosehandlers={def:note.def,article:format.article,
 	group:format.group,tag:format.tag,link:link,img:img,svg:svg};
 const setHandlers=function(corpus,openhandlers,closehandlers,otherhandlers){
@@ -84,8 +85,10 @@ const addContent=function(content,name,opts){
 			const headtag=tag.name.match(/^[Hh]\d+/);
 			if (headtag) {
 				const depth=parseInt(tag.name.substr(1),10);
-				tocobj={tag:tag.name,kpos:corpus.kPos,text:"",depth:depth,position:this.position};
-			}			
+				const text=(tag.attributes.t||tag.attributes.text)||"";
+
+				tocobj={tag:tag.name,kpos:corpus.kPos,text:text,depth:depth,position:this.position};
+			}
 		}
 
 		if (handler&&handler.call(corpus,tag)) {
@@ -156,10 +159,12 @@ const addContent=function(content,name,opts){
 				}
 				treekpos=corpus.kPos;
 			}
-			if (tocobj && tagname==tocobj.tag){ //closing the toc node
+			if (tocobj && (tagname==tocobj.tag)){ //closing the toc node
 				var headvalue=tocobj.depth;
-				tocobj.text=corpus.content.substring(tocobj.position,endposition)
-				.replace(/<.+?>/g,"");
+				if (!tocobj.text) {
+					tocobj.text=corpus.content.substring(tocobj.position,endposition)
+					.replace(/<.+?>/g,"");					
+				}
 
 				const n=tag.attributes.n;
 				if (n) headvalue+='\t'+n;

@@ -58,7 +58,7 @@ const addContent=function(content,name,opts){
 		if (!captured) {
 			emitText.call(this);
 		}
-		if (tag.attributes.rend && kpos<corpus.kPos) {
+		if (opts.applyRend && tag.attributes.rend && kpos<corpus.kPos) {
 			corpus.putArticleField("rend",tag.attributes.rend,corpus.makeRange(kpos,corpus.kPos));
 		}
 

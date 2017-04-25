@@ -112,7 +112,10 @@ const link=function(tag,closing,kpos,tpos,start,end){
 		this.putArticleField("link",target,this.makeRange(kpos,this.kPos));
 	}
 }
+const pu=function(tag,closing,kpos,tpos){
+	this.putArticleField("pu",tag.attributes.n,kpos);
+}
 
 module.exports={lb:lb,article:article,
-	articlegroup:articlegroup,link:link,
+	articlegroup:articlegroup,link:link,pu:pu,
 	div:div,head:head,head_finalize:head_finalize};
