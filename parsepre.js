@@ -196,6 +196,23 @@ const line=function(){
 const loadExternals=function(corpus,externals){
 	externals.footnotes&&note.setFootnotes(externals.footnotes);
 }
+const loadExternalFieldsJSON=function(path,fields){
+	if (!fields) return;
+	const FS="fs";
+	const fs=require(FS);	
+	var fn="";
+	try {
+		for (var key in fields){
+			fn=path+fields[key];
+			if (fs.existsSync(fn)){
+				fields[key]=JSON.parse(fs.readFileSync(fn,'utf8'));
+			}
+		}		
+	} catch(e) {
+		log(fn);
+		log(e);
+	}
+}
 const initialize=function(corpus,opts){
 	var images={};
 	var fs=null
@@ -206,41 +223,48 @@ const initialize=function(corpus,opts){
 
 	}
 
-	if (opts.images&&fs&&fs.existsSync) {
-		for (var i=0;i<opts.images.length;i++) {
-			const fn=opts.path+opts.images[i];
-			if (fs.existsSync(fn)){
-				var at=opts.images[i].lastIndexOf("/");
-				var fnonly=fn;
-				if (at>1) fnonly=opts.images[i].substr(at+1);
-				images[fnonly]=fs.readFileSync(fn);
+	if (fs&&fs.existsSync){
+		if (opts.images) {
+			for (var i=0;i<opts.images.length;i++) {
+				const fn=opts.path+opts.images[i];
+				if (fs.existsSync(fn)){
+					var at=opts.images[i].lastIndexOf("/");
+					var fnonly=fn;
+					if (at>1) fnonly=opts.images[i].substr(at+1);
+					images[fnonly]=fs.readFileSync(fn);
+				}
 			}
-		}
-		opts.images=images;
-	}
-
-	if (opts.external&&fs&&fs.existsSync) {
-		try{
-		for (var key in opts.external){
-			const fn=opts.path+opts.external[key];
-			if (fs.existsSync(fn)){
-				opts.external[key]=JSON.parse(fs.readFileSync(fn,'utf8'));
-			}
-		}
-		if (opts.external.footnotes){
-			note.setFootnotes(opts.external.footnotes);
+			opts.images=images;
 		}
 
-		if (opts.external.bigrams) {
-			if (typeof opts.external.bigrams=="string") { //string format, expand it
-				const bi={};
-				opts.external.bigrams.split(" ").forEach(function(b){bi[b]=true});
-				opts.external.bigrams=bi;
+		if (opts.external) {
+			try{
+			for (var key in opts.external){
+				const fn=opts.path+opts.external[key];
+				if (fs.existsSync(fn)){
+					opts.external[key]=JSON.parse(fs.readFileSync(fn,'utf8'));
+				}
 			}
-		} 
-		}catch(e){
-			log(e);
+			if (opts.external.footnotes){
+				note.setFootnotes(opts.external.footnotes);
+			}
+
+			if (opts.external.bigrams) {
+				if (typeof opts.external.bigrams=="string") { //string format, expand it
+					const bi={};
+					opts.external.bigrams.split(" ").forEach(function(b){bi[b]=true});
+					opts.external.bigrams=bi;
+				}
+			} 
+			}catch(e){
+				log(e);
+			}
 		}
+
+		loadExternalFieldsJSON(opts.path,opts.afields);
+		loadExternalFieldsJSON(opts.path,opts.fields)
+		loadExternalFieldsJSON(opts.path,opts.gfields)
+		loadExternalFieldsJSON(opts.path,opts.kfields)
 	}
 	if (!opts.toc) opts.toc="article";
 	corpus.openhandlers=defaultopenhandlers;
@@ -266,6 +290,7 @@ const finalize=function(corpus,opts){
 			opts.linkTo[key]=ReverseLink.importLinks.call(corpus,key,links,targetcorpus);
 		}
 	}
+
 	if(treeitems.length) {
 		corpus.putField("toc",treeitems,treekpos);
 		corpus.putField("tocrange",corpus.kPos,treekpos);

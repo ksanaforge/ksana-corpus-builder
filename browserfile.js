@@ -85,6 +85,18 @@ const setExternal=function(externals,name,jsonstr){
 		this.log("error",e.message);
 	}
 }
+const setExternalField=function(fields,name,jsonstr){
+	try {
+		const json=JSON.parse(jsonstr);
+		for (var i in fields ) {
+			if (fields[i]==name) {
+				fields[i]=json;
+			}
+		}
+	} catch(e) {
+		this.log("error",e.message);
+	}
+}
 const setImage=function(images,name,str){
 	if (images instanceof Array) {
 		var img={};
@@ -157,6 +169,11 @@ const addBrowserFiles=function(filelist,cb){
 								hasexternal=true;
 								setExternal.call(me,options.external,fn,e.target.result);
 							}
+							if (options.afields) setExternalField.call(me,options.afields,fn,e.target.result);
+							if (options.kfields) setExternalField.call(me,options.kfields,fn,e.target.result);
+							if (options.gfields) setExternalField.call(me,options.gfields,fn,e.target.result);
+							if (options.fields) setExternalField.call(me,options.fields,fn,e.target.result);
+
 						} else if (type=='img'){
 							hasexternal=true;
 							options.images=setImage.call(me,options.images,fn,e.target.result);

@@ -1,5 +1,9 @@
-var Ksanapos=require("ksana-corpus/ksanapos");
-var bsearch=require("ksana-corpus/bsearch");
+const Ksanapos=require("ksana-corpus/ksanapos");
+const bsearch=require("ksana-corpus/bsearch");
+const importAFields=require("./externalmarkup").importAFields;
+const importKFields=require("./externalmarkup").importKFields;
+const importFields=require("./externalmarkup").importFields;
+var log=console.log;
 const Romable=function(opts){
 	opts=opts||{};
 	var gfields={},fields={},afields={},texts=[],kfields={};
@@ -120,12 +124,6 @@ const Romable=function(opts){
 		return texts;
 	}
 
-	const invertAField=function(name,pos,value,inverttype){
-		if (inverttype=="startend_unsorted") {
-			putField(name+"_start", value[0],pos[0]);
-			putField(name+"_end", value[value.length-1],pos[pos.length-1]);
-		}
-	}
 	const finalizeTexts=function(){
 		for (var i=0;i<texts.length;i++) {
 			const booktexts=texts[i];
@@ -144,7 +142,7 @@ const Romable=function(opts){
 		}
 		return texts;
 	}
-	const finalizeKFields=function(){
+	const finalizeKFields=function(json){
 		if (Object.keys(kfields).length==0) return null;
 		const out={};
 		for (var name in kfields) {
@@ -162,12 +160,24 @@ const Romable=function(opts){
 			out[name]={key:key,kpos:kpos};
 			if (hasvalue) out[name].value=value;
 		}
+
+		var externalFields={};
+		if (json) {
+			externalFields=importKFields.call(this,json);
+			for (var key in externalFields) {
+				if (out[key]) {
+					log("duplicate kfield",key);
+				} else {
+					out[key]=externalFields[key];
+				}
+			}			
+		}
 		return out;
 	}
-	const finalizeAFields=function(){
-		for (article in afields) {
-			const afield=afields[article];
 
+	const finalizeAFields=function(json){
+		for (article in afields) {
+			var afield=afields[article];
 			for (name in afield) {
 				const field=afield[name];
 				var pos=[],value=[];
@@ -181,19 +191,30 @@ const Romable=function(opts){
 				}
 				afield[name]={pos:pos};
 				if (value.length) afield[name].value=value;
-
-				if(opts.invertAField&&opts.invertAField[name]){
-					invertAField(name,pos,value,opts.invertAField[name]);	
-				}				
 			}
 		}
+		var externalFields={};
+		if (json) {
+			externalFields=importAFields.call(this,json);
+			for (var article in externalFields) {
+				if (!afields[article]) afields[article]={};
+				for (var field in externalFields[article]) {
+					if (afields[article][field]) {
+						log("duplicate afield",field);
+					} else {
+						afields[article][field]=externalFields[article][field];
+					}
+				}
+			}
+		}
+
 		return afields;
 	}
 
 //optimize for jsonrom
 //convert to column base single item array
 //kpos use vint and make use of stringarray
-	const finalizeFields=function(_fields){
+	const finalizeFields=function(_fields,json){
 		var i,j,k,f,hasvalue;
 		for (i in _fields) {
 			var pos=[], value=[], field=_fields[i];
@@ -224,14 +245,26 @@ const Romable=function(opts){
 				}
 			}
 		}
+		var externalFields={};
+		if (json) {
+			externalFields=importFields.call(this,json);
+			for (var key in externalFields) {
+				if (_fields[key]) {
+					log("duplicate field",key);
+				} else {
+					_fields[key]=externalFields[key];
+				}
+			}
+		}
+
 		return _fields;
 	}
 
-	const buildROM=function(meta,inverted){
-		const afields=finalizeAFields();
-		const _kfields=finalizeKFields();
-		const _fields=finalizeFields(fields);
-		const _gfields=finalizeFields(gfields);
+	const buildROM=function(meta,inverted,external){
+		const afields=finalizeAFields.call(this,external.afields);
+		const _kfields=finalizeKFields.call(this,external.kfields);
+		const _fields=finalizeFields.call(this,fields,external.fields);
+		const _gfields=finalizeFields.call(this,gfields,external.gfields);
 		const texts=finalizeTexts();
 		const r={meta:meta,texts:texts};
 
@@ -251,9 +284,14 @@ const Romable=function(opts){
 		}
 		return r;
 	}
+	const setLog=function(_log){
+		log=_log;
+	}
 
 	return {putLine:putLine,
 		putArticle:putArticle,
+		addressPattern:opts.addressPattern,
+		setLog:setLog,
 		articleCount:function(){return articlecount},
 		putField:putField,putAField:putAField,
 		putGField:putGField,

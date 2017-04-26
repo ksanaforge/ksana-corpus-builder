@@ -10,7 +10,8 @@ const genBigram=require("./genbigram");
 //const builderVersion=20170319;// move bigrams footnotes in external
 //const builderVersion=20170321;// move tocrange, group,article and bilinks to gfields
 //const builderVersion=20170328;// removed putBookField, add HTLL support
-const builderVersion=20170423;// add keyfields
+//const builderVersion=20170423;// add keyfields
+const builderVersion=20170426;// remove invertAField
 const createInverted=require("./inverted").createInverted;
 const importExternalMarkup=require("./externalmarkup").importExternalMarkup;
 const createTokenizer=Tokenizer.createTokenizer;
@@ -57,7 +58,7 @@ const createCorpus=function(opts){
 
 	var concreteToken=Tokenizer.concreteToken;
 
-	var romable=Romable({invertAField:opts.invertAField});
+	var romable=Romable({addressPattern:addressPattern});
 
 	var inverted=null;
 	var finalized=false;
@@ -77,7 +78,7 @@ const createCorpus=function(opts){
 			throw "cannot add file "+fn+" after finalized";
 		}
 		if (!require("fs").existsSync(fn)) {
-			if (fn.indexOf("#")==-1) log("error","file not found",fn);
+			if (fn.indexOf("#")==-1) this.log("error","file not found",fn);
 			return;
 		}
 		this.onFileStart&&this.onFileStart.call(this,fn,filecount);
@@ -295,7 +296,6 @@ const createCorpus=function(opts){
 		if (opts.article) meta.article=opts.article;
 		if (addressPattern.column) meta.column=addressPattern.column;
 		if (opts.language) meta.language=opts.language;
-		if (opts.invertAField) meta.invertAField=opts.invertAField;
 		if (opts.articleFields) meta.articleFields=opts.articleFields;
 		if (opts.removePunc) meta.removePunc=opts.removePunc;
 		if (opts.title) meta.title=opts.title;
@@ -325,8 +325,10 @@ const createCorpus=function(opts){
 		//var okdb="./outputkdb";
 		const meta=buildMeta.call(this);
 		var rom=null;
+		const externalFields={fields:opts.fields,afields:opts.afields,
+			kfields:opts.kfields,gfields:opts.gfields};
 		try {
-			rom=romable.buildROM(meta,inverted);	
+			rom=romable.buildROM(meta,inverted,externalFields);
 		} catch(e) {
 			this.log("ERROR",e);
 			return;
@@ -376,6 +378,7 @@ const createCorpus=function(opts){
 		this.log=_log;
 		this.parser.setLog&&this.parser.setLog(_log);
 		Ksanapos.setLog&&		Ksanapos.setLog(_log);
+		romable.setLog&&romable.setLog(_log);
 	}
 
 	const substring=function(s,e){
