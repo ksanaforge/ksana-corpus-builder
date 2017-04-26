@@ -23,10 +23,15 @@ const pb=function(tag,closing){
 var maxarticlelen=0,prevtpos=0;
 const article=function(tag,closing,kpos,tpos, start,end){
 	if (closing) {
-		const caption=this.substring(start,end);
+		var caption=this.substring(start,end);
+		if (!caption && tag.attributes.t) {
+			caption=caption;
+		}
 		this.putArticle(caption,kpos,tpos);
 		const range=this.makeRange(kpos,this.kPos);
-		this.putArticleField("rend","article",range);
+		if (this.kPos>kpos) {
+			this.putArticleField("rend","article",range);
+		}
 	}
 }
 const p=function(tag,closing){
@@ -43,7 +48,10 @@ const origin=function(tag){
 }
 const group=function(tag,closing,kpos,tpos,start,end){
 	if (closing) {
-		const name=this.content.substring(start,end);
+		var name=this.content.substring(start,end);
+		if (!name && tag.attributes.t) {
+			name=name;
+		}
 		this.putGroup(name,kpos,tpos);	
 	}
 }

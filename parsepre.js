@@ -170,7 +170,9 @@ const addContent=function(content,name,opts){
 				if (n) headvalue+='\t'+n;
 
 				const range=corpus.makeRange(tocobj.kpos,corpus.kPos);
-				corpus.putArticleField("head",headvalue,range);
+				if (corpus.kPos>tocobj.kpos) {
+					corpus.putArticleField("head",headvalue,range);
+				}
 				treeitems.push(encodeTreeItem(tocobj));
 			}
 		}
