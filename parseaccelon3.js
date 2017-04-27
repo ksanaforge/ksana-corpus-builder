@@ -60,8 +60,10 @@ const addContent=function(content,name,opts){
 
 	if (treeitems.length){
 		corpus.putField("toc",treeitems,treekpos);
-		corpus.putField("tocrange",corpus.kPos,treekpos);		
+		corpus.putField("tocrange",corpus.kPos,treekpos);
+		treeitems=[];
 	}	
+
 }
 
 const finalize=function(corpus,opts){
