@@ -47,12 +47,13 @@ const def=function(tag,closing,kpos,tpos,start,end){
 			this.log("warn","釋 without n",this.stringify(this.kPos));
 			return;
 		}
-		const defrange=this.makeRange(kpos,this.kPos);
+		//const defrange=this.makeRange(kpos,this.kPos);
+		const def=this.substring(start,end);
 		ptrpos=noteid[n];
 		if (!ptrpos) {
 			throw "no such ptr "+n;
 		}
-		this.putField("note",defrange, ptrpos);
+		this.putArticleField("note",n+"\t"+def, ptrpos);
 	}
 }
 
