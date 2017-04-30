@@ -24,6 +24,7 @@ const addContent=function(content,name,opts){
 	parser.log=log;//assuming after setLog
 	corpus.content=content;
 	const emitText=function(){
+		textbuf=textbuf.replace(/\r?\n/g,"");
 		const tokenized=corpus.tokenizer.tokenize(textbuf);
 		corpus.addTokens(tokenized);
 		textbuf="";
