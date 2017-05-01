@@ -68,8 +68,8 @@ const Romable=function(opts){
 		if (!afields[a][name]) {
 			afields[a][name]=[];
 		}
-		const len=afields[a][name].length
-		if (len && afields[a][name][len-1][0]]==kpos) {
+		const len=afields[a][name].length;
+		if (len && afields[a][name][len-1][0]==kpos) {
 			log("warning same kpos, field "+name+" kpos "+kpos);
 		} else {
 			afields[a][name].push([kpos,value]);	
