@@ -1,4 +1,4 @@
-
+const NormalizeDiacritics=require("ksana-corpus/diacritics").normalize;
 const createInverted=function(opts){
 	const putBookPos=function(booknum){
 		book2tpos[booknum]=tPos;
@@ -35,7 +35,9 @@ const createInverted=function(opts){
 			pTk=null;
 			return;
 		}
-
+		if (type==TT.LATIN && typeof tk==="string") {
+			tk=NormalizeDiacritics(tk);
+		}
 		if (type==TT.PUNC || type==TT.NUMBER) { //not indexed
 			pTk=null;
 			tPos++;
@@ -46,6 +48,7 @@ const createInverted=function(opts){
 				posting(pTk+tk,tPos-1);
 				totalPosting++;
 			}
+
 			posting(tk,tPos);
 			totalPosting++;
 		} else {
