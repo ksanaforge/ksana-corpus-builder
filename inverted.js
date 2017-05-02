@@ -36,7 +36,7 @@ const createInverted=function(opts){
 			return;
 		}
 		if (type==TT.LATIN && typeof tk==="string") {
-			tk=NormalizeDiacritics(tk);
+			tk=NormalizeDiacritics(tk).toLowerCase();
 		}
 		if (type==TT.PUNC || type==TT.NUMBER) { //not indexed
 			pTk=null;

@@ -70,7 +70,8 @@ const Romable=function(opts){
 		}
 		const len=afields[a][name].length;
 		if (len && afields[a][name][len-1][0]==kpos) {
-			log("warning same kpos, field "+name+" kpos "+kpos);
+			debugger
+			log("warning same kpos, field "+name+" kpos "+Ksanapos.stringify(kpos,opts.addressPattern));
 		} else {
 			afields[a][name].push([kpos,value]);	
 		}

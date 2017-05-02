@@ -44,7 +44,7 @@ const addContent=function(content,name,opts){
 		const handler=corpus.openhandlers[tag.name];
 		corpus.position=this.position;
 
-		if (handler&&handler.call(corpus,tag)) {
+		if (handler&&handler.call(corpus,tag,false)) {
 			captured++;
 			T.capturing=true;
 		}
