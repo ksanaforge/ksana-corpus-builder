@@ -16,6 +16,10 @@ var subtree=0,treeitems=[],treekpos=0;
 const addContent=function(content,name,opts){
 	const corpus=this;
 	onopentag=function(tag){
+		if(tag.name == "類")
+		{
+			debugger
+		}
 		const treetag=a3Tree.call(corpus,tag);
 		const depth=treetag.indexOf(tag.name);
 		if (depth>-1) {
@@ -39,7 +43,9 @@ const addContent=function(content,name,opts){
 			} else {
 				if (treeitems.length){
 					corpus.putField("toc",treeitems,treekpos);
-					corpus.putField("tocrange",corpus.kPos,treekpos);
+					// 用 tocobj 才對, 上個目錄群組的終點應該是本標記首, 而不是尾, 參考parsepre.js
+					//corpus.putField("tocrange",corpus.kPos,treekpos);
+					corpus.putField("tocrange",tocobj.kpos,treekpos);
 					treeitems=[];
 				} 
 				if (opts.toc==tocobj.tag) {
@@ -58,12 +64,13 @@ const addContent=function(content,name,opts){
 	});
 	parsepre.addContent.call(this,content,name,newopts);
 
+/* 這段應該不需要
 	if (treeitems.length){
 		corpus.putField("toc",treeitems,treekpos);
 		corpus.putField("tocrange",corpus.kPos,treekpos);
 		treeitems=[];
 	}	
-
+*/
 }
 
 const finalize=function(corpus,opts){
