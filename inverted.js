@@ -31,8 +31,16 @@ const createInverted=function(opts){
 	}
 
 	const putToken=function(tk,type){
-		if (type==TT.SPACE|| (type===TT.PUNC && removePunc)) {
+		// 忽略標點時，不能和空白一樣在這裡處理
+		// if (type==TT.SPACE|| (type===TT.PUNC && removePunc)) {
+		if (type==TT.SPACE) {	
 			pTk=null;
+			return;
+		}
+		// 在忽略標點的情況下, pTk 不要處理, 才能處理被標點隔離的情況
+		// 例如 （慈）悲，若 pTk = null , 這組慈悲就不會被記錄了。
+		if (type===TT.PUNC && removePunc) {	
+			// pTk=null;
 			return;
 		}
 		if (type==TT.LATIN && typeof tk==="string") {
