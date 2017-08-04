@@ -37,6 +37,10 @@ const addContent=function(content,name,opts){
 		corpus.putArticleField("cdata",text);
 	}	
 	parser.onopentag=function(tag){
+		// 在 captured 為真的情況下, 不處理 lb 標記, 以免行數記錄被混亂
+		if(captured && tag.name == "lb"){
+			return;
+		}
 		emitText.call(this);
 		var T={tag:tag,kpos:corpus.kPos,tpos:corpus.tPos,
 			position:this.position};
@@ -51,6 +55,10 @@ const addContent=function(content,name,opts){
 	}
 
 	parser.onclosetag=function(tagname){
+		// 在 captured 為真的情況下, 不處理 lb 標記, 以免行數記錄被混亂
+		if(captured && tagname == "lb") {
+			return;
+		}
 		const t=this.tagstack.pop();
 		const tag=t.tag, kpos=t.kpos,tpos=t.tpos,start=t.position;
 		const handler=corpus.closehandlers[tagname];
